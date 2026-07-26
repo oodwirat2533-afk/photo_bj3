@@ -148,7 +148,18 @@ function extractPhotosList(data) {
 }
 
 async function openFolder(folderId, folderName) {
-  state.navStack.push({ id: folderId, name: folderName });
+  const lastIndex = state.navStack.length - 1;
+  if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
+    state.navStack[lastIndex].name = folderName;
+  } else {
+    const existingIndex = state.navStack.findIndex(item => item.id === folderId);
+    if (existingIndex !== -1) {
+      state.navStack = state.navStack.slice(0, existingIndex + 1);
+    } else {
+      state.navStack.push({ id: folderId, name: folderName });
+    }
+  }
+
   state.currentFolderId = folderId;
   state.currentOffset = 0;
   state.hasMore = false;
