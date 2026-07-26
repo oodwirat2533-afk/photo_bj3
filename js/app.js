@@ -594,6 +594,11 @@ async function openLightbox(photoId) {
   document.getElementById('lightboxImage').src = photo.viewLink;
   document.getElementById('lightboxDownloadBtn').href = photo.downloadLink;
 
+  const btnDelete = document.getElementById('btnDeletePhoto');
+  if (btnDelete) {
+    btnDelete.style.display = (state.userCtx && state.userCtx.isAdminOrHigher) ? 'inline-flex' : 'none';
+  }
+
   if (photo.created && photo.size) {
     document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: ${photo.created} | ขนาด: ${photo.size}`;
   } else {
@@ -628,6 +633,7 @@ async function deleteCurrentPhoto() {
   try {
     const res = await fetch(`/api/photos?fileId=${encodeURIComponent(state.currentPhoto.id)}&userEmail=${encodeURIComponent(userEmail)}`, { method: 'DELETE' });
     const data = await res.json();
+    if (data.error) throw new Error(data.error);
     showToast(data.message || 'ลบรูปภาพสำเร็จ', 'success');
     closeModal('lightboxModal');
     if (state.navStack.length > 0) {
