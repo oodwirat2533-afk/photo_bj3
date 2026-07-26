@@ -211,6 +211,16 @@ window.addEventListener('click', function(e) {
   if (dropdown && !dropdown.contains(e.target)) {
     closeSettingsDropdown();
   }
+  if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
+    closeModal(e.target.id);
+  }
+});
+
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const activeModals = document.querySelectorAll('.modal.active');
+    activeModals.forEach(m => closeModal(m.id));
+  }
 });
 
 async function loadAlbums() {
@@ -801,8 +811,23 @@ async function changeUserRole(email, newRole) {
   }
 }
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+  }
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  if (!document.querySelector('.modal.active')) {
+    document.body.classList.remove('modal-open');
+  }
+}
 
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');

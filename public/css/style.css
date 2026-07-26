@@ -514,6 +514,10 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
 
 .breadcrumb-link:hover { color: var(--accent); }
 
+body.modal-open {
+  overflow: hidden !important;
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -526,6 +530,8 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: fadeIn 0.25s ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal.active { display: flex; }
@@ -547,6 +553,7 @@ button { cursor: pointer; border: none; outline: none; font-family: inherit; }
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   position: relative;
+  overscroll-behavior: contain;
 }
 
 .modal-header {

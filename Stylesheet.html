@@ -537,6 +537,11 @@ button {
   color: var(--text-muted);
 }
 
+/* Prevent background scroll when modal is active */
+body.modal-open {
+  overflow: hidden !important;
+}
+
 /* ============================================================================
    LIGHTBOX MODAL
    ============================================================================ */
@@ -552,6 +557,8 @@ button {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: fadeIn 0.25s ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal.active {
@@ -575,6 +582,7 @@ button {
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   position: relative;
+  overscroll-behavior: contain;
 }
 
 .modal-header {
