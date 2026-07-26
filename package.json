@@ -4,9 +4,7 @@
   "description": "School Photo Gallery & Management System on Vercel and Google Drive",
   "main": "index.html",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Building static files for Vercel'",
-    "deploy": "npx @google/clasp push --force && npx @google/clasp deploy"
+    "build": "echo 'Build complete'"
   },
   "keywords": [
     "school-gallery",
@@ -17,9 +15,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@vercel/node": "^3.0.0"
-  },
-  "devDependencies": {
-    "@google/clasp": "^2.4.2"
+    "@vercel/node": "^5.0.0"
   }
 }
