@@ -62,10 +62,10 @@ function renderUserNavbar(ctx) {
 async function loadAlbums() {
   const albumGrid = document.getElementById('albumGrid');
   albumGrid.innerHTML = `
-    <div class="album-card-skeleton skeleton"></div>
-    <div class="album-card-skeleton skeleton"></div>
-    <div class="album-card-skeleton skeleton"></div>
-    <div class="album-card-skeleton skeleton"></div>`;
+    <div class="album-card-skeleton skeleton" style="height: 75px;"></div>
+    <div class="album-card-skeleton skeleton" style="height: 75px;"></div>
+    <div class="album-card-skeleton skeleton" style="height: 75px;"></div>
+    <div class="album-card-skeleton skeleton" style="height: 75px;"></div>`;
 
   try {
     const res = await fetch('/api/folders');
@@ -115,20 +115,17 @@ function renderAlbumGrid(folders) {
 
 function buildAlbumCard(f, onClick) {
   const card = document.createElement('div');
-  card.className = 'album-card';
+  card.className = 'album-card folder-card';
   card.onclick = onClick;
 
-  const coverHtml = f.coverUrl
-    ? `<img class="album-cover-img" src="${f.coverUrl}" alt="${escapeHtml(f.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'album-cover-placeholder\\'>📷<span>ไม่มีรูปภาพ</span></div>'">`
-    : `<div class="album-cover-placeholder">📷<span>ไม่มีรูปภาพ</span></div>`;
-
+  const icon = f.isRoot ? '🖼️' : '📁';
   card.innerHTML = `
-    <div class="album-cover">
-      ${coverHtml}
-      <div class="album-cover-gradient"></div>
-    </div>
-    <div class="album-info">
-      <div class="album-name">${f.isRoot ? '🖼️' : '📁'} ${escapeHtml(f.name)}</div>
+    <div class="folder-card-body">
+      <div class="folder-icon">${icon}</div>
+      <div class="folder-info">
+        <div class="folder-name">${escapeHtml(f.name)}</div>
+        <div class="folder-subtext">${f.isRoot ? 'แสดงภาพทั้งหมดในระบบ' : 'คลิกเพื่อเปิดดูอัลบั้ม'}</div>
+      </div>
       <div class="album-arrow">›</div>
     </div>`;
   return card;

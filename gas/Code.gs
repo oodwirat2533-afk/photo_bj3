@@ -287,12 +287,10 @@ function getDriveFolders() {
   var root = getRootFolder();
   var list = [];
 
-  var rootCover = getCoverPhoto(root);
   list.push({
     id: root.getId(),
     name: 'รูปภาพทั้งหมด (All Photos)',
-    isRoot: true,
-    coverUrl: rootCover
+    isRoot: true
   });
 
   var foldersIter = root.getFolders();
@@ -302,7 +300,6 @@ function getDriveFolders() {
       id: f.getId(),
       name: f.getName(),
       isRoot: false,
-      coverUrl: getCoverPhoto(f),
       updatedAt: f.getLastUpdated().toISOString()
     });
   }
@@ -312,8 +309,8 @@ function getDriveFolders() {
 
 /**
  * getFolderContents — smart function that checks if a folder has subfolders.
- * If subfolders exist  → returns them as album cards (with cover photos).
- * If no subfolders     → returns the FIRST page of photos only (fast!).
+ * If subfolders exist  → returns them as folder list items (fast!).
+ * If no subfolders     → returns the FIRST page of photos only.
  */
 function getFolderContents(folderId) {
   var folder;
@@ -326,8 +323,7 @@ function getFolderContents(folderId) {
     subfolders.push({
       id: sub.getId(),
       name: sub.getName(),
-      isRoot: false,
-      coverUrl: getCoverPhoto(sub)
+      isRoot: false
     });
   }
 
