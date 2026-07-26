@@ -46,7 +46,7 @@ function initGoogleAuth() {
 
 function setupGoogleButton() {
   if (!window.google || !google.accounts) return;
-  const clientId = localStorage.getItem('googleClientId') || '1088737299092-example.apps.googleusercontent.com';
+  const clientId = '681425643119-rljc3o9g3ln0vcd14s1fg6kno903mv5s.apps.googleusercontent.com';
   try {
     google.accounts.id.initialize({
       client_id: clientId,
