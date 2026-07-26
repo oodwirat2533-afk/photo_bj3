@@ -414,7 +414,7 @@ function loadMorePhotos(folderId, offset, searchKeyword) {
 
 function createDriveFolder(folderName) {
   var userCtx = getUserContext();
-  if (!userCtx.isAdminOrHigher) throw new Error('Unauthorized: เฉพาะ Admin หรือ Super Admin เท่านั้น');
+  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
   if (!folderName || !folderName.trim()) throw new Error('ชื่อโฟลเดอร์ไม่สามารถเป็นค่าว่างได้');
   var root = getRootFolder();
   var newFolder = root.createFolder(folderName.trim());
