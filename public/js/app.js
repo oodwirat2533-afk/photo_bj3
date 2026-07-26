@@ -178,10 +178,27 @@ async function openFolder(folderId, folderName) {
 }
 
 function renderSubfolderView(subfolders, directPhotosData) {
-  const photoList = extractPhotosList(directPhotosData);
-  state.photos = photoList;
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = '';
+
+  const photosList = extractPhotosList(directPhotosData);
+  let hasMore = false;
+  let nextOffset = 0;
+  let total = 0;
+
+  if (directPhotosData && directPhotosData.hasMore !== undefined) {
+    hasMore = directPhotosData.hasMore;
+    nextOffset = directPhotosData.nextOffset;
+    total = directPhotosData.total;
+  } else if (directPhotosData && directPhotosData.directPhotos && directPhotosData.directPhotos.hasMore !== undefined) {
+    hasMore = directPhotosData.directPhotos.hasMore;
+    nextOffset = directPhotosData.directPhotos.nextOffset;
+    total = directPhotosData.total;
+  }
+
+  state.hasMore = hasMore;
+  state.currentOffset = nextOffset;
+  state.photos = photosList;
 
   const subGrid = document.createElement('div');
   subGrid.className = 'album-grid';
@@ -191,18 +208,21 @@ function renderSubfolderView(subfolders, directPhotosData) {
   });
   grid.appendChild(subGrid);
 
-  if (photoList.length > 0) {
+  if (photosList.length > 0) {
     const divider = document.createElement('div');
     divider.style.cssText = 'grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);';
-    divider.innerHTML = `<span>📷 รูปภาพในโฟลเดอร์นี้ (${photoList.length} รูป)</span>`;
+    divider.innerHTML = `<span>📷 รูปภาพในอัลบั้มนี้ (แสดง ${photosList.length}${total > 0 ? ' จากทั้งหมด ' + total : ''} รูป)</span>`;
     grid.appendChild(divider);
 
-    photoList.forEach(photo => {
+    photosList.forEach(photo => {
       grid.appendChild(buildPhotoCard(photo));
     });
   }
 
-  document.getElementById('photoCountBadge').textContent = `${subfolders.length} โฟลเดอร์${photoList.length > 0 ? ' + ' + photoList.length + ' รูป' : ''}`;
+  const badgeText = `${subfolders.length} โฟลเดอร์ย่อย` + (total > 0 ? ` • ทั้งหมด ${total} รูปภาพ` : (photosList.length > 0 ? ` • ${photosList.length} รูปภาพ` : ''));
+  document.getElementById('photoCountBadge').textContent = badgeText;
+
+  setupInfiniteScroll();
 }
 
 function showPhotoSkeletons() {
@@ -241,7 +261,8 @@ function renderGalleryGrid(photosData, append = false) {
     grid.innerHTML = '';
   }
 
-  document.getElementById('photoCountBadge').textContent = `${state.photos.length}${total > 0 ? ' / ' + total : ''} รูปภาพ`;
+  const countBadgeText = total > 0 ? `กำลังแสดง ${state.photos.length} จากทั้งหมด ${total} รูปภาพ` : `${state.photos.length} รูปภาพ`;
+  document.getElementById('photoCountBadge').textContent = countBadgeText;
 
   if (!append && state.photos.length === 0) {
     grid.innerHTML = `

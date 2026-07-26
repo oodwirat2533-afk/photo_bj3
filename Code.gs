@@ -355,36 +355,12 @@ function getFolderContents(folderId, offset, limit) {
  */
 function getDirectPhotos(folder, searchKeyword, offset, limit) {
   var keyword = (searchKeyword || '').toLowerCase().trim();
-  var pageSize = limit || 24;
-  var startAt = offset || 0;
+  var pageSize = parseInt(limit || 24, 10);
+  var startAt = parseInt(offset || 0, 10);
 
-  // Collect ALL matching photos first (metadata only, fast)
+  // Collect ALL matching photos recursively across folder and subfolders (fast metadata scanning)
   var allPhotos = [];
-  var filesIter = folder.getFiles();
-  while (filesIter.hasNext()) {
-    var file = filesIter.next();
-    var actualFile = file;
-    if (file.getMimeType() === 'application/vnd.google-apps.shortcut') {
-      try { actualFile = DriveApp.getFileById(file.getTargetId()); } catch (e) { continue; }
-    }
-    var mime = actualFile.getMimeType();
-    var fileName = actualFile.getName();
-    if (isImageFile(mime, fileName)) {
-      if (keyword && fileName.toLowerCase().indexOf(keyword) === -1) continue;
-      var fileId = actualFile.getId();
-      allPhotos.push({
-        id: fileId,
-        name: fileName,
-        size: formatBytes(actualFile.getSize()),
-        mimeType: mime,
-        created: actualFile.getDateCreated().toLocaleDateString('th-TH'),
-        createdIso: actualFile.getDateCreated().toISOString(),
-        thumbnailLink: 'https://lh3.googleusercontent.com/d/' + fileId + '=s300',  // s300 = faster
-        viewLink:      'https://lh3.googleusercontent.com/d/' + fileId + '=s1600', // full res for lightbox
-        downloadLink:  'https://drive.google.com/uc?export=download&id=' + fileId
-      });
-    }
-  }
+  collectPhotosRecursive(folder, keyword, allPhotos);
 
   allPhotos.sort(function(a, b) { return new Date(b.createdIso) - new Date(a.createdIso); });
 
