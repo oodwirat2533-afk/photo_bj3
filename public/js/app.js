@@ -289,7 +289,7 @@ function setupInfiniteScroll() {
   sentinel.id = 'infiniteSentinel';
   sentinel.className = 'infinite-sentinel';
   sentinel.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1rem;';
-  sentinel.innerHTML = `<span style="display:inline-block;">⏳</span> เลื่อนเมาส์ลงเพื่อโหลดรูปภาพเพิ่มเติม...`;
+  sentinel.innerHTML = `<span style="display:inline-block;">⏳</span> กำลังโหลดรูป โปรดรอซักครู่`;
   
   document.getElementById('galleryGrid').appendChild(sentinel);
 
