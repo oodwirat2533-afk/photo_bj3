@@ -27,7 +27,8 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const data = await gasPost({ action: 'updateRootFolderUrl', urlOrId: req.body ? req.body.urlOrId : '' });
+      const body = req.body || {};
+      const data = await gasPost({ action: 'updateRootFolderUrl', urlOrId: body.urlOrId || '', userEmail: body.userEmail || '' });
       res.status(200).json(data);
     } else {
       const data = await gasGet({ action: 'getRootFolderInfo' });

@@ -71,7 +71,7 @@ function doPost(e) {
     } else if (action === 'createFolder') {
       data = createDriveFolder(postData.folderName, userEmail);
     } else if (action === 'updateRootFolderUrl') {
-      data = updateRootFolderUrl(postData.urlOrId);
+      data = updateRootFolderUrl(postData.urlOrId, userEmail);
     } else if (action === 'updateUserRole') {
       data = updateUserRole(postData.targetEmail, postData.newRole, userEmail);
     } else if (action === 'addAdmin') {
@@ -317,9 +317,9 @@ function extractFolderId(input) {
   return str;
 }
 
-function updateRootFolderUrl(urlOrId) {
-  var userCtx = getUserContext();
-  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
+function updateRootFolderUrl(urlOrId, userEmail) {
+  var userCtx = getUserContext(userEmail);
+  if (!userCtx.isFixed) throw new Error('Unauthorized: เฉพาะผู้ดูแลหลัก (Fixed) เท่านั้นที่สามารถตั้งค่าคลังภาพ Google Drive ได้');
   var folderId = extractFolderId(urlOrId);
   if (!folderId) throw new Error('กรุณาระบุ Google Drive Folder URL หรือ Folder ID ให้ถูกต้อง');
   var folder;

@@ -175,7 +175,7 @@ function renderUserNavbar(ctx) {
     if (gsiWrapper) gsiWrapper.style.display = 'inline-block';
   }
 
-  const showDriveConfig = (ctx && ctx.isSuperAdmin);
+  const showDriveConfig = (ctx && ctx.isFixed);
   const showAdminPanel = (ctx && ctx.isSuperAdmin);
   const showManageAlbums = (ctx && ctx.isSuperAdmin);
 
@@ -758,18 +758,20 @@ async function submitDriveConfig() {
   if (!urlOrId.trim()) { showToast('กรุณาระบุ Google Drive Folder URL หรือ Folder ID', 'error'); return; }
   showToast('กำลังเชื่อมต่อโฟลเดอร์...', 'info');
 
+  const userEmail = googleUser ? googleUser.email : '';
   try {
     const res = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ urlOrId })
+      body: JSON.stringify({ urlOrId, userEmail })
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error);
     showToast(data.message || 'บันทึกเรียบร้อยแล้ว', 'success');
     closeModal('driveConfigModal');
     loadAlbums();
   } catch (err) {
-    showToast('ตั้งค่าโฟลเดอร์ล้มเหลว', 'error');
+    showToast('ตั้งค่าโฟลเดอร์ล้มเหลว: ' + err.message, 'error');
   }
 }
 
