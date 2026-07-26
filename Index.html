@@ -35,12 +35,7 @@
       <button id="btnRequestAccess" class="btn btn-secondary" onclick="openRequestModal()" style="display: none;">
         <span>🔑</span> ขอสิทธิ์ผู้ดูแล
       </button>
-      <button id="btnCreateFolderNav" class="btn btn-secondary btn-create-folder" onclick="openCreateFolderModal()" style="display: none;">
-        <span>➕</span> สร้างอัลบั้มใหม่
-      </button>
-      <button id="btnUpload" class="btn btn-primary" onclick="openUploadModal()" style="display: none;">
-        <span>📤</span> อัปโหลดรูปภาพ
-      </button>
+
 
       <!-- Settings Dropdown Menu -->
       <div id="settingsDropdown" class="dropdown" style="display: none;">
@@ -88,9 +83,14 @@
     <section id="viewAlbums">
       <div class="section-header">
         <h2 class="section-title"><span>📁</span> อัลบั้มภาพกิจกรรม (Albums)</h2>
-        <button id="btnCreateFolder" class="btn btn-secondary btn-create-folder" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openCreateFolderModal()">
-          <span>➕</span> สร้างอัลบั้มใหม่
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button id="btnCreateFolder" class="btn btn-secondary btn-create-folder" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openCreateFolderModal()">
+            <span>➕</span> สร้างอัลบั้มใหม่
+          </button>
+          <button id="btnUpload" class="btn btn-primary btn-upload-photo" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openUploadModal()">
+            <span>📤</span> อัปโหลดรูปภาพ
+          </button>
+        </div>
       </div>
       <div id="albumGrid" class="album-grid">
         <div class="album-card-skeleton skeleton"></div>
@@ -109,10 +109,13 @@
           </button>
           <h2 id="galleryTitle" class="section-title"><span>📸</span> รูปภาพในอัลบั้ม</h2>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span id="photoCountBadge" class="user-badge" style="font-size: 0.8rem;">0 รูปภาพ</span>
           <button id="btnCreateFolderPhotos" class="btn btn-secondary btn-create-folder" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openCreateFolderModal()">
             <span>➕</span> สร้างอัลบั้มใหม่
+          </button>
+          <button id="btnUploadPhotos" class="btn btn-primary btn-upload-photo" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openUploadModal()">
+            <span>📤</span> อัปโหลดรูปภาพ
           </button>
         </div>
       </div>
