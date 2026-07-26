@@ -1,0 +1,25 @@
+{
+  "name": "photo-school-gas-webapp",
+  "version": "1.0.0",
+  "description": "School Photo Gallery & Management System on Vercel and Google Drive",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Building static files for Vercel'",
+    "deploy": "npx @google/clasp push --force && npx @google/clasp deploy"
+  },
+  "keywords": [
+    "school-gallery",
+    "photo-management",
+    "vercel",
+    "github"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}
