@@ -195,9 +195,14 @@ function renderUserNavbar(ctx) {
   document.querySelectorAll('.btn-upload-photo, #btnUpload').forEach(el => {
     if (el) el.style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
   });
-  document.querySelectorAll('.btn-create-folder').forEach(el => {
-    el.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
-  });
+  const btnCreateFolderMain = document.getElementById('btnCreateFolder');
+  const btnCreateFolderPhotos = document.getElementById('btnCreateFolderPhotos');
+  if (btnCreateFolderMain) {
+    btnCreateFolderMain.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
+  }
+  if (btnCreateFolderPhotos) {
+    btnCreateFolderPhotos.style.display = (ctx && ctx.isAdminOrHigher) ? 'inline-flex' : 'none';
+  }
 }
 
 function toggleSettingsDropdown(event) {
