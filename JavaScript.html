@@ -174,8 +174,8 @@ function openFolder(folderId, folderName) {
   // Switch to photo view and show loading
   document.getElementById('viewAlbums').style.display = 'none';
   document.getElementById('viewPhotos').style.display = 'block';
-  document.getElementById('galleryTitle').innerHTML = `<span>📸</span> ${escapeHtml(folderName)}`;
-  document.getElementById('searchInput').value = '';
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.value = '';
 
   renderBreadcrumb();
   showPhotoSkeletons();
@@ -308,8 +308,8 @@ function navToStack(index) {
   state.navStack = state.navStack.slice(0, index + 1);
 
   showPhotoSkeletons();
-  renderBreadcrumb();
-  document.getElementById('searchInput').value = '';
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.value = '';
 
   google.script.run
     .withSuccessHandler(onFolderContentsLoaded)
@@ -322,7 +322,8 @@ function backToAlbums() {
   state.photos = [];
   document.getElementById('viewPhotos').style.display = 'none';
   document.getElementById('viewAlbums').style.display = 'block';
-  document.getElementById('searchInput').value = '';
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.value = '';
 }
 
 // ============================================================================

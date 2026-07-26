@@ -319,8 +319,8 @@ async function openFolder(folderId, folderName) {
 
   document.getElementById('viewAlbums').style.display = 'none';
   document.getElementById('viewPhotos').style.display = 'block';
-  document.getElementById('galleryTitle').innerHTML = `<span>📸</span> ${escapeHtml(folderName)}`;
-  document.getElementById('searchInput').value = '';
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.value = '';
 
   renderBreadcrumb();
   showPhotoSkeletons();
@@ -536,7 +536,8 @@ function backToAlbums() {
   state.photos = [];
   document.getElementById('viewPhotos').style.display = 'none';
   document.getElementById('viewAlbums').style.display = 'block';
-  document.getElementById('searchInput').value = '';
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.value = '';
 }
 
 function handleSearchInput(e) {
