@@ -1,15 +1,11 @@
 // Vercel Serverless API Route: /api/folders
-const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbwu4nT5mvLHNLtGEvohgoutIRlsSK7ZswAp8AY3gWKvP05qTvi-LbDRXk3iv63CBopTCQ/exec';
+const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbz-q4Es0YxmLPNyVT-N-ztnjVO-5yRq5S2jU3TgCY1djdSFKr6BmzajB_i-dMMiuvs6Xw/exec';
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -17,20 +13,20 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const targetUrl = `${GAS_API_URL}?action=getFolders`;
-    const response = await fetch(targetUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch folders: ${response.statusText}`);
+    if (req.method === 'POST') {
+      const response = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'createFolder', folderName: req.body ? req.body.folderName : '' })
+      });
+      const data = await response.json();
+      res.status(200).json(data);
+    } else {
+      const response = await fetch(`${GAS_API_URL}?action=getFolders`);
+      const data = await response.json();
+      res.status(200).json(data);
     }
-
-    const data = await response.json();
-    res.status(200).json(data);
   } catch (error) {
-    // Return graceful mock/cached structure if backend proxy is initialising
-    res.status(200).json([
-      { id: 'root', name: 'รูปภาพทั้งหมด (All Photos)', isRoot: true, coverUrl: null },
-      { id: 'album1', name: 'ภาพกิจกรรมโรงเรียน', isRoot: false, coverUrl: null }
-    ]);
+    res.status(500).json({ error: error.toString() });
   }
 };

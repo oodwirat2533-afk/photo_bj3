@@ -1,10 +1,3 @@
-/**
- * ============================================================================
- * School Photo Management Web App - Client JS for Vercel & Web Standard
- * ============================================================================
- */
-
-// Global State
 let state = {
   userCtx: null,
   folders: [],
@@ -15,7 +8,6 @@ let state = {
   searchTimer: null
 };
 
-// INITIALIZATION
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
@@ -67,7 +59,6 @@ function renderUserNavbar(ctx) {
   document.getElementById('btnCreateFolder').style.display = (ctx && ctx.isAdminOrHigher) ? 'inline-flex' : 'none';
 }
 
-// ALBUM CARDS (View 1)
 async function loadAlbums() {
   const albumGrid = document.getElementById('albumGrid');
   albumGrid.innerHTML = `
@@ -133,7 +124,6 @@ function buildAlbumCard(f, onClick) {
   return card;
 }
 
-// OPEN FOLDER & NAVIGATION (View 2)
 async function openFolder(folderId, folderName) {
   state.navStack.push({ id: folderId, name: folderName });
 
@@ -231,7 +221,6 @@ function buildPhotoCard(photo) {
   return card;
 }
 
-// BREADCRUMB
 function renderBreadcrumb() {
   const title = document.getElementById('galleryTitle');
   const stack = state.navStack;
@@ -264,7 +253,6 @@ function backToAlbums() {
   document.getElementById('searchInput').value = '';
 }
 
-// SEARCH
 function handleSearchInput(e) {
   clearTimeout(state.searchTimer);
   const keyword = e.target.value;
@@ -290,7 +278,6 @@ function handleSearchInput(e) {
   }
 }
 
-// LIGHTBOX & MODALS
 function openLightbox(photoId) {
   const photo = state.photos.find(p => p.id === photoId);
   if (!photo) return;
@@ -300,6 +287,203 @@ function openLightbox(photoId) {
   document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: ${photo.created || '-'} | ขนาด: ${photo.size || '-'}`;
   document.getElementById('lightboxDownloadBtn').href = photo.downloadLink;
   openModal('lightboxModal');
+}
+
+async function deleteCurrentPhoto() {
+  if (!state.currentPhoto) return;
+  if (!confirm(`คุณต้องการลบรูปภาพ "${state.currentPhoto.name}" ใช่หรือไม่?`)) return;
+  showToast('กำลังลบรูปภาพ...', 'info');
+  try {
+    const res = await fetch(`/api/photos?fileId=${encodeURIComponent(state.currentPhoto.id)}`, { method: 'DELETE' });
+    const data = await res.json();
+    showToast(data.message || 'ลบรูปภาพสำเร็จ', 'success');
+    closeModal('lightboxModal');
+    if (state.navStack.length > 0) {
+      const current = state.navStack[state.navStack.length - 1];
+      openFolder(current.id, current.name);
+    }
+  } catch (err) {
+    showToast('ลบรูปภาพล้มเหลว: ' + err.message, 'error');
+  }
+}
+
+function openUploadModal() {
+  state.selectedFiles = [];
+  document.getElementById('selectedFilesList').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('btnSubmitUpload').disabled = true;
+  openModal('uploadModal');
+}
+
+function handleFileSelect(e) { addFiles(Array.from(e.target.files)); }
+
+function addFiles(files) {
+  const valid = files.filter(f => f.type.startsWith('image/'));
+  state.selectedFiles = state.selectedFiles.concat(valid);
+  const container = document.getElementById('selectedFilesList');
+  container.innerHTML = `<strong>เลือกไฟล์ทั้งหมด ${state.selectedFiles.length} รายการ:</strong><br>`;
+  state.selectedFiles.forEach(f => { container.innerHTML += `• ${escapeHtml(f.name)} (${formatBytes(f.size)})<br>`; });
+  document.getElementById('btnSubmitUpload').disabled = state.selectedFiles.length === 0;
+}
+
+async function submitUpload() {
+  if (!state.selectedFiles.length) return;
+  const targetFolderId = document.getElementById('uploadFolderSelect').value;
+  const btnSubmit = document.getElementById('btnSubmitUpload');
+  btnSubmit.disabled = true;
+  btnSubmit.innerHTML = '<span>⏳</span> กำลังอ่านไฟล์...';
+
+  try {
+    const filePayloads = await Promise.all(state.selectedFiles.map(async f => ({
+      name: f.name, mimeType: f.type, base64Data: await readFileAsBase64(f)
+    })));
+    btnSubmit.innerHTML = '<span>🚀</span> กำลังอัปโหลด...';
+    showToast(`กำลังอัปโหลด ${filePayloads.length} ไฟล์...`, 'info');
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderId: targetFolderId, filePayloads })
+    });
+    const data = await res.json();
+    showToast(`อัปโหลดสำเร็จ ${data.uploadedCount || filePayloads.length} ไฟล์`, 'success');
+    closeModal('uploadModal');
+    loadAlbums();
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = '<span>🚀</span> เริ่มต้นอัปโหลด';
+  } catch (err) {
+    showToast('อัปโหลดล้มเหลว: ' + err.toString(), 'error');
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = '<span>🚀</span> เริ่มต้นอัปโหลด';
+  }
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function openCreateFolderModal() {
+  document.getElementById('newFolderNameInput').value = '';
+  openModal('createFolderModal');
+}
+
+async function submitCreateFolder() {
+  const name = document.getElementById('newFolderNameInput').value;
+  if (!name.trim()) { showToast('กรุณาระบุชื่ออัลบั้ม', 'error'); return; }
+  showToast('กำลังสร้างอัลบั้มใหม่...', 'info');
+
+  try {
+    const res = await fetch('/api/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderName: name })
+    });
+    const data = await res.json();
+    showToast(`สร้างอัลบั้ม "${name}" เรียบร้อยแล้ว`, 'success');
+    closeModal('createFolderModal');
+    loadAlbums();
+  } catch (err) {
+    showToast('สร้างอัลบั้มล้มเหลว: ' + err.message, 'error');
+  }
+}
+
+function openDriveConfigModal() {
+  openModal('driveConfigModal');
+  const infoDiv = document.getElementById('currentDriveInfo');
+  infoDiv.innerHTML = 'กำลังดึงข้อมูลโฟลเดอร์ปัจจุบัน...';
+
+  fetch('/api/config')
+    .then(r => r.json())
+    .then(info => {
+      infoDiv.innerHTML = `<strong>📁 โฟลเดอร์ปัจจุบัน:</strong><br>• ชื่อ: <strong>${escapeHtml(info.name)}</strong><br>• ID: <code>${info.id}</code><br>• <a href="${info.url}" target="_blank" style="color:#60a5fa;text-decoration:underline;">เปิดใน Google Drive ↗</a>`;
+      document.getElementById('driveUrlInput').value = info.url || '';
+    })
+    .catch(err => showToast('ดึงข้อมูลโฟลเดอร์ล้มเหลว', 'error'));
+}
+
+async function submitDriveConfig() {
+  const urlOrId = document.getElementById('driveUrlInput').value;
+  if (!urlOrId.trim()) { showToast('กรุณาระบุ Google Drive Folder URL หรือ Folder ID', 'error'); return; }
+  showToast('กำลังเชื่อมต่อโฟลเดอร์...', 'info');
+
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urlOrId })
+    });
+    const data = await res.json();
+    showToast(data.message || 'บันทึกเรียบร้อยแล้ว', 'success');
+    closeModal('driveConfigModal');
+    loadAlbums();
+  } catch (err) {
+    showToast('ตั้งค่าโฟลเดอร์ล้มเหลว', 'error');
+  }
+}
+
+function openAdminUserModal() {
+  openModal('adminUserModal');
+  loadUsersList();
+}
+
+async function loadUsersList() {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;">กำลังโหลด...</td></tr>';
+  try {
+    const res = await fetch('/api/users');
+    const users = await res.json();
+    renderUserTable(users);
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:red;">ไม่สามารถโหลดรายชื่อผู้ใช้ได้</td></tr>';
+  }
+}
+
+function renderUserTable(users) {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+  if (!Array.isArray(users)) return;
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    let badge = '';
+    if      (u.role === 'SUPER_ADMIN')     badge = `<span class="role-pill role-super">Super Admin</span>`;
+    else if (u.role === 'ADMIN')           badge = `<span class="role-pill role-admin">Admin</span>`;
+    else if (u.role === 'ASSISTANT_ADMIN') badge = `<span class="role-pill role-assistant">ผู้ช่วย Admin</span>`;
+    else if (u.role === 'PENDING')         badge = `<span class="role-pill role-pending">รออนุมัติ</span>`;
+    else                                   badge = `<span class="role-pill">ปฏิเสธแล้ว</span>`;
+
+    const actions = u.isFixed
+      ? `<em style="color:var(--accent);font-size:0.8rem;">ผู้ดูแลหลัก (Fixed)</em>`
+      : `<button class="btn btn-primary"   style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ADMIN')">อนุมัติ Admin</button>
+         <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ASSISTANT_ADMIN')">อนุมัติ ผู้ช่วย Admin</button>
+         <button class="btn btn-danger"    style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>`;
+
+    tr.innerHTML = `
+      <td><div style="font-weight:500;">${escapeHtml(u.displayName)}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(u.email)}</div></td>
+      <td>${badge}</td>
+      <td><div style="display:flex;gap:0.35rem;flex-wrap:wrap;">${actions}</div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function changeUserRole(email, newRole) {
+  showToast(`กำลังเปลี่ยนสิทธิ์ของ ${email}...`, 'info');
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetEmail: email, newRole })
+    });
+    const data = await res.json();
+    showToast(data.message || 'เปลี่ยนสิทธิ์สำเร็จ', 'success');
+    loadUsersList();
+  } catch (err) {
+    showToast('เปลี่ยนสิทธิ์ล้มเหลว', 'error');
+  }
 }
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -318,4 +502,11 @@ function showToast(message, type = 'info') {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 Bytes';
+  const k = 1024, sizes = ['Bytes','KB','MB','GB'];
+  const i = Math.floor(Math.log(bytes)/Math.log(k));
+  return parseFloat((bytes/Math.pow(k,i)).toFixed(2)) + ' ' + sizes[i];
 }

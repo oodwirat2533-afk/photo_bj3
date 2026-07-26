@@ -5,6 +5,7 @@
   "main": "index.html",
   "scripts": {
     "build": "echo 'Build complete'",
+    "deploy": "npx @google/clasp push --force && npx @google/clasp deploy",
     "push": "git add . ; git commit -m \"update web app\" ; git push origin main"
   },
   "keywords": [
@@ -17,5 +18,8 @@
   "license": "MIT",
   "dependencies": {
     "@vercel/node": "^5.0.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
   }
 }

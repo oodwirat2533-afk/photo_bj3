@@ -1,10 +1,10 @@
-// Vercel Serverless API Route: /api/photos
+// Vercel Serverless API Route: /api/users
 const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbz-q4Es0YxmLPNyVT-N-ztnjVO-5yRq5S2jU3TgCY1djdSFKr6BmzajB_i-dMMiuvs6Xw/exec';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,DELETE');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
@@ -13,19 +13,20 @@ module.exports = async (req, res) => {
   }
 
   try {
-    if (req.method === 'DELETE' || (req.method === 'POST' && req.body && req.body.action === 'deletePhoto')) {
-      const fileId = req.query.fileId || (req.body ? req.body.fileId : null);
+    if (req.method === 'POST') {
       const response = await fetch(GAS_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'deletePhoto', fileId })
+        body: JSON.stringify({
+          action: 'updateUserRole',
+          targetEmail: req.body ? req.body.targetEmail : '',
+          newRole: req.body ? req.body.newRole : ''
+        })
       });
       const data = await response.json();
       res.status(200).json(data);
     } else {
-      const { folderId = 'root', search = '' } = req.query;
-      const targetUrl = `${GAS_API_URL}?action=getPhotos&folderId=${encodeURIComponent(folderId)}&search=${encodeURIComponent(search)}`;
-      const response = await fetch(targetUrl);
+      const response = await fetch(`${GAS_API_URL}?action=getUsersList`);
       const data = await response.json();
       res.status(200).json(data);
     }

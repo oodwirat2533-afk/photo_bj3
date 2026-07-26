@@ -15,11 +15,75 @@ var CONFIG = {
 // ============================================================================
 
 function doGet(e) {
+  var params = (e && e.parameter) ? e.parameter : {};
+  var action = params.action;
+
+  if (action) {
+    var data;
+    try {
+      if (action === 'getFolders') {
+        data = getDriveFolders();
+      } else if (action === 'getPhotos') {
+        data = getFolderContents(params.folderId);
+      } else if (action === 'searchPhotos') {
+        data = searchPhotos(params.folderId, params.search);
+      } else if (action === 'getUserContext') {
+        data = getUserContext();
+      } else if (action === 'getUsersList') {
+        data = getUsersList();
+      } else if (action === 'getRootFolderInfo') {
+        data = getRootFolderInfo();
+      } else {
+        data = { error: 'Invalid action: ' + action };
+      }
+    } catch (err) {
+      data = { error: err.toString() };
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   var template = HtmlService.createTemplateFromFile('Index');
   return template.evaluate()
     .setTitle('คลังรูปภาพและกิจกรรมโรงเรียน | School Photo Gallery')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function doPost(e) {
+  var data = {};
+  try {
+    var postData;
+    if (e && e.postData && e.postData.contents) {
+      postData = JSON.parse(e.postData.contents);
+    } else {
+      postData = e ? e.parameter : {};
+    }
+
+    var action = postData.action;
+
+    if (action === 'uploadPhotos') {
+      data = uploadPhotos(postData.folderId, postData.filePayloads);
+    } else if (action === 'createFolder') {
+      data = createDriveFolder(postData.folderName);
+    } else if (action === 'updateRootFolderUrl') {
+      data = updateRootFolderUrl(postData.urlOrId);
+    } else if (action === 'updateUserRole') {
+      data = updateUserRole(postData.targetEmail, postData.newRole);
+    } else if (action === 'requestAccess') {
+      data = requestAccess(postData.displayName);
+    } else if (action === 'deletePhoto') {
+      data = deletePhoto(postData.fileId);
+    } else {
+      data = { error: 'Invalid POST action: ' + action };
+    }
+  } catch (err) {
+    data = { error: err.toString() };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function include(filename) {
