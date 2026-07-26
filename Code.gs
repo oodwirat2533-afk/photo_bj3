@@ -117,7 +117,7 @@ function getUserContext(userEmail) {
     isSuperAdmin: (role === 'SUPER_ADMIN'),
     isAdminOrHigher: (role === 'SUPER_ADMIN' || role === 'ADMIN'),
     isCanUpload: (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ASSISTANT_ADMIN'),
-    canCreateAlbum: (role === 'SUPER_ADMIN' || role === 'ADMIN'),
+    canCreateAlbum: (role === 'SUPER_ADMIN'),
     profileComplete: getProfileComplete(email)
   };
 }
@@ -513,7 +513,7 @@ function loadMorePhotos(folderId, offset, searchKeyword) {
 
 function createDriveFolder(folderName, userEmail) {
   var userCtx = getUserContext(userEmail);
-  if (!userCtx.isAdminOrHigher) throw new Error('Unauthorized: เฉพาะ Admin หรือ Super Admin เท่านั้น');
+  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
   if (!folderName || !folderName.trim()) throw new Error('ชื่อโฟลเดอร์ไม่สามารถเป็นค่าว่างได้');
   var root = getRootFolder();
   var newFolder = root.createFolder(folderName.trim());

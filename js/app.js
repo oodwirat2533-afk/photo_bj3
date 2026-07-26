@@ -196,7 +196,7 @@ function renderUserNavbar(ctx) {
     if (el) el.style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
   });
   document.querySelectorAll('.btn-create-folder').forEach(el => {
-    el.style.display = (ctx && ctx.canCreateAlbum) ? 'inline-flex' : 'none';
+    el.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
   });
 }
 
