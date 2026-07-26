@@ -168,13 +168,50 @@ function renderUserNavbar(ctx) {
     if (gsiWrapper) gsiWrapper.style.display = 'inline-block';
   }
 
-  document.getElementById('btnDriveConfig').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
-  document.getElementById('btnAdminPanel').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
+  const showDriveConfig = (ctx && ctx.isSuperAdmin);
+  const showAdminPanel = (ctx && ctx.isSuperAdmin);
+  const showManageAlbums = (ctx && ctx.isSuperAdmin);
+
+  const btnDriveConfig = document.getElementById('btnDriveConfig');
+  const btnAdminPanel = document.getElementById('btnAdminPanel');
   const btnManageAlbums = document.getElementById('btnManageAlbums');
-  if (btnManageAlbums) btnManageAlbums.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
-  document.getElementById('btnUpload').style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
-  document.getElementById('btnCreateFolder').style.display = (ctx && ctx.isAdminOrHigher) ? 'inline-flex' : 'none';
+  const settingsDropdown = document.getElementById('settingsDropdown');
+
+  if (btnDriveConfig) btnDriveConfig.style.display = showDriveConfig ? 'flex' : 'none';
+  if (btnAdminPanel) btnAdminPanel.style.display = showAdminPanel ? 'flex' : 'none';
+  if (btnManageAlbums) btnManageAlbums.style.display = showManageAlbums ? 'flex' : 'none';
+
+  if (settingsDropdown) {
+    settingsDropdown.style.display = (showDriveConfig || showAdminPanel || showManageAlbums) ? 'inline-block' : 'none';
+  }
+
+  const btnUpload = document.getElementById('btnUpload');
+  if (btnUpload) btnUpload.style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
+  const btnCreateFolder = document.getElementById('btnCreateFolder');
+  if (btnCreateFolder) btnCreateFolder.style.display = (ctx && ctx.isAdminOrHigher) ? 'inline-flex' : 'none';
 }
+
+function toggleSettingsDropdown(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('settingsMenu');
+  if (menu) {
+    menu.classList.toggle('show');
+  }
+}
+
+function closeSettingsDropdown() {
+  const menu = document.getElementById('settingsMenu');
+  if (menu) {
+    menu.classList.remove('show');
+  }
+}
+
+window.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('settingsDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    closeSettingsDropdown();
+  }
+});
 
 async function loadAlbums() {
   const albumGrid = document.getElementById('albumGrid');

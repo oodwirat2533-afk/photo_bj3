@@ -33,15 +33,27 @@
       <button id="btnRequestAccess" class="btn btn-secondary" onclick="openRequestModal()" style="display: none;">
         <span>🔑</span> ขอสิทธิ์ผู้ดูแล
       </button>
-      <button id="btnDriveConfig" class="btn btn-secondary" onclick="openDriveConfigModal()" style="display: none;" title="ตั้งค่าโฟลเดอร์ Google Drive">
-        <span>⚙️</span> ตั้งค่าคลังภาพ
-      </button>
-      <button id="btnAdminPanel" class="btn btn-accent" onclick="openAdminUserModal()" style="display: none;">
-        <span>👥</span> อนุมัติผู้ใช้งาน
-      </button>
       <button id="btnUpload" class="btn btn-primary" onclick="openUploadModal()" style="display: none;">
         <span>📤</span> อัปโหลดรูปภาพ
       </button>
+
+      <!-- Settings Dropdown Menu -->
+      <div id="settingsDropdown" class="dropdown" style="display: none;">
+        <button id="btnSettings" class="btn btn-secondary" onclick="toggleSettingsDropdown(event)">
+          <span>⚙️</span> ตั้งค่า <span class="dropdown-caret">▼</span>
+        </button>
+        <div id="settingsMenu" class="dropdown-menu">
+          <button id="btnDriveConfig" class="dropdown-item" onclick="openDriveConfigModal(); closeSettingsDropdown();" style="display: none;" title="ตั้งค่าโฟลเดอร์ Google Drive">
+            <span>⚙️</span> ตั้งค่าคลังภาพ
+          </button>
+          <button id="btnAdminPanel" class="dropdown-item" onclick="openAdminUserModal(); closeSettingsDropdown();" style="display: none;">
+            <span>👥</span> อนุมัติผู้ใช้งาน
+          </button>
+          <button id="btnManageAlbums" class="dropdown-item" onclick="openManageAlbumsModal(); closeSettingsDropdown();" style="display: none;" title="จัดการแสดงผลอัลบั้ม">
+            <span>👁️</span> จัดการอัลบั้ม
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 
