@@ -131,6 +131,17 @@ function buildAlbumCard(f, onClick) {
   return card;
 }
 
+function extractPhotosList(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.items)) return data.items;
+  if (data.directPhotos) {
+    if (Array.isArray(data.directPhotos)) return data.directPhotos;
+    if (Array.isArray(data.directPhotos.items)) return data.directPhotos.items;
+  }
+  return [];
+}
+
 async function openFolder(folderId, folderName) {
   state.navStack.push({ id: folderId, name: folderName });
 
@@ -145,18 +156,20 @@ async function openFolder(folderId, folderName) {
   try {
     const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}`);
     const contents = await res.json();
-    if (contents.type === 'subfolders' && contents.subfolders.length > 0) {
-      renderSubfolderView(contents.subfolders, contents.directPhotos || []);
+    if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
+      renderSubfolderView(contents.subfolders, extractPhotosList(contents.directPhotos));
     } else {
-      renderGalleryGrid(contents.items || contents.directPhotos || []);
+      renderGalleryGrid(extractPhotosList(contents));
     }
   } catch (err) {
-    showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้', 'error');
+    console.error(err);
+    showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
   }
 }
 
 function renderSubfolderView(subfolders, directPhotos) {
-  state.photos = directPhotos;
+  const photoList = Array.isArray(directPhotos) ? directPhotos : extractPhotosList(directPhotos);
+  state.photos = photoList;
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = '';
 
@@ -168,18 +181,18 @@ function renderSubfolderView(subfolders, directPhotos) {
   });
   grid.appendChild(subGrid);
 
-  if (directPhotos && directPhotos.length > 0) {
+  if (photoList.length > 0) {
     const divider = document.createElement('div');
     divider.style.cssText = 'grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);';
-    divider.innerHTML = `<span>📷 รูปภาพในโฟลเดอร์นี้ (${directPhotos.length} รูป)</span>`;
+    divider.innerHTML = `<span>📷 รูปภาพในโฟลเดอร์นี้ (${photoList.length} รูป)</span>`;
     grid.appendChild(divider);
 
-    directPhotos.forEach(photo => {
+    photoList.forEach(photo => {
       grid.appendChild(buildPhotoCard(photo));
     });
   }
 
-  document.getElementById('photoCountBadge').textContent = `${subfolders.length} โฟลเดอร์${directPhotos.length > 0 ? ' + ' + directPhotos.length + ' รูป' : ''}`;
+  document.getElementById('photoCountBadge').textContent = `${subfolders.length} โฟลเดอร์${photoList.length > 0 ? ' + ' + photoList.length + ' รูป' : ''}`;
 }
 
 function showPhotoSkeletons() {
@@ -190,7 +203,8 @@ function showPhotoSkeletons() {
     <div class="photo-card skeleton" style="height:220px;"></div>`;
 }
 
-function renderGalleryGrid(photos) {
+function renderGalleryGrid(photosInput) {
+  const photos = Array.isArray(photosInput) ? photosInput : extractPhotosList(photosInput);
   state.photos = photos;
   const grid = document.getElementById('galleryGrid');
   document.getElementById('photoCountBadge').textContent = `${photos.length} รูปภาพ`;
