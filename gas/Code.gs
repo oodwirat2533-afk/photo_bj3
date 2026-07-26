@@ -31,6 +31,8 @@ function doGet(e) {
         data = getUserContext();
       } else if (action === 'getUsersList') {
         data = getUsersList();
+      } else if (action === 'getPhotoMetadata') {
+        data = getPhotoMetadata(params.fileId);
       } else if (action === 'getRootFolderInfo') {
         data = getRootFolderInfo();
       } else {
@@ -463,6 +465,21 @@ function isImageFile(mimeType, fileName) {
     if (ext) return true;
   }
   return false;
+}
+
+function getPhotoMetadata(fileId) {
+  if (!fileId) return { error: 'No fileId provided' };
+  try {
+    var file = DriveApp.getFileById(fileId);
+    return {
+      id: fileId,
+      name: file.getName(),
+      size: formatBytes(file.getSize()),
+      created: file.getDateCreated().toLocaleDateString('th-TH')
+    };
+  } catch (e) {
+    return { id: fileId, size: '-', created: '-' };
+  }
 }
 
 function uploadPhotos(targetFolderId, filePayloads) {

@@ -402,15 +402,38 @@ function handleSearchInput(e) {
   }
 }
 
-function openLightbox(photoId) {
+async function openLightbox(photoId) {
   const photo = state.photos.find(p => p.id === photoId);
   if (!photo) return;
   state.currentPhoto = photo;
   document.getElementById('lightboxTitle').textContent = photo.name;
   document.getElementById('lightboxImage').src = photo.viewLink;
-  document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: ${photo.created || '-'} | ขนาด: ${photo.size || '-'}`;
   document.getElementById('lightboxDownloadBtn').href = photo.downloadLink;
+
+  if (photo.created && photo.size) {
+    document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: ${photo.created} | ขนาด: ${photo.size}`;
+  } else {
+    document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: กำลังดึงข้อมูล... | ขนาด: กำลังดึงข้อมูล...`;
+    fetchPhotoMetadata(photoId);
+  }
+
   openModal('lightboxModal');
+}
+
+async function fetchPhotoMetadata(photoId) {
+  try {
+    const res = await fetch(`/api/photos?action=getPhotoMetadata&fileId=${encodeURIComponent(photoId)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (state.currentPhoto && state.currentPhoto.id === photoId) {
+        state.currentPhoto.created = data.created || '-';
+        state.currentPhoto.size = data.size || '-';
+        document.getElementById('lightboxMeta').textContent = `วันที่อัปโหลด: ${data.created || '-'} | ขนาด: ${data.size || '-'}`;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch photo metadata:', e);
+  }
 }
 
 async function deleteCurrentPhoto() {

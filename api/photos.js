@@ -30,6 +30,9 @@ module.exports = async (req, res) => {
       const fileId = req.query.fileId;
       const data = await gasPost({ action: 'deletePhoto', fileId });
       res.status(200).json(data);
+    } else if (req.query.action === 'getPhotoMetadata') {
+      const data = await gasGet({ action: 'getPhotoMetadata', fileId: req.query.fileId });
+      res.status(200).json(data);
     } else {
       const { folderId = 'root', search = '', offset = '0', limit = '24' } = req.query;
       const data = await gasGet({ action: 'getPhotos', folderId, search, offset, limit });
