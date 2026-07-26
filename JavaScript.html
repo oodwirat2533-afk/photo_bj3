@@ -72,7 +72,9 @@ function renderUserNavbar(ctx) {
 
   document.getElementById('btnRequestAccess').style.display = (!ctx.email || ctx.role === 'GUEST') ? 'inline-flex' : 'none';
   document.getElementById('btnUpload').style.display        = ctx.isCanUpload  ? 'inline-flex' : 'none';
-  document.getElementById('btnCreateFolder').style.display  = ctx.isAdminOrHigher ? 'inline-flex' : 'none';
+  document.querySelectorAll('.btn-create-folder').forEach(el => {
+    el.style.display = ctx.isAdminOrHigher ? 'inline-flex' : 'none';
+  });
 }
 
 function toggleSettingsDropdown(event) {
