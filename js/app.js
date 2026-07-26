@@ -800,16 +800,22 @@ function openManageAlbumsModal() {
   } else {
     albums.forEach(f => {
       const isHidden = !!f.isHidden;
-      const statusText = isHidden ? '<span style="color: #ef4444; font-weight: 600;">🚫 ซ่อนอยู่</span>' : '<span style="color: #10b981; font-weight: 600;">👁️ แสดงปกติ</span>';
-      const actionBtn = isHidden 
-        ? `<button class="btn btn-primary" onclick="toggleAlbumVisibility('${f.id}', false)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">👁️ เปิดแสดง</button>`
-        : `<button class="btn btn-secondary" onclick="toggleAlbumVisibility('${f.id}', true)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: #ef4444; color: #ef4444;">🚫 ซ่อนอัลบั้ม</button>`;
+      const statusText = isHidden 
+        ? '<span style="color: #ef4444; font-weight: 600;">🚫 ซ่อนอยู่</span>' 
+        : '<span style="color: #10b981; font-weight: 600;">👁️ แสดงปกติ</span>';
+      
+      const switchHtml = `
+        <label class="toggle-switch" title="${isHidden ? 'คลิกเพื่อแสดงอัลบั้ม' : 'คลิกเพื่อซ่อนอัลบั้ม'}">
+          <input type="checkbox" ${!isHidden ? 'checked' : ''} onchange="toggleAlbumVisibility('${f.id}', !this.checked, this)">
+          <span class="toggle-slider"></span>
+        </label>
+      `;
       
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-weight: 500;">${escapeHtml(f.name)}</td>
-        <td style="text-align: center;">${statusText}</td>
-        <td style="text-align: center;">${actionBtn}</td>
+        <td id="status-cell-${f.id}" style="text-align: center;">${statusText}</td>
+        <td style="text-align: center; vertical-align: middle;">${switchHtml}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -817,10 +823,24 @@ function openManageAlbumsModal() {
   openModal('manageAlbumsModal');
 }
 
-async function toggleAlbumVisibility(albumId, isHidden) {
+async function toggleAlbumVisibility(albumId, isHidden, checkboxElem) {
   if (!googleUser) return;
+  
+  const folderItem = state.folders ? state.folders.find(f => f.id === albumId) : null;
+  if (folderItem) {
+    folderItem.isHidden = isHidden;
+  }
+  
+  const statusCell = document.getElementById(`status-cell-${albumId}`);
+  if (statusCell) {
+    statusCell.innerHTML = isHidden 
+      ? '<span style="color: #ef4444; font-weight: 600;">🚫 ซ่อนอยู่</span>' 
+      : '<span style="color: #10b981; font-weight: 600;">👁️ แสดงปกติ</span>';
+  }
+  
+  renderAlbumGrid(state.folders);
+
   try {
-    showToast('กำลังบันทึกการตั้งค่า...', 'info');
     const res = await fetch('/api/folders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -831,10 +851,16 @@ async function toggleAlbumVisibility(albumId, isHidden) {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     
-    showToast('บันทึกการตั้งค่าอัลบั้มเรียบร้อยแล้ว', 'success');
-    closeModal('manageAlbumsModal');
-    loadAlbums(); // refresh albums
+    showToast(isHidden ? 'ซ่อนอัลบั้มเรียบร้อยแล้ว' : 'แสดงอัลบั้มเรียบร้อยแล้ว', 'success');
   } catch (err) {
+    if (folderItem) folderItem.isHidden = !isHidden;
+    if (checkboxElem) checkboxElem.checked = !isHidden;
+    if (statusCell) {
+      statusCell.innerHTML = !isHidden 
+        ? '<span style="color: #ef4444; font-weight: 600;">🚫 ซ่อนอยู่</span>' 
+        : '<span style="color: #10b981; font-weight: 600;">👁️ แสดงปกติ</span>';
+    }
+    renderAlbumGrid(state.folders);
     showToast('บันทึกล้มเหลว: ' + err.message, 'error');
   }
 }
