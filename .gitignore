@@ -5,3 +5,6 @@ node_modules/
 .clasprc.json
 .clasp.json.bak
 *.log
+
+.vercel
+.env*
