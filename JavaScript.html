@@ -396,25 +396,22 @@ function deleteCurrentPhoto() {
 // 8. UPLOAD
 // ============================================================================
 function openUploadModal() {
+  const currentNav = state.navStack[state.navStack.length - 1];
+  if (!currentNav || currentNav.id === 'root') {
+    showToast('กรุณาเลือกหรือเปิดเข้าไปในอัลบั้มก่อนทำการอัปโหลดรูปภาพ', 'warning');
+    return;
+  }
+
   state.selectedFiles = [];
   document.getElementById('selectedFilesList').innerHTML = '';
   document.getElementById('fileInput').value = '';
   document.getElementById('btnSubmitUpload').disabled = true;
 
-  const currentNav = state.navStack[state.navStack.length - 1];
   const uploadSelect = document.getElementById('uploadFolderSelect');
   const targetNameEl = document.getElementById('uploadTargetFolderName');
 
-  if (currentNav && currentNav.id !== 'root') {
-    if (uploadSelect) uploadSelect.value = currentNav.id;
-    if (targetNameEl) targetNameEl.textContent = currentNav.name;
-  } else if (state.folders && state.folders.length > 0) {
-    if (uploadSelect) uploadSelect.value = state.folders[0].id;
-    if (targetNameEl) targetNameEl.textContent = state.folders[0].name;
-  } else {
-    if (uploadSelect) uploadSelect.value = '';
-    if (targetNameEl) targetNameEl.textContent = 'ยังไม่มีอัลบั้ม';
-  }
+  if (uploadSelect) uploadSelect.value = currentNav.id;
+  if (targetNameEl) targetNameEl.textContent = currentNav.name;
 
   openModal('uploadModal');
 }
