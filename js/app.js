@@ -192,7 +192,9 @@ async function loadAlbums() {
 }
 
 function renderAlbumGrid(folders) {
-  state.folders = Array.isArray(folders) ? folders : [];
+  const rawList = Array.isArray(folders) ? folders : [];
+  const cleanFolders = rawList.filter(f => !f.isRoot && !(f.name && f.name.indexOf('รูปภาพทั้งหมด') !== -1));
+  state.folders = cleanFolders;
   const albumGrid = document.getElementById('albumGrid');
   const uploadSelect = document.getElementById('uploadFolderSelect');
   albumGrid.innerHTML = '';
@@ -208,7 +210,7 @@ function renderAlbumGrid(folders) {
     return;
   }
 
-  if (folders.length === 0) {
+  if (cleanFolders.length === 0) {
     albumGrid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
         <div class="empty-icon">📁</div>
@@ -218,7 +220,7 @@ function renderAlbumGrid(folders) {
     return;
   }
 
-  folders.forEach(f => {
+  cleanFolders.forEach(f => {
     albumGrid.appendChild(buildAlbumCard(f, () => openFolder(f.id, f.name)));
 
     const opt = document.createElement('option');

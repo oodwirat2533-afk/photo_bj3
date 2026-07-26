@@ -289,12 +289,6 @@ function getDriveFolders() {
   var root = getRootFolder();
   var list = [];
 
-  list.push({
-    id: root.getId(),
-    name: 'รูปภาพทั้งหมด (All Photos)',
-    isRoot: true
-  });
-
   var foldersIter = root.getFolders();
   while (foldersIter.hasNext()) {
     var f = foldersIter.next();
