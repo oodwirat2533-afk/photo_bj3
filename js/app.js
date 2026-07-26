@@ -144,7 +144,7 @@ function renderUserNavbar(ctx) {
   } else {
     userSection.style.display = 'none';
     if (btnLogout) btnLogout.style.display = 'none';
-    if (gsiWrapper) gsiWrapper.style.display = 'inline-flex';
+    if (gsiWrapper) gsiWrapper.style.display = 'inline-block';
   }
 
   document.getElementById('btnDriveConfig').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
