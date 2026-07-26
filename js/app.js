@@ -956,26 +956,11 @@ async function toggleAlbumVisibility(albumId, isHidden, checkboxElem) {
 // ============================================================================
 
 window.openAddAdminModal = function() {
-  console.log("openAddAdminModal clicked!");
-  try {
-    const emailInput = document.getElementById('addAdminEmail');
-    if (emailInput) emailInput.value = '';
-    const radioInput = document.querySelector('input[name="addAdminRole"][value="ADMIN"]');
-    if (radioInput) radioInput.checked = true;
-    
-    const modal = document.getElementById('addAdminModal');
-    if(modal) {
-       modal.classList.add('active');
-       modal.style.display = 'flex';
-       modal.style.zIndex = '9999';
-       document.body.classList.add('modal-open');
-    } else {
-       alert('ไม่พบ HTML ของป๊อปอัป กรุณารีเฟรชหน้าเว็บแบบล้างแคช (Ctrl+F5)');
-    }
-  } catch(e) {
-    console.error(e);
-    alert('Error: ' + e.message);
-  }
+  const emailInput = document.getElementById('addAdminEmail');
+  if (emailInput) emailInput.value = '';
+  const radioInput = document.querySelector('input[name="addAdminRole"][value="ADMIN"]');
+  if (radioInput) radioInput.checked = true;
+  openModal('addAdminModal');
 }
 
 async function submitAddAdmin() {
