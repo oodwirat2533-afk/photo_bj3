@@ -799,12 +799,20 @@ function renderUserTable(users) {
     else if (u.role === 'PENDING')         badge = `<span class="role-pill role-pending">รออนุมัติ</span>`;
     else                                   badge = `<span class="role-pill">ปฏิเสธแล้ว</span>`;
 
+    const roleSelectHtml = `
+      <select class="form-input" style="padding:0.3rem 0.6rem;font-size:0.8rem;width:auto;min-width:140px;background:#0f172a;cursor:pointer;" onchange="changeUserRole('${u.email}', this.value)">
+        <option value="" disabled ${!u.role || u.role === 'PENDING' ? 'selected' : ''}>-- เลือกกำหนดสิทธิ์ --</option>
+        <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>Admin (ผู้ดูแล)</option>
+        <option value="ASSISTANT_ADMIN" ${u.role === 'ASSISTANT_ADMIN' ? 'selected' : ''}>ผู้ช่วย Admin</option>
+        <option value="REJECTED" ${u.role === 'REJECTED' ? 'selected' : ''}>ยกเลิกสิทธิ์ (ปฏิเสธ)</option>
+      </select>`;
+
     const actions = u.isFixed
       ? `<em style="color:var(--accent);font-size:0.8rem;">ผู้ดูแลหลัก (Fixed)</em>`
-      : `<button class="btn btn-primary"   style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ADMIN')">อนุมัติ Admin</button>
-         <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ASSISTANT_ADMIN')">อนุมัติ ผู้ช่วย Admin</button>
-         <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>
-         <button class="btn btn-danger"    style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="deleteUserAccount('${u.email}')">🗑️ ลบผู้ใช้</button>`;
+      : `<div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+           ${roleSelectHtml}
+           <button class="btn btn-danger" style="padding:0.3rem 0.6rem;font-size:0.8rem;" onclick="deleteUserAccount('${u.email}')">🗑️ ลบ</button>
+         </div>`;
 
     const profileStatus = u.isFixed ? '' : (u.profileComplete ? '' : '<div style="font-size:0.7rem;color:#f59e0b;margin-top:2px;">🟡 รอกรอกข้อมูล</div>');
     const deptInfo = u.department ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">📚 ${escapeHtml(u.department)}</div>` : '';
