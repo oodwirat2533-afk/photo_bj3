@@ -109,11 +109,16 @@ function getUserContext(userEmail) {
   var activeEmail = Session.getActiveUser().getEmail();
   var effectiveEmail = Session.getEffectiveUser().getEmail();
   var email = (userEmail && userEmail.trim()) ? userEmail.trim() : activeEmail;
+  var cleanEmail = email ? email.toLowerCase().trim() : '';
+  var primarySuperAdmin = CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase().trim();
+  var scriptOwner = effectiveEmail.toLowerCase().trim();
+  var isFixed = (cleanEmail === primarySuperAdmin || cleanEmail === scriptOwner);
   var role = determineUserRole(email);
   return {
     email: email,
     scriptOwnerEmail: effectiveEmail,
     role: role,
+    isFixed: isFixed,
     isSuperAdmin: (role === 'SUPER_ADMIN'),
     isAdminOrHigher: (role === 'SUPER_ADMIN' || role === 'ADMIN'),
     isCanUpload: (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ASSISTANT_ADMIN'),
@@ -255,6 +260,7 @@ function requestAccess(displayName, userEmail) {
 function getUsersList(userEmail) {
   var userCtx = getUserContext(userEmail);
   if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
+  var callerIsFixed = userCtx.isFixed;
   var userDb = getUserDatabase();
   var list = [];
   list.push({ email: CONFIG.PRIMARY_SUPER_ADMIN, displayName: 'Super Admin (Primary)', role: 'SUPER_ADMIN', isFixed: true });
@@ -268,7 +274,7 @@ function getUsersList(userEmail) {
       list.push({ email: u.email, displayName: u.displayName || u.email, role: u.role || 'PENDING', profileComplete: u.profileComplete !== false, department: u.department || '', addedBy: u.addedBy || '', requestedAt: u.requestedAt || '', updatedAt: u.updatedAt || '', isFixed: false });
     }
   }
-  return list;
+  return { users: list, callerIsFixed: callerIsFixed };
 }
 
 function updateUserRole(targetEmail, newRole, userEmail) {
@@ -279,10 +285,20 @@ function updateUserRole(targetEmail, newRole, userEmail) {
   if (cleanEmail === CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase() || cleanEmail === Session.getEffectiveUser().getEmail().toLowerCase()) {
     throw new Error('ไม่สามารถแก้ไขสิทธิ์ของ Primary Super Admin หรือ เจ้าของโปรเจกต์ได้');
   }
+  // เฉพาะ Fixed Admin เท่านั้นที่กำหนด SUPER_ADMIN ให้ user อื่นได้
+  if (newRole === 'SUPER_ADMIN') {
+    if (!userCtx.isFixed) {
+      throw new Error('เฉพาะผู้ดูแลหลัก (Fixed) เท่านั้นที่สามารถกำหนดสิทธิ์ Super Admin ได้');
+    }
+  }
   var userDb = getUserDatabase();
   if (!userDb[cleanEmail]) userDb[cleanEmail] = { email: cleanEmail, displayName: cleanEmail.split('@')[0] };
   userDb[cleanEmail].role = newRole;
   userDb[cleanEmail].updatedAt = new Date().toISOString();
+  if (newRole === 'SUPER_ADMIN') {
+    userDb[cleanEmail].promotedToSuperAdminBy = userEmail;
+    userDb[cleanEmail].promotedToSuperAdminAt = new Date().toISOString();
+  }
   saveUserDatabase(userDb);
   return { success: true, message: 'อัปเดตสิทธิ์ผู้ใช้เรียบร้อยแล้ว' };
 }

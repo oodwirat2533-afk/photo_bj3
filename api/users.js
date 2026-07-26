@@ -42,7 +42,8 @@ module.exports = async (req, res) => {
     } else {
       const userEmail = req.query.userEmail || '';
       const data = await gasGet({ action: 'getUsersList', userEmail });
-      res.status(200).json(Array.isArray(data) ? data : []);
+      // รองรับ response แบบใหม่ { users, callerIsFixed } และแบบเก่า (array)
+      res.status(200).json(data);
     }
   } catch (error) {
     res.status(500).json({ error: error.message });

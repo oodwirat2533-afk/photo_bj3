@@ -784,29 +784,38 @@ async function loadUsersList() {
   const userEmail = googleUser ? googleUser.email : '';
   try {
     const res = await fetch(`/api/users?userEmail=${encodeURIComponent(userEmail)}`);
-    const users = await res.json();
-    renderUserTable(users);
+    const data = await res.json();
+    // รองรับทั้ง response แบบใหม่ { users, callerIsFixed } และแบบเก่า (array)
+    const users = Array.isArray(data) ? data : (data.users || []);
+    const callerIsFixed = Array.isArray(data) ? false : (data.callerIsFixed || false);
+    renderUserTable(users, callerIsFixed);
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:red;">ไม่สามารถโหลดรายชื่อผู้ใช้ได้</td></tr>';
   }
 }
 
-function renderUserTable(users) {
+function renderUserTable(users, callerIsFixed) {
   const tbody = document.getElementById('userTableBody');
   tbody.innerHTML = '';
   if (!Array.isArray(users)) return;
   users.forEach(u => {
     const tr = document.createElement('tr');
     let badge = '';
-    if      (u.role === 'SUPER_ADMIN')     badge = `<span class="role-pill role-super">Super Admin</span>`;
+    if      (u.role === 'SUPER_ADMIN')     badge = `<span class="role-pill role-super">⭐ Super Admin</span>`;
     else if (u.role === 'ADMIN')           badge = `<span class="role-pill role-admin">Admin</span>`;
     else if (u.role === 'ASSISTANT_ADMIN') badge = `<span class="role-pill role-assistant">ผู้ช่วย Admin</span>`;
     else if (u.role === 'PENDING')         badge = `<span class="role-pill role-pending">รออนุมัติ</span>`;
     else                                   badge = `<span class="role-pill">ปฏิเสธแล้ว</span>`;
 
+    // แสดง option SUPER_ADMIN เฉพาะ Fixed Admin เท่านั้น
+    const superAdminOption = callerIsFixed
+      ? `<option value="SUPER_ADMIN" ${u.role === 'SUPER_ADMIN' ? 'selected' : ''}>⭐ Super Admin</option>`
+      : '';
+
     const roleSelectHtml = `
-      <select class="form-input" style="padding:0.3rem 0.6rem;font-size:0.8rem;width:auto;min-width:140px;background:#0f172a;cursor:pointer;" onchange="changeUserRole('${u.email}', this.value)">
+      <select class="form-input" style="padding:0.3rem 0.6rem;font-size:0.8rem;width:auto;min-width:140px;background:#0f172a;cursor:pointer;" onchange="changeUserRole('${u.email}', this.value, ${callerIsFixed})">
         <option value="" disabled ${!u.role || u.role === 'PENDING' || u.role === 'REJECTED' ? 'selected' : ''}>-- อนุมัติสิทธิ์ --</option>
+        ${superAdminOption}
         <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>Admin (ผู้ดูแล)</option>
         <option value="ASSISTANT_ADMIN" ${u.role === 'ASSISTANT_ADMIN' ? 'selected' : ''}>ผู้ช่วย Admin</option>
       </select>`;
@@ -819,23 +828,37 @@ function renderUserTable(users) {
       ? `<em style="color:var(--accent);font-size:0.8rem;">ผู้ดูแลหลัก (Fixed)</em>`
       : `<div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
            ${roleSelectHtml}
-           <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>
+           <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);" onclick="changeUserRole('${u.email}','REJECTED',${callerIsFixed})">ยกเลิกสิทธิ์</button>
            ${deleteBtnHtml}
          </div>`;
 
     const profileStatus = u.isFixed ? '' : (u.profileComplete ? '' : '<div style="font-size:0.7rem;color:#f59e0b;margin-top:2px;">🟡 รอกรอกข้อมูล</div>');
     const deptInfo = u.department ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">📚 ${escapeHtml(u.department)}</div>` : '';
     const addedByInfo = u.addedBy ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">เพิ่มโดย: ${escapeHtml(u.addedBy)}</div>` : '';
+    // แสดงผู้ที่ promote เป็น Super Admin (ถ้ามี)
+    const promotedByInfo = (u.role === 'SUPER_ADMIN' && !u.isFixed && u.promotedToSuperAdminBy)
+      ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">⭐ Promoted โดย: ${escapeHtml(u.promotedToSuperAdminBy)}</div>`
+      : '';
 
     tr.innerHTML = `
-      <td><div style="font-weight:500;">${escapeHtml(u.displayName)}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(u.email)}</div>${deptInfo}${addedByInfo}${profileStatus}</td>
+      <td><div style="font-weight:500;">${escapeHtml(u.displayName)}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(u.email)}</div>${deptInfo}${addedByInfo}${promotedByInfo}${profileStatus}</td>
       <td>${badge}</td>
       <td><div style="display:flex;gap:0.35rem;flex-wrap:wrap;">${actions}</div></td>`;
     tbody.appendChild(tr);
   });
 }
 
-async function changeUserRole(email, newRole) {
+async function changeUserRole(email, newRole, callerIsFixed) {
+  // Confirmation พิเศษสำหรับ Super Admin promotion
+  if (newRole === 'SUPER_ADMIN') {
+    const confirmed = confirm(
+      `⭐ ยืนยันการให้สิทธิ์ Super Admin\n\nคุณกำลังให้สิทธิ์ "Super Admin" แก่:\n${email}\n\nผู้ที่ได้รับสิทธิ์นี้จะสามารถจัดการผู้ใช้, อัลบั้ม และตั้งค่าระบบได้\n\nยืนยันหรือไม่?`
+    );
+    if (!confirmed) {
+      loadUsersList(); // reset dropdown กลับ
+      return;
+    }
+  }
   showToast(`กำลังเปลี่ยนสิทธิ์ของ ${email}...`, 'info');
   const userEmail = googleUser ? googleUser.email : '';
   try {
@@ -845,10 +868,12 @@ async function changeUserRole(email, newRole) {
       body: JSON.stringify({ targetEmail: email, newRole, userEmail })
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error);
     showToast(data.message || 'เปลี่ยนสิทธิ์สำเร็จ', 'success');
     loadUsersList();
   } catch (err) {
-    showToast('เปลี่ยนสิทธิ์ล้มเหลว', 'error');
+    showToast('เปลี่ยนสิทธิ์ล้มเหลว: ' + err.message, 'error');
+    loadUsersList(); // reset dropdown กลับ
   }
 }
 
