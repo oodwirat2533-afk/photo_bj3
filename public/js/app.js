@@ -121,7 +121,7 @@ function renderUserNavbar(ctx) {
   const userEmailText = document.getElementById('userEmailText');
   const rolePill = document.getElementById('rolePill');
   const btnLogout = document.getElementById('btnLogout');
-  const gsiContainer = document.getElementById('gsiLoginContainer');
+  const gsiWrapper = document.getElementById('gsiWrapper');
 
   if (ctx && ctx.email) {
     userSection.style.display = 'inline-flex';
@@ -140,11 +140,11 @@ function renderUserNavbar(ctx) {
       rolePill.textContent = 'บุคคลทั่วไป';
     }
     if (btnLogout) btnLogout.style.display = 'inline-flex';
-    if (gsiContainer) gsiContainer.style.display = 'none';
+    if (gsiWrapper) gsiWrapper.style.display = 'none';
   } else {
     userSection.style.display = 'none';
     if (btnLogout) btnLogout.style.display = 'none';
-    if (gsiContainer) gsiContainer.style.display = 'inline-block';
+    if (gsiWrapper) gsiWrapper.style.display = 'inline-flex';
   }
 
   document.getElementById('btnDriveConfig').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
