@@ -24,7 +24,7 @@ function doGet(e) {
       if (action === 'getFolders') {
         data = getDriveFolders();
       } else if (action === 'getPhotos') {
-        data = getFolderContents(params.folderId);
+        data = getFolderContents(params.folderId, params.offset, params.limit);
       } else if (action === 'searchPhotos') {
         data = searchPhotos(params.folderId, params.search);
       } else if (action === 'getUserContext') {
@@ -312,9 +312,21 @@ function getDriveFolders() {
  * If subfolders exist  → returns them as folder list items (fast!).
  * If no subfolders     → returns the FIRST page of photos only.
  */
-function getFolderContents(folderId) {
+function getFolderContents(folderId, offset, limit) {
   var folder;
   try { folder = DriveApp.getFolderById(folderId); } catch (e) { folder = getRootFolder(); }
+
+  var startOffset = parseInt(offset || 0, 10);
+  var pageSize = parseInt(limit || 24, 10);
+
+  if (startOffset > 0) {
+    var photos = getDirectPhotos(folder, '', startOffset, pageSize);
+    return {
+      type: 'photos',
+      subfolders: [],
+      directPhotos: photos
+    };
+  }
 
   var subfolderIter = folder.getFolders();
   var subfolders = [];
@@ -327,21 +339,12 @@ function getFolderContents(folderId) {
     });
   }
 
-  if (subfolders.length > 0) {
-    var directPhotos = getDirectPhotos(folder, '', 0, 24);
-    return {
-      type: 'subfolders',
-      subfolders: subfolders,
-      directPhotos: directPhotos
-    };
-  } else {
-    var photos = getDirectPhotos(folder, '', 0, 24);
-    return {
-      type: 'photos',
-      subfolders: [],
-      directPhotos: photos
-    };
-  }
+  var directPhotos = getDirectPhotos(folder, '', 0, pageSize);
+  return {
+    type: subfolders.length > 0 ? 'subfolders' : 'photos',
+    subfolders: subfolders,
+    directPhotos: directPhotos
+  };
 }
 
 /**

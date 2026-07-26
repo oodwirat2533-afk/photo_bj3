@@ -5,7 +5,12 @@ let state = {
   photos: [],
   selectedFiles: [],
   currentPhoto: null,
-  searchTimer: null
+  searchTimer: null,
+  currentFolderId: null,
+  currentOffset: 0,
+  hasMore: false,
+  isLoadingMore: false,
+  scrollObserver: null
 };
 
 document.addEventListener('DOMContentLoaded', initApp);
@@ -144,6 +149,11 @@ function extractPhotosList(data) {
 
 async function openFolder(folderId, folderName) {
   state.navStack.push({ id: folderId, name: folderName });
+  state.currentFolderId = folderId;
+  state.currentOffset = 0;
+  state.hasMore = false;
+  state.isLoadingMore = false;
+  state.photos = [];
 
   document.getElementById('viewAlbums').style.display = 'none';
   document.getElementById('viewPhotos').style.display = 'block';
@@ -154,12 +164,12 @@ async function openFolder(folderId, folderName) {
   showPhotoSkeletons();
 
   try {
-    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}`);
+    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&offset=0&limit=24`);
     const contents = await res.json();
     if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
-      renderSubfolderView(contents.subfolders, extractPhotosList(contents.directPhotos));
+      renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
     } else {
-      renderGalleryGrid(extractPhotosList(contents));
+      renderGalleryGrid(contents.directPhotos || contents);
     }
   } catch (err) {
     console.error(err);
@@ -167,8 +177,8 @@ async function openFolder(folderId, folderName) {
   }
 }
 
-function renderSubfolderView(subfolders, directPhotos) {
-  const photoList = Array.isArray(directPhotos) ? directPhotos : extractPhotosList(directPhotos);
+function renderSubfolderView(subfolders, directPhotosData) {
+  const photoList = extractPhotosList(directPhotosData);
   state.photos = photoList;
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = '';
@@ -203,24 +213,96 @@ function showPhotoSkeletons() {
     <div class="photo-card skeleton" style="height:220px;"></div>`;
 }
 
-function renderGalleryGrid(photosInput) {
-  const photos = Array.isArray(photosInput) ? photosInput : extractPhotosList(photosInput);
-  state.photos = photos;
+function renderGalleryGrid(photosData, append = false) {
   const grid = document.getElementById('galleryGrid');
-  document.getElementById('photoCountBadge').textContent = `${photos.length} รูปภาพ`;
+  const photosList = extractPhotosList(photosData);
 
-  if (!photos || photos.length === 0) {
+  let hasMore = false;
+  let nextOffset = 0;
+  let total = 0;
+
+  if (photosData && photosData.hasMore !== undefined) {
+    hasMore = photosData.hasMore;
+    nextOffset = photosData.nextOffset;
+    total = photosData.total;
+  } else if (photosData && photosData.directPhotos && photosData.directPhotos.hasMore !== undefined) {
+    hasMore = photosData.directPhotos.hasMore;
+    nextOffset = photosData.directPhotos.nextOffset;
+    total = photosData.directPhotos.total;
+  }
+
+  state.hasMore = hasMore;
+  state.currentOffset = nextOffset;
+
+  if (append) {
+    state.photos = state.photos.concat(photosList);
+  } else {
+    state.photos = photosList;
+    grid.innerHTML = '';
+  }
+
+  document.getElementById('photoCountBadge').textContent = `${state.photos.length}${total > 0 ? ' / ' + total : ''} รูปภาพ`;
+
+  if (!append && state.photos.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">📷</div>
         <h3>ไม่พบรูปภาพในโฟลเดอร์นี้</h3>
         <p>ยังไม่มีการอัปโหลดรูปภาพ หรือไม่พบไฟล์ตรงตามคำค้นหา</p>
       </div>`;
+    removeInfiniteSentinel();
     return;
   }
 
-  grid.innerHTML = '';
-  photos.forEach(photo => grid.appendChild(buildPhotoCard(photo)));
+  photosList.forEach(photo => grid.appendChild(buildPhotoCard(photo)));
+
+  setupInfiniteScroll();
+}
+
+function setupInfiniteScroll() {
+  removeInfiniteSentinel();
+
+  if (!state.hasMore) return;
+
+  const sentinel = document.createElement('div');
+  sentinel.id = 'infiniteSentinel';
+  sentinel.className = 'infinite-sentinel';
+  sentinel.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1rem;';
+  sentinel.innerHTML = `<span style="display:inline-block;">⏳</span> เลื่อนเมาส์ลงเพื่อโหลดรูปภาพเพิ่มเติม...`;
+  
+  document.getElementById('galleryGrid').appendChild(sentinel);
+
+  if (state.scrollObserver) state.scrollObserver.disconnect();
+
+  state.scrollObserver = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && state.hasMore && !state.isLoadingMore) {
+      loadNextPageOfPhotos();
+    }
+  }, { rootMargin: '300px' });
+
+  state.scrollObserver.observe(sentinel);
+}
+
+function removeInfiniteSentinel() {
+  const el = document.getElementById('infiniteSentinel');
+  if (el) el.remove();
+}
+
+async function loadNextPageOfPhotos() {
+  if (!state.hasMore || state.isLoadingMore || !state.currentFolderId) return;
+
+  state.isLoadingMore = true;
+
+  try {
+    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(state.currentFolderId)}&offset=${state.currentOffset}&limit=24`);
+    const contents = await res.json();
+    removeInfiniteSentinel();
+    renderGalleryGrid(contents.directPhotos || contents, true);
+  } catch (err) {
+    console.error('Failed to load more photos:', err);
+  } finally {
+    state.isLoadingMore = false;
+  }
 }
 
 function buildPhotoCard(photo) {

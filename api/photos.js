@@ -31,8 +31,8 @@ module.exports = async (req, res) => {
       const data = await gasPost({ action: 'deletePhoto', fileId });
       res.status(200).json(data);
     } else {
-      const { folderId = 'root', search = '' } = req.query;
-      const data = await gasGet({ action: 'getPhotos', folderId, search });
+      const { folderId = 'root', search = '', offset = '0', limit = '24' } = req.query;
+      const data = await gasGet({ action: 'getPhotos', folderId, search, offset, limit });
       res.status(200).json(data);
     }
   } catch (error) {
