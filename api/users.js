@@ -27,10 +27,12 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const data = await gasPost({ action: 'updateUserRole', targetEmail: req.body.targetEmail, newRole: req.body.newRole });
+      const { targetEmail, newRole, userEmail = '' } = req.body || {};
+      const data = await gasPost({ action: 'updateUserRole', targetEmail, newRole, userEmail });
       res.status(200).json(data);
     } else {
-      const data = await gasGet({ action: 'getUsersList' });
+      const userEmail = req.query.userEmail || '';
+      const data = await gasGet({ action: 'getUsersList', userEmail });
       res.status(200).json(Array.isArray(data) ? data : []);
     }
   } catch (error) {

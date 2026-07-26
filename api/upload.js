@@ -18,8 +18,8 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
   try {
-    const { folderId, filePayloads } = req.body || {};
-    const data = await gasPost({ action: 'uploadPhotos', folderId, filePayloads });
+    const { folderId, filePayloads, userEmail = '' } = req.body || {};
+    const data = await gasPost({ action: 'uploadPhotos', folderId, filePayloads, userEmail });
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });

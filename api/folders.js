@@ -37,7 +37,8 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const data = await gasPost({ action: 'createFolder', folderName: req.body ? req.body.folderName : '' });
+      const { folderName = '', userEmail = '' } = req.body || {};
+      const data = await gasPost({ action: 'createFolder', folderName, userEmail });
       res.status(200).json(data);
     } else {
       const data = await gasGet({ action: 'getFolders' });

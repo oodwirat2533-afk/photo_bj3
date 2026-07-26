@@ -96,10 +96,10 @@ function include(filename) {
 // 3. USER AUTHENTICATION & ROLE MANAGEMENT
 // ============================================================================
 
-function getUserContext() {
+function getUserContext(userEmail) {
   var activeEmail = Session.getActiveUser().getEmail();
   var effectiveEmail = Session.getEffectiveUser().getEmail();
-  var email = activeEmail || effectiveEmail || "";
+  var email = (userEmail && userEmail.trim()) ? userEmail.trim() : activeEmail;
   var role = determineUserRole(email);
   return {
     email: email,
@@ -133,8 +133,8 @@ function saveUserDatabase(userDb) {
   PropertiesService.getScriptProperties().setProperty('USER_DATABASE', JSON.stringify(userDb));
 }
 
-function requestAccess(displayName) {
-  var userCtx = getUserContext();
+function requestAccess(displayName, userEmail) {
+  var userCtx = getUserContext(userEmail);
   if (!userCtx.email) return { success: false, message: 'ไม่พบอีเมลผู้ใช้ กรุณาเข้าสู่ระบบด้วย Google Account' };
   var email = userCtx.email.toLowerCase().trim();
   if (userCtx.isSuperAdmin) return { success: true, message: 'คุณมีสิทธิ์ Super Admin อยู่แล้ว', role: 'SUPER_ADMIN' };
@@ -151,8 +151,8 @@ function requestAccess(displayName) {
   return { success: true, message: 'ส่งคำขออนุมัติสิทธิ์เรียบร้อยแล้ว รอ Super Admin ดำเนินการอนุมัติ', status: userDb[email].role };
 }
 
-function getUsersList() {
-  var userCtx = getUserContext();
+function getUsersList(userEmail) {
+  var userCtx = getUserContext(userEmail);
   if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
   var userDb = getUserDatabase();
   var list = [];
@@ -170,8 +170,8 @@ function getUsersList() {
   return list;
 }
 
-function updateUserRole(targetEmail, newRole) {
-  var userCtx = getUserContext();
+function updateUserRole(targetEmail, newRole, userEmail) {
+  var userCtx = getUserContext(userEmail);
   if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
   if (!targetEmail) throw new Error('Target email is required');
   var cleanEmail = targetEmail.toLowerCase().trim();

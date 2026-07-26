@@ -13,16 +13,99 @@ let state = {
   scrollObserver: null
 };
 
+let googleUser = null;
+
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
-  checkUserStatus();
+  initGoogleAuth();
   loadAlbums();
 }
 
-async function checkUserStatus() {
+function initGoogleAuth() {
+  const stored = localStorage.getItem('googleUser');
+  if (stored) {
+    try {
+      googleUser = JSON.parse(stored);
+      checkUserStatus(googleUser.email);
+    } catch (e) {
+      checkUserStatus('');
+    }
+  } else {
+    checkUserStatus('');
+  }
+
+  if (window.google && google.accounts) {
+    setupGoogleButton();
+  } else {
+    window.addEventListener('load', () => {
+      setTimeout(setupGoogleButton, 500);
+    });
+  }
+}
+
+function setupGoogleButton() {
+  if (!window.google || !google.accounts) return;
+  const clientId = localStorage.getItem('googleClientId') || '1088737299092-example.apps.googleusercontent.com';
   try {
-    const res = await fetch('/api/auth');
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleCredentialResponse
+    });
+    const container = document.getElementById('gsiLoginContainer');
+    if (container) {
+      google.accounts.id.renderButton(container, {
+        theme: 'outline',
+        size: 'medium',
+        text: 'signin_with',
+        shape: 'pill'
+      });
+    }
+  } catch (err) {
+    console.warn('GSI Init error:', err);
+  }
+}
+
+function handleCredentialResponse(response) {
+  try {
+    const payload = parseJwt(response.credential);
+    googleUser = {
+      email: payload.email,
+      name: payload.name || payload.email.split('@')[0],
+      picture: payload.picture || '',
+      token: response.credential
+    };
+    localStorage.setItem('googleUser', JSON.stringify(googleUser));
+    checkUserStatus(googleUser.email);
+    showToast(`ยินดีต้อนรับ ${googleUser.name}!`, 'success');
+  } catch (err) {
+    showToast('เข้าสู่ระบบล้มเหลว: ' + err.message, 'error');
+  }
+}
+
+function parseJwt(token) {
+  var base64Url = token.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+  return JSON.parse(jsonPayload);
+}
+
+function logoutGoogle() {
+  googleUser = null;
+  localStorage.removeItem('googleUser');
+  if (window.google && google.accounts) {
+    try { google.accounts.id.disableAutoSelect(); } catch(e){}
+  }
+  showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
+  setTimeout(() => window.location.reload(), 500);
+}
+
+async function checkUserStatus(emailOverride) {
+  const email = emailOverride !== undefined ? emailOverride : (googleUser ? googleUser.email : '');
+  try {
+    const res = await fetch(`/api/auth?userEmail=${encodeURIComponent(email)}`);
     if (res.ok) {
       const ctx = await res.json();
       state.userCtx = ctx;
@@ -37,6 +120,8 @@ function renderUserNavbar(ctx) {
   const userSection = document.getElementById('userSection');
   const userEmailText = document.getElementById('userEmailText');
   const rolePill = document.getElementById('rolePill');
+  const btnLogout = document.getElementById('btnLogout');
+  const gsiContainer = document.getElementById('gsiLoginContainer');
 
   if (ctx && ctx.email) {
     userSection.style.display = 'inline-flex';
@@ -54,8 +139,12 @@ function renderUserNavbar(ctx) {
     } else {
       rolePill.textContent = 'บุคคลทั่วไป';
     }
+    if (btnLogout) btnLogout.style.display = 'inline-flex';
+    if (gsiContainer) gsiContainer.style.display = 'none';
   } else {
     userSection.style.display = 'none';
+    if (btnLogout) btnLogout.style.display = 'none';
+    if (gsiContainer) gsiContainer.style.display = 'inline-block';
   }
 
   document.getElementById('btnDriveConfig').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
@@ -451,8 +540,9 @@ async function deleteCurrentPhoto() {
   if (!state.currentPhoto) return;
   if (!confirm(`คุณต้องการลบรูปภาพ "${state.currentPhoto.name}" ใช่หรือไม่?`)) return;
   showToast('กำลังลบรูปภาพ...', 'info');
+  const userEmail = googleUser ? googleUser.email : '';
   try {
-    const res = await fetch(`/api/photos?fileId=${encodeURIComponent(state.currentPhoto.id)}`, { method: 'DELETE' });
+    const res = await fetch(`/api/photos?fileId=${encodeURIComponent(state.currentPhoto.id)}&userEmail=${encodeURIComponent(userEmail)}`, { method: 'DELETE' });
     const data = await res.json();
     showToast(data.message || 'ลบรูปภาพสำเร็จ', 'success');
     closeModal('lightboxModal');
@@ -490,6 +580,7 @@ async function submitUpload() {
   const btnSubmit = document.getElementById('btnSubmitUpload');
   btnSubmit.disabled = true;
   btnSubmit.innerHTML = '<span>⏳</span> กำลังอ่านไฟล์...';
+  const userEmail = googleUser ? googleUser.email : '';
 
   try {
     const filePayloads = await Promise.all(state.selectedFiles.map(async f => ({
@@ -501,7 +592,7 @@ async function submitUpload() {
     const res = await fetch('/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderId: targetFolderId, filePayloads })
+      body: JSON.stringify({ folderId: targetFolderId, filePayloads, userEmail })
     });
     const data = await res.json();
     showToast(`อัปโหลดสำเร็จ ${data.uploadedCount || filePayloads.length} ไฟล์`, 'success');
@@ -534,12 +625,13 @@ async function submitCreateFolder() {
   const name = document.getElementById('newFolderNameInput').value;
   if (!name.trim()) { showToast('กรุณาระบุชื่ออัลบั้ม', 'error'); return; }
   showToast('กำลังสร้างอัลบั้มใหม่...', 'info');
+  const userEmail = googleUser ? googleUser.email : '';
 
   try {
     const res = await fetch('/api/folders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderName: name })
+      body: JSON.stringify({ folderName: name, userEmail })
     });
     const data = await res.json();
     showToast(`สร้างอัลบั้ม "${name}" เรียบร้อยแล้ว`, 'success');
@@ -592,8 +684,9 @@ function openAdminUserModal() {
 async function loadUsersList() {
   const tbody = document.getElementById('userTableBody');
   tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;">กำลังโหลด...</td></tr>';
+  const userEmail = googleUser ? googleUser.email : '';
   try {
-    const res = await fetch('/api/users');
+    const res = await fetch(`/api/users?userEmail=${encodeURIComponent(userEmail)}`);
     const users = await res.json();
     renderUserTable(users);
   } catch (err) {
@@ -630,11 +723,12 @@ function renderUserTable(users) {
 
 async function changeUserRole(email, newRole) {
   showToast(`กำลังเปลี่ยนสิทธิ์ของ ${email}...`, 'info');
+  const userEmail = googleUser ? googleUser.email : '';
   try {
     const res = await fetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetEmail: email, newRole })
+      body: JSON.stringify({ targetEmail: email, newRole, userEmail })
     });
     const data = await res.json();
     showToast(data.message || 'เปลี่ยนสิทธิ์สำเร็จ', 'success');

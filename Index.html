@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>คลังรูปภาพและกิจกรรมโรงเรียน | School Photo Gallery</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -26,10 +27,14 @@
     </div>
 
     <div class="nav-actions">
+      <div id="gsiLoginContainer" style="display: inline-block;"></div>
       <div id="userSection" class="user-badge" style="display: none;">
         <span id="userEmailText">...</span>
         <span id="rolePill" class="role-pill">...</span>
       </div>
+      <button id="btnLogout" class="btn btn-secondary" onclick="logoutGoogle()" style="display: none;">
+        <span>🚪</span> ออกจากระบบ
+      </button>
       <button id="btnRequestAccess" class="btn btn-secondary" onclick="openRequestModal()" style="display: none;">
         <span>🔑</span> ขอสิทธิ์ผู้ดูแล
       </button>

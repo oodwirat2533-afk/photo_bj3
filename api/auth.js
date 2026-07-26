@@ -14,17 +14,28 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
+  const userEmail = req.query.userEmail || '';
   try {
-    const data = await gasGet({ action: 'getUserContext' });
+    const data = await gasGet({ action: 'getUserContext', userEmail });
     res.status(200).json(data);
   } catch (error) {
-    // Fallback: treat as Super Admin for the project owner
-    res.status(200).json({
-      email: "ood.wirat2533@gmail.com",
-      role: "SUPER_ADMIN",
-      isSuperAdmin: true,
-      isAdminOrHigher: true,
-      isCanUpload: true
-    });
+    if (userEmail) {
+      const isOwner = userEmail.toLowerCase() === 'ood.wirat2533@gmail.com';
+      res.status(200).json({
+        email: userEmail,
+        role: isOwner ? "SUPER_ADMIN" : "GUEST",
+        isSuperAdmin: isOwner,
+        isAdminOrHigher: isOwner,
+        isCanUpload: isOwner
+      });
+    } else {
+      res.status(200).json({
+        email: "",
+        role: "GUEST",
+        isSuperAdmin: false,
+        isAdminOrHigher: false,
+        isCanUpload: false
+      });
+    }
   }
 };

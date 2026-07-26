@@ -28,7 +28,8 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'DELETE') {
       const fileId = req.query.fileId;
-      const data = await gasPost({ action: 'deletePhoto', fileId });
+      const userEmail = req.query.userEmail || (req.body ? req.body.userEmail : '');
+      const data = await gasPost({ action: 'deletePhoto', fileId, userEmail });
       res.status(200).json(data);
     } else if (req.query.action === 'getPhotoMetadata') {
       const data = await gasGet({ action: 'getPhotoMetadata', fileId: req.query.fileId });
