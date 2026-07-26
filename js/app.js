@@ -803,7 +803,8 @@ function renderUserTable(users) {
       ? `<em style="color:var(--accent);font-size:0.8rem;">ผู้ดูแลหลัก (Fixed)</em>`
       : `<button class="btn btn-primary"   style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ADMIN')">อนุมัติ Admin</button>
          <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ASSISTANT_ADMIN')">อนุมัติ ผู้ช่วย Admin</button>
-         <button class="btn btn-danger"    style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>`;
+         <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>
+         <button class="btn btn-danger"    style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="deleteUserAccount('${u.email}')">🗑️ ลบผู้ใช้</button>`;
 
     const profileStatus = u.isFixed ? '' : (u.profileComplete ? '' : '<div style="font-size:0.7rem;color:#f59e0b;margin-top:2px;">🟡 รอกรอกข้อมูล</div>');
     const deptInfo = u.department ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">📚 ${escapeHtml(u.department)}</div>` : '';
@@ -831,6 +832,25 @@ async function changeUserRole(email, newRole) {
     loadUsersList();
   } catch (err) {
     showToast('เปลี่ยนสิทธิ์ล้มเหลว', 'error');
+  }
+}
+
+async function deleteUserAccount(email) {
+  if (!confirm(`คุณต้องการลบผู้ใช้ "${email}" ออกจากระบบใช่หรือไม่?`)) return;
+  showToast(`กำลังลบผู้ใช้ ${email}...`, 'info');
+  const userEmail = googleUser ? googleUser.email : '';
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deleteUser', targetEmail: email, userEmail })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    showToast(data.message || 'ลบผู้ใช้สำเร็จ', 'success');
+    loadUsersList();
+  } catch (err) {
+    showToast('ลบผู้ใช้ล้มเหลว: ' + err.message, 'error');
   }
 }
 

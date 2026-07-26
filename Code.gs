@@ -78,6 +78,8 @@ function doPost(e) {
       data = addAdmin(postData.targetEmail, postData.newRole, userEmail);
     } else if (action === 'updateProfile') {
       data = updateProfile(postData.prefix, postData.firstName, postData.lastName, postData.department, userEmail);
+    } else if (action === 'deleteUser') {
+      data = deleteUser(postData.targetEmail, userEmail);
     } else if (action === 'requestAccess') {
       data = requestAccess(postData.displayName, userEmail);
     } else if (action === 'deletePhoto') {
@@ -187,16 +189,39 @@ function updateProfile(prefix, firstName, lastName, department, userEmail) {
   var userDb = getUserDatabase();
   if (!userDb[cleanEmail]) throw new Error('ไม่พบบัญชีผู้ใช้ในระบบ');
   
-  userDb[cleanEmail].prefix = prefix.trim();
-  userDb[cleanEmail].firstName = firstName.trim();
+  var pFix = prefix.trim();
+  var fName = firstName.trim();
+  if (fName.indexOf(pFix) === 0) {
+    fName = fName.substring(pFix.length).trim();
+  }
+  
+  userDb[cleanEmail].prefix = pFix;
+  userDb[cleanEmail].firstName = fName;
   userDb[cleanEmail].lastName = lastName.trim();
   userDb[cleanEmail].department = department.trim();
-  userDb[cleanEmail].displayName = prefix.trim() + firstName.trim() + ' ' + lastName.trim();
+  userDb[cleanEmail].displayName = pFix + fName + ' ' + lastName.trim();
   userDb[cleanEmail].profileComplete = true;
   userDb[cleanEmail].updatedAt = new Date().toISOString();
   
   saveUserDatabase(userDb);
   return { success: true, message: 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว' };
+}
+
+function deleteUser(targetEmail, callerEmail) {
+  var userCtx = getUserContext(callerEmail);
+  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
+  if (!targetEmail) throw new Error('Target email is required');
+  var cleanEmail = targetEmail.toLowerCase().trim();
+  if (cleanEmail === CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase() || 
+      cleanEmail === Session.getEffectiveUser().getEmail().toLowerCase()) {
+    throw new Error('ไม่สามารถลบ Super Admin หรือ เจ้าของโปรเจกต์ได้');
+  }
+  var userDb = getUserDatabase();
+  if (userDb[cleanEmail]) {
+    delete userDb[cleanEmail];
+    saveUserDatabase(userDb);
+  }
+  return { success: true, message: 'ลบรายชื่อผู้ใช้เรียบร้อยแล้ว' };
 }
 
 function getProfileComplete(email) {
