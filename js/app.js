@@ -118,7 +118,11 @@ async function checkUserStatus(emailOverride, isLoginAttempt = false) {
         googleUser = null;
         localStorage.removeItem('googleUser');
         renderUserNavbar(null);
-        showToast('คุณไม่ได้อยู่ในฐานะ admin', 'error');
+        if (isLoginAttempt) {
+          openModal('accessDeniedModal');
+        } else {
+          showToast('คุณไม่ได้อยู่ในฐานะ admin', 'error');
+        }
         return;
       }
 
