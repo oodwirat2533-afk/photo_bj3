@@ -76,8 +76,7 @@ function handleCredentialResponse(response) {
       token: response.credential
     };
     localStorage.setItem('googleUser', JSON.stringify(googleUser));
-    checkUserStatus(googleUser.email);
-    showToast(`ยินดีต้อนรับ ${googleUser.name}!`, 'success');
+    checkUserStatus(googleUser.email, true);
   } catch (err) {
     showToast('เข้าสู่ระบบล้มเหลว: ' + err.message, 'error');
   }
@@ -102,14 +101,32 @@ function logoutGoogle() {
   setTimeout(() => window.location.reload(), 500);
 }
 
-async function checkUserStatus(emailOverride) {
+async function checkUserStatus(emailOverride, isLoginAttempt = false) {
   const email = emailOverride !== undefined ? emailOverride : (googleUser ? googleUser.email : '');
+  if (!email) {
+    renderUserNavbar(null);
+    return;
+  }
+
   try {
     const res = await fetch(`/api/auth?userEmail=${encodeURIComponent(email)}`);
     if (res.ok) {
       const ctx = await res.json();
+      
+      // If user is not an admin/uploader
+      if (!ctx.isCanUpload) {
+        googleUser = null;
+        localStorage.removeItem('googleUser');
+        renderUserNavbar(null);
+        showToast('คุณไม่ได้อยู่ในฐานะ admin', 'error');
+        return;
+      }
+
       state.userCtx = ctx;
       renderUserNavbar(ctx);
+      if (isLoginAttempt) {
+        showToast(`ยินดีต้อนรับ ${googleUser ? googleUser.name : 'Admin'}!`, 'success');
+      }
     }
   } catch (err) {
     console.warn('Auth check skipped:', err);
