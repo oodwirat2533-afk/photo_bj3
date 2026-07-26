@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "build": "echo 'Build complete'",
-    "deploy": "npx @google/clasp push --force && npx @google/clasp deploy",
+    "deploy": "npx @google/clasp push --force && npx @google/clasp deploy -i AKfycbxj_KsFJ89lpmxYQLlxnoZ9NoFeVMy_9gnIC0vDFImonUllNygnYZ7tNTyG0C0FBxDvWA",
     "push": "git add . ; git commit -m \"update web app\" ; git push origin main"
   },
   "keywords": [

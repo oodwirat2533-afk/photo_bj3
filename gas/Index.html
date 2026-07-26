@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>คลังรูปภาพและกิจกรรมโรงเรียน | School Photo Gallery</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- NAVBAR & NAVIGATION -->
+  <nav class="navbar">
+    <div class="brand-logo">
+      <div class="brand-icon">🏫</div>
+      <div>
+        <div>School Photo Hub</div>
+        <div class="brand-text-sub">คลังรูปภาพและกิจกรรมโรงเรียน</div>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ค้นหาชื่อรูปภาพหรือกิจกรรม..." oninput="handleSearchInput(event)">
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <div id="userSection" class="user-badge" style="display: none;">
+        <span id="userEmailText">...</span>
+        <span id="rolePill" class="role-pill">...</span>
+      </div>
+      <button id="btnRequestAccess" class="btn btn-secondary" onclick="openRequestModal()" style="display: none;">
+        <span>🔑</span> ขอสิทธิ์ผู้ดูแล
+      </button>
+      <button id="btnDriveConfig" class="btn btn-secondary" onclick="openDriveConfigModal()" style="display: none;" title="ตั้งค่าโฟลเดอร์ Google Drive">
+        <span>⚙️</span> ตั้งค่าคลังภาพ
+      </button>
+      <button id="btnAdminPanel" class="btn btn-accent" onclick="openAdminUserModal()" style="display: none;">
+        <span>👥</span> อนุมัติผู้ใช้งาน
+      </button>
+      <button id="btnUpload" class="btn btn-primary" onclick="openUploadModal()" style="display: none;">
+        <span>📤</span> อัปโหลดรูปภาพ
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- Pending Access Notice Banner -->
+    <div id="pendingBanner" class="pending-alert" style="display: none;">
+      <div><strong>⏳ อยู่ระหว่างรอการอนุมัติสิทธิ์:</strong> คำขอของคุณถูกส่งไปยัง Super Admin เรียบร้อยแล้ว</div>
+      <button class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="checkUserStatus()">รีเฟรชสถานะ</button>
+    </div>
+
+    <!-- Hero Banner -->
+    <section class="hero-banner">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">คลังภาพกิจกรรมสถาบัน</h1>
+        <p class="hero-desc">รวบรวมและจัดเก็บภาพบรรยากาศ ภาพกิจกรรมสำคัญ และความทรงจำของโรงเรียน เข้าดู ค้นหา และดาวน์โหลดได้ทันที</p>
+      </div>
+    </section>
+
+    <!-- VIEW 1: ALBUM CARD GRID (Default) -->
+    <section id="viewAlbums">
+      <div class="section-header">
+        <h2 class="section-title"><span>📁</span> อัลบั้มภาพกิจกรรม (Albums)</h2>
+        <button id="btnCreateFolder" class="btn btn-secondary" style="display: none; padding: 0.4rem 0.85rem; font-size: 0.85rem;" onclick="openCreateFolderModal()">
+          <span>➕</span> สร้างอัลบั้มใหม่
+        </button>
+      </div>
+      <div id="albumGrid" class="album-grid">
+        <div class="album-card-skeleton skeleton"></div>
+        <div class="album-card-skeleton skeleton"></div>
+        <div class="album-card-skeleton skeleton"></div>
+        <div class="album-card-skeleton skeleton"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: PHOTO GRID (Inside Album) -->
+    <section id="viewPhotos" style="display: none;">
+      <div class="section-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button class="btn btn-secondary" onclick="backToAlbums()" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+            ← กลับ
+          </button>
+          <h2 id="galleryTitle" class="section-title"><span>📸</span> รูปภาพในอัลบั้ม</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="photoCountBadge" class="user-badge" style="font-size: 0.8rem;">0 รูปภาพ</span>
+        </div>
+      </div>
+      <div id="galleryGrid" class="gallery-grid">
+        <div class="photo-card skeleton" style="height: 220px;"></div>
+        <div class="photo-card skeleton" style="height: 220px;"></div>
+        <div class="photo-card skeleton" style="height: 220px;"></div>
+        <div class="photo-card skeleton" style="height: 220px;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightboxModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div id="lightboxTitle" class="modal-title">ดูรูปภาพ</div>
+        <button class="close-btn" onclick="closeModal('lightboxModal')">✕</button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightboxImage" class="lightbox-img" src="" alt="Photo preview">
+      </div>
+      <div class="modal-footer">
+        <div id="lightboxMeta" style="font-size: 0.85rem; color: var(--text-muted);">...</div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btnDeletePhoto" class="btn btn-danger" style="display: none;" onclick="deleteCurrentPhoto()">
+            <span>🗑️</span> ลบรูปภาพ
+          </button>
+          <a id="lightboxDownloadBtn" class="btn btn-primary" target="_blank" download>
+            <span>⬇️</span> ดาวน์โหลด
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD PHOTO MODAL -->
+  <div id="uploadModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">📤 อัปโหลดรูปภาพเข้า Google Drive</div>
+        <button class="close-btn" onclick="closeModal('uploadModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted);">เลือกอัลบั้มปลายทาง</label>
+          <select id="uploadFolderSelect" style="width: 100%; padding: 0.6rem 1rem; background: rgba(15,23,42,0.9); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: white;"></select>
+        </div>
+        <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+          <div class="drop-icon">📁</div>
+          <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">รองรับ JPG, PNG, WEBP, HEIC, GIF</div>
+          <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+        <div id="selectedFilesList" style="margin-top: 1rem; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: var(--text-muted);"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('uploadModal')">ยกเลิก</button>
+        <button id="btnSubmitUpload" class="btn btn-primary" onclick="submitUpload()" disabled><span>🚀</span> เริ่มต้นอัปโหลด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE FOLDER MODAL -->
+  <div id="createFolderModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <div class="modal-title">📁 สร้างอัลบั้มภาพใหม่</div>
+        <button class="close-btn" onclick="closeModal('createFolderModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted);">ชื่ออัลบั้ม / กิจกรรม</label>
+        <input type="text" id="newFolderNameInput" placeholder="เช่น ภาพกิจกรรมกีฬาสี 2569" style="width: 100%; padding: 0.65rem 1rem; background: rgba(15,23,42,0.9); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: white; font-size: 0.95rem;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('createFolderModal')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="submitCreateFolder()">สร้างอัลบั้ม</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRIVE CONFIG MODAL (Super Admin) -->
+  <div id="driveConfigModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ ตั้งค่าคลังภาพ Google Drive (Super Admin)</div>
+        <button class="close-btn" onclick="closeModal('driveConfigModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">วาง Google Drive Folder URL หรือ Folder ID ของโฟลเดอร์รูปภาพโรงเรียน:</p>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted);">Google Drive Folder URL / Folder ID</label>
+          <input type="text" id="driveUrlInput" placeholder="https://drive.google.com/drive/folders/1ABC123xyz..." style="width: 100%; padding: 0.65rem 1rem; background: rgba(15,23,42,0.9); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: white; font-size: 0.9rem;">
+        </div>
+        <div id="currentDriveInfo" style="padding: 0.75rem 1rem; background: rgba(30,41,59,0.6); border: 1px solid var(--border-light); border-radius: var(--radius-md); font-size: 0.85rem; color: #93c5fd;">
+          กำลังดึงข้อมูลโฟลเดอร์ปัจจุบัน...
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('driveConfigModal')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="submitDriveConfig()"><span>💾</span> บันทึกการเชื่อมต่อ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN USER APPROVAL MODAL -->
+  <div id="adminUserModal" class="modal">
+    <div class="modal-content" style="max-width: 850px;">
+      <div class="modal-header">
+        <div class="modal-title">👥 แดชบอร์ดจัดการและอนุมัติสิทธิ์ผู้ใช้งาน (Super Admin Panel)</div>
+        <button class="close-btn" onclick="closeModal('adminUserModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem; overflow-y: auto; max-height: 70vh;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">จัดการอนุมัติสิทธิ์ผู้สมัครขอเป็นผู้ดูแลระบบ</p>
+        <div class="table-responsive">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>ผู้ใช้งาน / Email</th>
+                <th>สถานะสิทธิ์ (Role)</th>
+                <th>การจัดการสิทธิ์ (Actions)</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">กำลังโหลดข้อมูลผู้ใช้...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('adminUserModal')">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
