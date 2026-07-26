@@ -4,7 +4,8 @@
   "description": "School Photo Gallery & Management System on Vercel and Google Drive",
   "main": "index.html",
   "scripts": {
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "push": "git add . ; git commit -m \"update web app\" ; git push origin main"
   },
   "keywords": [
     "school-gallery",
