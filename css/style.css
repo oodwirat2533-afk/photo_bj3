@@ -910,3 +910,12 @@ body.modal-open {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+#addAdminModal {
+  z-index: 300;
+}
+
+#profileSetupModal {
+  z-index: 400;
+}
+

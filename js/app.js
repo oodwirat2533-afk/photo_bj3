@@ -956,8 +956,10 @@ async function toggleAlbumVisibility(albumId, isHidden, checkboxElem) {
 // ============================================================================
 
 function openAddAdminModal() {
-  document.getElementById('addAdminEmail').value = '';
-  document.querySelector('input[name="addAdminRole"][value="ADMIN"]').checked = true;
+  const emailInput = document.getElementById('addAdminEmail');
+  if (emailInput) emailInput.value = '';
+  const radioInput = document.querySelector('input[name="addAdminRole"][value="ADMIN"]');
+  if (radioInput) radioInput.checked = true;
   openModal('addAdminModal');
 }
 

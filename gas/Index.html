@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>คลังรูปภาพและกิจกรรมโรงเรียน | School Photo Gallery</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -21,6 +22,12 @@
 
 
     <div class="nav-actions">
+      <div id="gsiWrapper" style="position: relative; display: inline-block;">
+        <button class="btn" style="background: linear-gradient(135deg, #2563eb, #1e3a8a); color: white; border: 1px solid rgba(147, 197, 253, 0.35); box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); font-weight: 600; padding: 0.55rem 1.1rem; border-radius: var(--radius-md); pointer-events: none;">
+          <span>🔐</span> ลงชื่อเข้าใช้ ADMIN
+        </button>
+        <div id="gsiLoginContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.001; z-index: 2; overflow: hidden; cursor: pointer;"></div>
+      </div>
       <div id="userSection" class="user-badge" style="display: none;">
         <span id="userEmailText">...</span>
         <span id="rolePill" class="role-pill">...</span>
@@ -47,6 +54,10 @@
           </button>
         </div>
       </div>
+
+      <button id="btnLogout" class="btn btn-secondary" onclick="logoutGoogle()" style="display: none;">
+        <span>🚪</span> ออกจากระบบ
+      </button>
     </div>
   </nav>
 
@@ -209,6 +220,36 @@
     </div>
   </div>
 
+  <!-- MANAGE ALBUMS MODAL (Super Admin) -->
+  <div id="manageAlbumsModal" class="modal">
+    <div class="modal-content" style="max-width: 850px;">
+      <div class="modal-header">
+        <div class="modal-title">👁️ จัดการแสดงผลอัลบั้ม (Super Admin)</div>
+        <button class="close-btn" onclick="closeModal('manageAlbumsModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem; overflow-y: auto; max-height: 70vh;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">กำหนดสิทธิ์การมองเห็นอัลบั้มสำหรับบุคคลทั่วไป</p>
+        <div class="table-responsive">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>ชื่ออัลบั้ม (Album Name)</th>
+                <th style="width: 150px; text-align: center;">สถานะ (Status)</th>
+                <th style="width: 150px; text-align: center;">จัดการ (Actions)</th>
+              </tr>
+            </thead>
+            <tbody id="albumsTableBody">
+              <tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">กำลังโหลดข้อมูลอัลบั้ม...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('manageAlbumsModal')">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ADMIN USER APPROVAL MODAL -->
   <div id="adminUserModal" class="modal">
     <div class="modal-content" style="max-width: 850px;">
@@ -218,6 +259,11 @@
       </div>
       <div style="padding: 1.5rem; overflow-y: auto; max-height: 70vh;">
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">จัดการอนุมัติสิทธิ์ผู้สมัครขอเป็นผู้ดูแลระบบ</p>
+        <div style="margin-bottom: 1rem;">
+          <button class="btn btn-primary" onclick="openAddAdminModal()" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+            <span>➕</span> เพิ่ม Admin ใหม่
+          </button>
+        </div>
         <div class="table-responsive">
           <table class="user-table">
             <thead>
@@ -236,6 +282,122 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('adminUserModal')">ปิดหน้าต่าง</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ADD ADMIN MODAL -->
+  <div id="addAdminModal" class="modal">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">➕ เพิ่ม Admin ใหม่</div>
+        <button class="close-btn" onclick="closeModal('addAdminModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">กรอก Email ของผู้ที่ต้องการเพิ่มเป็น Admin<br>ผู้ใช้จะกรอกข้อมูลส่วนตัวเองเมื่อเข้าสู่ระบบครั้งแรก</p>
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">Email ของ Admin ใหม่ *</label>
+          <input type="email" id="addAdminEmail" placeholder="example@gmail.com" class="form-input">
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <label class="form-label">กำหนด Role *</label>
+          <div class="role-selector">
+            <label class="role-option">
+              <input type="radio" name="addAdminRole" value="ADMIN" checked>
+              <div class="role-option-content">
+                <span class="role-pill role-admin">Admin</span>
+                <span class="role-option-desc">อัปโหลดรูป, ลบรูป, สร้างอัลบั้ม</span>
+              </div>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="addAdminRole" value="ASSISTANT_ADMIN">
+              <div class="role-option-content">
+                <span class="role-pill role-assistant">ผู้ช่วย Admin</span>
+                <span class="role-option-desc">อัปโหลดรูปเท่านั้น</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addAdminModal')">ยกเลิก</button>
+        <button id="btnSubmitAddAdmin" class="btn btn-primary" onclick="submitAddAdmin()">
+          <span>✅</span> เพิ่ม Admin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SETUP MODAL (บังคับกรอก — ปิดไม่ได้) -->
+  <div id="profileSetupModal" class="modal">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">📋 กรอกข้อมูลส่วนตัว</div>
+      </div>
+      <div style="padding: 1.5rem;">
+        <div style="background: rgba(37,99,235,0.1); border: 1px solid rgba(96,165,250,0.3); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1.25rem;">
+          <p style="font-size: 0.85rem; color: #93c5fd; margin: 0;">🎉 ยินดีต้อนรับเข้าสู่ระบบ! กรุณากรอกข้อมูลส่วนตัวของท่านให้ครบถ้วนเพื่อเริ่มต้นใช้งาน</p>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">อีเมล (Email)</label>
+          <input type="email" id="profileEmail" class="form-input" disabled style="opacity: 0.6; cursor: not-allowed;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">คำนำหน้าชื่อ *</label>
+          <select id="profilePrefix" class="form-input">
+            <option value="">-- เลือกคำนำหน้า --</option>
+            <option value="นาย">นาย</option>
+            <option value="นาง">นาง</option>
+            <option value="นางสาว">นางสาว</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label">ชื่อ *</label>
+            <input type="text" id="profileFirstName" placeholder="ชื่อจริง" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">นามสกุล *</label>
+            <input type="text" id="profileLastName" placeholder="นามสกุล" class="form-input">
+          </div>
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <label class="form-label">กลุ่มสาระการเรียนรู้ *</label>
+          <select id="profileDepartment" class="form-input">
+            <option value="">-- เลือกกลุ่มสาระ --</option>
+            <option value="ภาษาไทย">ภาษาไทย</option>
+            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+            <option value="สังคมศึกษา ศาสนาและวัฒนธรรม">สังคมศึกษา ศาสนาและวัฒนธรรม</option>
+            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+            <option value="ศิลปะ">ศิลปะ</option>
+            <option value="การงานอาชีพ">การงานอาชีพ</option>
+            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnSubmitProfile" class="btn btn-primary" onclick="submitProfile()" style="width: 100%; justify-content: center;">
+          <span>💾</span> บันทึกข้อมูลและเข้าใช้งาน
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCESS DENIED MODAL -->
+  <div id="accessDeniedModal" class="modal">
+    <div class="modal-content" style="max-width: 440px; text-align: center; padding: 2.25rem 1.75rem; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(239, 68, 68, 0.25);">
+      <div style="font-size: 3.5rem; margin-bottom: 0.75rem; line-height: 1;">⚠️</div>
+      <h2 style="color: #ef4444; margin-bottom: 0.75rem; font-size: 1.4rem; font-weight: 700;">สิทธิ์การใช้งานจำกัด</h2>
+      <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1.25rem;">
+        <span style="color: #fca5a5; font-size: 1.15rem; font-weight: 700; display: block;">คุณไม่ได้อยู่ในฐานะ admin</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.75rem; line-height: 1.6;">
+        ระบบนี้รองรับการลงชื่อเข้าใช้เฉพาะผู้ดูแลระบบ (Admin) เท่านั้น<br>
+        นักเรียนและบุคคลทั่วไปสามารถดู ค้นหา และดาวน์โหลดรูปภาพได้โดยไม่ต้องเข้าสู่ระบบครับ
+      </p>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.75rem; background: linear-gradient(135deg, #ef4444, #dc2626); font-weight: 600;" onclick="closeModal('accessDeniedModal')">
+        ตกลง / เข้าใจแล้ว
+      </button>
     </div>
   </div>
 

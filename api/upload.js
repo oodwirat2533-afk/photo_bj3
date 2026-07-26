@@ -1,4 +1,4 @@
-const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbwto4enwrfI0N3a8xbZ_fEJASBvzhnjw_jhAZO-Yjj6n2B86MHNkBK9QO_lufP6uelwuA/exec';
+const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbxj_KsFJ89lpmxYQLlxnoZ9NoFeVMy_9gnIC0vDFImonUllNygnYZ7tNTyG0C0FBxDvWA/exec';
 
 async function gasPost(body) {
   const res = await fetch(GAS_API_URL, {
