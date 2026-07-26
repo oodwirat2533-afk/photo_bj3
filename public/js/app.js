@@ -128,6 +128,13 @@ async function checkUserStatus(emailOverride, isLoginAttempt = false) {
 
       state.userCtx = ctx;
       renderUserNavbar(ctx);
+
+      // ตรวจว่า profile ครบหรือยัง — ถ้ายังไม่ครบ บังคับกรอก
+      if (ctx.profileComplete === false) {
+        openProfileSetupModal(ctx.email);
+        return;
+      }
+
       if (isLoginAttempt) {
         showToast(`ยินดีต้อนรับ ${googleUser ? googleUser.name : 'Admin'}!`, 'success');
       }
@@ -189,7 +196,7 @@ function renderUserNavbar(ctx) {
     if (el) el.style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
   });
   document.querySelectorAll('.btn-create-folder').forEach(el => {
-    el.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
+    el.style.display = (ctx && ctx.canCreateAlbum) ? 'inline-flex' : 'none';
   });
 }
 
@@ -214,6 +221,7 @@ window.addEventListener('click', function(e) {
     closeSettingsDropdown();
   }
   if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
+    if (e.target.id === 'profileSetupModal') return;
     closeModal(e.target.id);
   }
 });
@@ -221,7 +229,10 @@ window.addEventListener('click', function(e) {
 window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     const activeModals = document.querySelectorAll('.modal.active');
-    activeModals.forEach(m => closeModal(m.id));
+    activeModals.forEach(m => {
+      if (m.id === 'profileSetupModal') return;
+      closeModal(m.id);
+    });
   }
 });
 
@@ -359,7 +370,7 @@ function renderSubfolderView(subfolders, directPhotosData) {
     total = directPhotosData.total;
   } else if (directPhotosData && directPhotosData.directPhotos && directPhotosData.directPhotos.hasMore !== undefined) {
     hasMore = directPhotosData.directPhotos.hasMore;
-    nextOffset = directPhotosData.directPhotos.nextOffset;
+    nextOffset = directPhotosData.nextOffset;
     total = directPhotosData.total;
   }
 
@@ -414,8 +425,8 @@ function renderGalleryGrid(photosData, append = false) {
     total = photosData.total;
   } else if (photosData && photosData.directPhotos && photosData.directPhotos.hasMore !== undefined) {
     hasMore = photosData.directPhotos.hasMore;
-    nextOffset = photosData.directPhotos.nextOffset;
-    total = photosData.directPhotos.total;
+    nextOffset = photosData.nextOffset;
+    total = photosData.total;
   }
 
   state.hasMore = hasMore;
@@ -794,8 +805,12 @@ function renderUserTable(users) {
          <button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','ASSISTANT_ADMIN')">อนุมัติ ผู้ช่วย Admin</button>
          <button class="btn btn-danger"    style="padding:0.25rem 0.5rem;font-size:0.75rem;" onclick="changeUserRole('${u.email}','REJECTED')">ยกเลิกสิทธิ์</button>`;
 
+    const profileStatus = u.isFixed ? '' : (u.profileComplete ? '' : '<div style="font-size:0.7rem;color:#f59e0b;margin-top:2px;">🟡 รอกรอกข้อมูล</div>');
+    const deptInfo = u.department ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">📚 ${escapeHtml(u.department)}</div>` : '';
+    const addedByInfo = u.addedBy ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">เพิ่มโดย: ${escapeHtml(u.addedBy)}</div>` : '';
+
     tr.innerHTML = `
-      <td><div style="font-weight:500;">${escapeHtml(u.displayName)}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(u.email)}</div></td>
+      <td><div style="font-weight:500;">${escapeHtml(u.displayName)}</div><div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(u.email)}</div>${deptInfo}${addedByInfo}${profileStatus}</td>
       <td>${badge}</td>
       <td><div style="display:flex;gap:0.35rem;flex-wrap:wrap;">${actions}</div></td>`;
     tbody.appendChild(tr);
@@ -933,5 +948,114 @@ async function toggleAlbumVisibility(albumId, isHidden, checkboxElem) {
     }
     renderAlbumGrid(state.folders);
     showToast('บันทึกล้มเหลว: ' + err.message, 'error');
+  }
+}
+
+// ============================================================================
+// ADD ADMIN & PROFILE SETUP
+// ============================================================================
+
+window.openAddAdminModal = function() {
+  console.log("openAddAdminModal clicked!");
+  try {
+    const emailInput = document.getElementById('addAdminEmail');
+    if (emailInput) emailInput.value = '';
+    const radioInput = document.querySelector('input[name="addAdminRole"][value="ADMIN"]');
+    if (radioInput) radioInput.checked = true;
+    
+    const modal = document.getElementById('addAdminModal');
+    if(modal) {
+       modal.classList.add('active');
+       modal.style.display = 'flex';
+       modal.style.zIndex = '9999';
+       document.body.classList.add('modal-open');
+    } else {
+       alert('ไม่พบ HTML ของป๊อปอัป กรุณารีเฟรชหน้าเว็บแบบล้างแคช (Ctrl+F5)');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error: ' + e.message);
+  }
+}
+
+async function submitAddAdmin() {
+  const email = document.getElementById('addAdminEmail').value.trim();
+  const role = document.querySelector('input[name="addAdminRole"]:checked').value;
+
+  if (!email) { showToast('กรุณาระบุ Email', 'error'); return; }
+  if (!email.includes('@')) { showToast('รูปแบบ Email ไม่ถูกต้อง', 'error'); return; }
+
+  const btn = document.getElementById('btnSubmitAddAdmin');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> กำลังเพิ่ม...';
+
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'addAdmin',
+        targetEmail: email,
+        newRole: role,
+        userEmail: googleUser ? googleUser.email : ''
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    showToast(data.message || 'เพิ่ม Admin สำเร็จ', 'success');
+    closeModal('addAdminModal');
+    loadUsersList();
+  } catch (err) {
+    showToast('เพิ่ม Admin ล้มเหลว: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✅</span> เพิ่ม Admin';
+  }
+}
+
+function openProfileSetupModal(email) {
+  document.getElementById('profileEmail').value = email;
+  document.getElementById('profilePrefix').value = '';
+  document.getElementById('profileFirstName').value = '';
+  document.getElementById('profileLastName').value = '';
+  document.getElementById('profileDepartment').value = '';
+  openModal('profileSetupModal');
+}
+
+async function submitProfile() {
+  const prefix = document.getElementById('profilePrefix').value;
+  const firstName = document.getElementById('profileFirstName').value.trim();
+  const lastName = document.getElementById('profileLastName').value.trim();
+  const department = document.getElementById('profileDepartment').value;
+
+  if (!prefix) { showToast('กรุณาเลือกคำนำหน้าชื่อ', 'error'); return; }
+  if (!firstName) { showToast('กรุณาระบุชื่อ', 'error'); return; }
+  if (!lastName) { showToast('กรุณาระบุนามสกุล', 'error'); return; }
+  if (!department) { showToast('กรุณาเลือกกลุ่มสาระการเรียนรู้', 'error'); return; }
+
+  const btn = document.getElementById('btnSubmitProfile');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> กำลังบันทึก...';
+
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateProfile',
+        prefix, firstName, lastName, department,
+        userEmail: googleUser ? googleUser.email : ''
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    showToast('บันทึกข้อมูลเรียบร้อย! ยินดีต้อนรับ', 'success');
+    closeModal('profileSetupModal');
+    checkUserStatus(googleUser.email, true);
+  } catch (err) {
+    showToast('บันทึกล้มเหลว: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>💾</span> บันทึกข้อมูลและเข้าใช้งาน';
   }
 }
