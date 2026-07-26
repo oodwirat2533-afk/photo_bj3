@@ -245,9 +245,7 @@ function renderAlbumGrid(folders) {
   const cleanFolders = rawList.filter(f => !f.isRoot && !(f.name && f.name.indexOf('รูปภาพทั้งหมด') !== -1) && !f.isHidden);
   state.folders = rawList; // keep rawList in state so modal can see hidden ones
   const albumGrid = document.getElementById('albumGrid');
-  const uploadSelect = document.getElementById('uploadFolderSelect');
   albumGrid.innerHTML = '';
-  uploadSelect.innerHTML = '';
 
   if (!Array.isArray(folders)) {
     albumGrid.innerHTML = `
@@ -271,11 +269,6 @@ function renderAlbumGrid(folders) {
 
   cleanFolders.forEach(f => {
     albumGrid.appendChild(buildAlbumCard(f, () => openFolder(f.id, f.name)));
-
-    const opt = document.createElement('option');
-    opt.value = f.id;
-    opt.textContent = f.name;
-    uploadSelect.appendChild(opt);
   });
 }
 
@@ -634,10 +627,19 @@ function openUploadModal() {
   document.getElementById('fileInput').value = '';
   document.getElementById('btnSubmitUpload').disabled = true;
 
-  const currentFolderId = state.navStack[state.navStack.length - 1].id;
+  const currentNav = state.navStack[state.navStack.length - 1];
   const uploadSelect = document.getElementById('uploadFolderSelect');
-  if (currentFolderId !== 'root' && uploadSelect) {
-    uploadSelect.value = currentFolderId;
+  const targetNameEl = document.getElementById('uploadTargetFolderName');
+
+  if (currentNav && currentNav.id !== 'root') {
+    if (uploadSelect) uploadSelect.value = currentNav.id;
+    if (targetNameEl) targetNameEl.textContent = currentNav.name;
+  } else if (state.folders && state.folders.length > 0) {
+    if (uploadSelect) uploadSelect.value = state.folders[0].id;
+    if (targetNameEl) targetNameEl.textContent = state.folders[0].name;
+  } else {
+    if (uploadSelect) uploadSelect.value = '';
+    if (targetNameEl) targetNameEl.textContent = 'ยังไม่มีอัลบั้ม';
   }
 
   openModal('uploadModal');

@@ -153,8 +153,11 @@
       </div>
       <div style="padding: 1.5rem;">
         <div style="margin-bottom: 1.25rem;">
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted);">เลือกอัลบั้มปลายทาง</label>
-          <select id="uploadFolderSelect" style="width: 100%; padding: 0.6rem 1rem; background: rgba(15,23,42,0.9); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: white;"></select>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: var(--text-muted);">อัลบั้มที่จะอัปโหลด</label>
+          <div style="padding: 0.65rem 1rem; background: rgba(15,23,42,0.9); border: 1px solid var(--border-light); border-radius: var(--radius-md); color: #38bdf8; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <span>📁</span> <span id="uploadTargetFolderName">...</span>
+          </div>
+          <input type="hidden" id="uploadFolderSelect" value="">
         </div>
         <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
           <div class="drop-icon">📁</div>
