@@ -77,13 +77,23 @@ async function loadAlbums() {
 }
 
 function renderAlbumGrid(folders) {
-  state.folders = folders;
+  state.folders = Array.isArray(folders) ? folders : [];
   const albumGrid = document.getElementById('albumGrid');
   const uploadSelect = document.getElementById('uploadFolderSelect');
   albumGrid.innerHTML = '';
   uploadSelect.innerHTML = '';
 
-  if (!folders || folders.length === 0) {
+  if (!Array.isArray(folders)) {
+    albumGrid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-icon">⚠️</div>
+        <h3>ไม่สามารถดึงข้อมูลอัลบั้มได้</h3>
+        <p>${escapeHtml(folders && folders.error ? folders.error : 'กรุณาตรวจสอบการตั้งค่าแชร์ใน Google Drive ให้เป็น "ทุกคนที่มีลิงก์มีสิทธิ์ดู"')}</p>
+      </div>`;
+    return;
+  }
+
+  if (folders.length === 0) {
     albumGrid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
         <div class="empty-icon">📁</div>

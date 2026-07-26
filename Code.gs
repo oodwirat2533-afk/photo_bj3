@@ -239,23 +239,26 @@ function getRootFolder() {
  * Get one cover photo from a folder (fast - stops after first image found)
  */
 function getCoverPhoto(folder) {
-  var filesIter = folder.getFiles();
-  while (filesIter.hasNext()) {
-    var file = filesIter.next();
-    var actualFile = file;
-    if (file.getMimeType() === "application/vnd.google-apps.shortcut") {
-      try { actualFile = DriveApp.getFileById(file.getTargetId()); } catch (e) { continue; }
+  try {
+    var filesIter = folder.getFiles();
+    while (filesIter.hasNext()) {
+      var file = filesIter.next();
+      var actualFile = file;
+      if (file.getMimeType() === "application/vnd.google-apps.shortcut") {
+        try { actualFile = DriveApp.getFileById(file.getTargetId()); } catch (e) { continue; }
+      }
+      if (isImageFile(actualFile.getMimeType(), actualFile.getName())) {
+        return "https://lh3.googleusercontent.com/d/" + actualFile.getId() + "=s400";
+      }
     }
-    if (isImageFile(actualFile.getMimeType(), actualFile.getName())) {
-      return "https://lh3.googleusercontent.com/d/" + actualFile.getId() + "=s400";
+    var subFolders = folder.getFolders();
+    while (subFolders.hasNext()) {
+      var sub = subFolders.next();
+      var cover = getCoverPhoto(sub);
+      if (cover) return cover;
     }
-  }
-  // Check subfolders for cover
-  var subFolders = folder.getFolders();
-  while (subFolders.hasNext()) {
-    var sub = subFolders.next();
-    var cover = getCoverPhoto(sub);
-    if (cover) return cover;
+  } catch (e) {
+    Logger.log("Error reading cover photo: " + e.toString());
   }
   return null;
 }
