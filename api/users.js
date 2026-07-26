@@ -27,8 +27,17 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const { targetEmail, newRole, userEmail = '' } = req.body || {};
-      const data = await gasPost({ action: 'updateUserRole', targetEmail, newRole, userEmail });
+      const body = req.body || {};
+      const data = await gasPost({
+        action: body.action || 'updateUserRole',
+        targetEmail: body.targetEmail,
+        newRole: body.newRole,
+        prefix: body.prefix,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        department: body.department,
+        userEmail: body.userEmail || ''
+      });
       res.status(200).json(data);
     } else {
       const userEmail = req.query.userEmail || '';

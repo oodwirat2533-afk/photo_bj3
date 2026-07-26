@@ -74,6 +74,10 @@ function doPost(e) {
       data = updateRootFolderUrl(postData.urlOrId);
     } else if (action === 'updateUserRole') {
       data = updateUserRole(postData.targetEmail, postData.newRole, userEmail);
+    } else if (action === 'addAdmin') {
+      data = addAdmin(postData.targetEmail, postData.newRole, userEmail);
+    } else if (action === 'updateProfile') {
+      data = updateProfile(postData.prefix, postData.firstName, postData.lastName, postData.department, userEmail);
     } else if (action === 'requestAccess') {
       data = requestAccess(postData.displayName, userEmail);
     } else if (action === 'deletePhoto') {
@@ -110,7 +114,9 @@ function getUserContext(userEmail) {
     role: role,
     isSuperAdmin: (role === 'SUPER_ADMIN'),
     isAdminOrHigher: (role === 'SUPER_ADMIN' || role === 'ADMIN'),
-    isCanUpload: (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ASSISTANT_ADMIN')
+    isCanUpload: (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ASSISTANT_ADMIN'),
+    canCreateAlbum: (role === 'SUPER_ADMIN' || role === 'ADMIN'),
+    profileComplete: getProfileComplete(email)
   };
 }
 
@@ -134,6 +140,73 @@ function getUserDatabase() {
 
 function saveUserDatabase(userDb) {
   PropertiesService.getScriptProperties().setProperty('USER_DATABASE', JSON.stringify(userDb));
+}
+
+function addAdmin(targetEmail, newRole, callerEmail) {
+  var userCtx = getUserContext(callerEmail);
+  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
+  if (!targetEmail || !targetEmail.trim()) throw new Error('กรุณาระบุ Email');
+  
+  var cleanEmail = targetEmail.toLowerCase().trim();
+  var validRoles = ['ADMIN', 'ASSISTANT_ADMIN'];
+  if (validRoles.indexOf(newRole) === -1) throw new Error('Role ไม่ถูกต้อง');
+  
+  if (cleanEmail === CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase() || 
+      cleanEmail === Session.getEffectiveUser().getEmail().toLowerCase()) {
+    throw new Error('ไม่สามารถเพิ่มทับ Super Admin ได้');
+  }
+  
+  var userDb = getUserDatabase();
+  if (userDb[cleanEmail] && userDb[cleanEmail].profileComplete) {
+    userDb[cleanEmail].role = newRole;
+    userDb[cleanEmail].updatedAt = new Date().toISOString();
+  } else {
+    userDb[cleanEmail] = {
+      email: cleanEmail,
+      displayName: cleanEmail.split('@')[0],
+      role: newRole,
+      profileComplete: false,
+      prefix: '', firstName: '', lastName: '', department: '',
+      addedBy: callerEmail,
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+  saveUserDatabase(userDb);
+  return { success: true, message: 'เพิ่ม Admin "' + cleanEmail + '" เรียบร้อยแล้ว' };
+}
+
+function updateProfile(prefix, firstName, lastName, department, userEmail) {
+  if (!userEmail) throw new Error('ไม่พบข้อมูลผู้ใช้');
+  var cleanEmail = userEmail.toLowerCase().trim();
+  if (!prefix || !prefix.trim()) throw new Error('กรุณาเลือกคำนำหน้าชื่อ');
+  if (!firstName || !firstName.trim()) throw new Error('กรุณาระบุชื่อ');
+  if (!lastName || !lastName.trim()) throw new Error('กรุณาระบุนามสกุล');
+  if (!department || !department.trim()) throw new Error('กรุณาเลือกกลุ่มสาระการเรียนรู้');
+  
+  var userDb = getUserDatabase();
+  if (!userDb[cleanEmail]) throw new Error('ไม่พบบัญชีผู้ใช้ในระบบ');
+  
+  userDb[cleanEmail].prefix = prefix.trim();
+  userDb[cleanEmail].firstName = firstName.trim();
+  userDb[cleanEmail].lastName = lastName.trim();
+  userDb[cleanEmail].department = department.trim();
+  userDb[cleanEmail].displayName = prefix.trim() + firstName.trim() + ' ' + lastName.trim();
+  userDb[cleanEmail].profileComplete = true;
+  userDb[cleanEmail].updatedAt = new Date().toISOString();
+  
+  saveUserDatabase(userDb);
+  return { success: true, message: 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว' };
+}
+
+function getProfileComplete(email) {
+  if (!email) return true;
+  var cleanEmail = email.toLowerCase().trim();
+  if (cleanEmail === CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase() ||
+      cleanEmail === Session.getEffectiveUser().getEmail().toLowerCase()) return true;
+  var userDb = getUserDatabase();
+  if (!userDb[cleanEmail]) return true;
+  return userDb[cleanEmail].profileComplete !== false;
 }
 
 function requestAccess(displayName, userEmail) {
@@ -167,7 +240,7 @@ function getUsersList(userEmail) {
   for (var email in userDb) {
     var u = userDb[email];
     if (email.toLowerCase() !== CONFIG.PRIMARY_SUPER_ADMIN.toLowerCase() && email.toLowerCase() !== ownerEmail.toLowerCase()) {
-      list.push({ email: u.email, displayName: u.displayName || u.email, role: u.role || 'PENDING', requestedAt: u.requestedAt || '', updatedAt: u.updatedAt || '', isFixed: false });
+      list.push({ email: u.email, displayName: u.displayName || u.email, role: u.role || 'PENDING', profileComplete: u.profileComplete !== false, department: u.department || '', addedBy: u.addedBy || '', requestedAt: u.requestedAt || '', updatedAt: u.updatedAt || '', isFixed: false });
     }
   }
   return list;
@@ -415,7 +488,7 @@ function loadMorePhotos(folderId, offset, searchKeyword) {
 
 function createDriveFolder(folderName, userEmail) {
   var userCtx = getUserContext(userEmail);
-  if (!userCtx.isSuperAdmin) throw new Error('Unauthorized: เฉพาะ Super Admin เท่านั้น');
+  if (!userCtx.isAdminOrHigher) throw new Error('Unauthorized: เฉพาะ Admin หรือ Super Admin เท่านั้น');
   if (!folderName || !folderName.trim()) throw new Error('ชื่อโฟลเดอร์ไม่สามารถเป็นค่าว่างได้');
   var root = getRootFolder();
   var newFolder = root.createFolder(folderName.trim());

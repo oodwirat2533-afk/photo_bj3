@@ -26,7 +26,9 @@ module.exports = async (req, res) => {
         role: isOwner ? "SUPER_ADMIN" : "GUEST",
         isSuperAdmin: isOwner,
         isAdminOrHigher: isOwner,
-        isCanUpload: isOwner
+        isCanUpload: isOwner,
+        canCreateAlbum: isOwner,
+        profileComplete: true
       });
     } else {
       res.status(200).json({
@@ -34,7 +36,9 @@ module.exports = async (req, res) => {
         role: "GUEST",
         isSuperAdmin: false,
         isAdminOrHigher: false,
-        isCanUpload: false
+        isCanUpload: false,
+        canCreateAlbum: false,
+        profileComplete: true
       });
     }
   }
