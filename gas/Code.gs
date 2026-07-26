@@ -78,6 +78,8 @@ function doPost(e) {
       data = requestAccess(postData.displayName, userEmail);
     } else if (action === 'deletePhoto') {
       data = deletePhoto(postData.fileId, userEmail);
+    } else if (action === 'toggleAlbumVisibility') {
+      data = toggleAlbumVisibility(postData.albumId, postData.isHidden, userEmail);
     } else {
       data = { error: 'Invalid POST action: ' + action };
     }
@@ -290,13 +292,25 @@ function getDriveFolders() {
   var root = getRootFolder();
   var list = [];
 
+  var props = PropertiesService.getScriptProperties();
+  var hiddenAlbumsRaw = props.getProperty('HIDDEN_ALBUMS');
+  var hiddenAlbums = {};
+  if (hiddenAlbumsRaw) {
+    try {
+      var arr = JSON.parse(hiddenAlbumsRaw);
+      arr.forEach(function(id) { hiddenAlbums[id] = true; });
+    } catch(e) {}
+  }
+
   var foldersIter = root.getFolders();
   while (foldersIter.hasNext()) {
     var f = foldersIter.next();
+    var fId = f.getId();
     list.push({
-      id: f.getId(),
+      id: fId,
       name: f.getName(),
       isRoot: false,
+      isHidden: !!hiddenAlbums[fId],
       updatedAt: f.getLastUpdated().toISOString()
     });
   }
@@ -503,6 +517,30 @@ function deletePhoto(fileId, userEmail) {
   if (!userCtx.isAdminOrHigher) throw new Error('Unauthorized: เฉพาะ Admin หรือ Super Admin เท่านั้น');
   try { DriveApp.getFileById(fileId).setTrashed(true); return { success: true, message: 'ลบรูปภาพเรียบร้อยแล้ว' }; }
   catch (e) { throw new Error('ไม่สามารถลบรูปภาพได้: ' + e.toString()); }
+}
+
+function toggleAlbumVisibility(albumId, isHidden, userEmail) {
+  var userCtx = getUserContext(userEmail);
+  if (!userCtx.isSuperAdmin) {
+    return { success: false, error: 'Permission denied: Super Admin only' };
+  }
+  
+  var props = PropertiesService.getScriptProperties();
+  var hiddenAlbumsRaw = props.getProperty('HIDDEN_ALBUMS');
+  var hiddenAlbums = [];
+  if (hiddenAlbumsRaw) {
+    try { hiddenAlbums = JSON.parse(hiddenAlbumsRaw); } catch(e) {}
+  }
+  
+  var index = hiddenAlbums.indexOf(albumId);
+  if (isHidden) {
+    if (index === -1) hiddenAlbums.push(albumId);
+  } else {
+    if (index !== -1) hiddenAlbums.splice(index, 1);
+  }
+  
+  props.setProperty('HIDDEN_ALBUMS', JSON.stringify(hiddenAlbums));
+  return { success: true, isHidden: isHidden };
 }
 
 function formatBytes(bytes, decimals) {

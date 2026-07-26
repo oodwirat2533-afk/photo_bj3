@@ -49,6 +49,9 @@
       <button id="btnAdminPanel" class="btn btn-accent" onclick="openAdminUserModal()" style="display: none;">
         <span>👥</span> อนุมัติผู้ใช้งาน
       </button>
+      <button id="btnManageAlbums" class="btn btn-secondary" onclick="openManageAlbumsModal()" style="display: none;" title="จัดการแสดงผลอัลบั้ม">
+        <span>👁️</span> จัดการอัลบั้ม
+      </button>
       <button id="btnUpload" class="btn btn-primary" onclick="openUploadModal()" style="display: none;">
         <span>📤</span> อัปโหลดรูปภาพ
       </button>
@@ -201,6 +204,36 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('driveConfigModal')">ยกเลิก</button>
         <button class="btn btn-primary" onclick="submitDriveConfig()"><span>💾</span> บันทึกการเชื่อมต่อ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE ALBUMS MODAL (Super Admin) -->
+  <div id="manageAlbumsModal" class="modal">
+    <div class="modal-content" style="max-width: 850px;">
+      <div class="modal-header">
+        <div class="modal-title">👁️ จัดการแสดงผลอัลบั้ม (Super Admin)</div>
+        <button class="close-btn" onclick="closeModal('manageAlbumsModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem; overflow-y: auto; max-height: 70vh;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">กำหนดสิทธิ์การมองเห็นอัลบั้มสำหรับบุคคลทั่วไป</p>
+        <div class="table-responsive">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>ชื่ออัลบั้ม (Album Name)</th>
+                <th style="width: 150px; text-align: center;">สถานะ (Status)</th>
+                <th style="width: 150px; text-align: center;">จัดการ (Actions)</th>
+              </tr>
+            </thead>
+            <tbody id="albumsTableBody">
+              <tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">กำลังโหลดข้อมูลอัลบั้ม...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('manageAlbumsModal')">ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>

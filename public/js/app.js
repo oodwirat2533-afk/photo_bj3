@@ -170,6 +170,8 @@ function renderUserNavbar(ctx) {
 
   document.getElementById('btnDriveConfig').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
   document.getElementById('btnAdminPanel').style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
+  const btnManageAlbums = document.getElementById('btnManageAlbums');
+  if (btnManageAlbums) btnManageAlbums.style.display = (ctx && ctx.isSuperAdmin) ? 'inline-flex' : 'none';
   document.getElementById('btnUpload').style.display = (ctx && ctx.isCanUpload) ? 'inline-flex' : 'none';
   document.getElementById('btnCreateFolder').style.display = (ctx && ctx.isAdminOrHigher) ? 'inline-flex' : 'none';
 }
@@ -193,8 +195,8 @@ async function loadAlbums() {
 
 function renderAlbumGrid(folders) {
   const rawList = Array.isArray(folders) ? folders : [];
-  const cleanFolders = rawList.filter(f => !f.isRoot && !(f.name && f.name.indexOf('รูปภาพทั้งหมด') !== -1));
-  state.folders = cleanFolders;
+  const cleanFolders = rawList.filter(f => !f.isRoot && !(f.name && f.name.indexOf('รูปภาพทั้งหมด') !== -1) && !f.isHidden);
+  state.folders = rawList; // keep rawList in state so modal can see hidden ones
   const albumGrid = document.getElementById('albumGrid');
   const uploadSelect = document.getElementById('uploadFolderSelect');
   albumGrid.innerHTML = '';
@@ -784,4 +786,55 @@ function formatBytes(bytes) {
   const k = 1024, sizes = ['Bytes','KB','MB','GB'];
   const i = Math.floor(Math.log(bytes)/Math.log(k));
   return parseFloat((bytes/Math.pow(k,i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function openManageAlbumsModal() {
+  if (!state.folders) return;
+  const tbody = document.getElementById('albumsTableBody');
+  tbody.innerHTML = '';
+  
+  const albums = state.folders.filter(f => !f.isRoot && !(f.name && f.name.indexOf('รูปภาพทั้งหมด') !== -1));
+  
+  if (albums.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 2rem;">ไม่พบอัลบั้ม</td></tr>';
+  } else {
+    albums.forEach(f => {
+      const isHidden = !!f.isHidden;
+      const statusText = isHidden ? '<span style="color: #ef4444; font-weight: 600;">🚫 ซ่อนอยู่</span>' : '<span style="color: #10b981; font-weight: 600;">👁️ แสดงปกติ</span>';
+      const actionBtn = isHidden 
+        ? `<button class="btn btn-primary" onclick="toggleAlbumVisibility('${f.id}', false)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">👁️ เปิดแสดง</button>`
+        : `<button class="btn btn-secondary" onclick="toggleAlbumVisibility('${f.id}', true)" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-color: #ef4444; color: #ef4444;">🚫 ซ่อนอัลบั้ม</button>`;
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight: 500;">${escapeHtml(f.name)}</td>
+        <td style="text-align: center;">${statusText}</td>
+        <td style="text-align: center;">${actionBtn}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  openModal('manageAlbumsModal');
+}
+
+async function toggleAlbumVisibility(albumId, isHidden) {
+  if (!googleUser) return;
+  try {
+    showToast('กำลังบันทึกการตั้งค่า...', 'info');
+    const res = await fetch('/api/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'toggleVisibility', albumId, isHidden, userEmail: googleUser.email })
+    });
+    
+    if (!res.ok) throw new Error('API Error ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    
+    showToast('บันทึกการตั้งค่าอัลบั้มเรียบร้อยแล้ว', 'success');
+    closeModal('manageAlbumsModal');
+    loadAlbums(); // refresh albums
+  } catch (err) {
+    showToast('บันทึกล้มเหลว: ' + err.message, 'error');
+  }
 }

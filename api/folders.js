@@ -37,9 +37,14 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      const { folderName = '', userEmail = '' } = req.body || {};
-      const data = await gasPost({ action: 'createFolder', folderName, userEmail });
-      res.status(200).json(data);
+      const { action = 'createFolder', folderName = '', userEmail = '', albumId = '', isHidden = false } = req.body || {};
+      if (action === 'toggleVisibility') {
+        const data = await gasPost({ action: 'toggleAlbumVisibility', albumId, isHidden, userEmail });
+        res.status(200).json(data);
+      } else {
+        const data = await gasPost({ action: 'createFolder', folderName, userEmail });
+        res.status(200).json(data);
+      }
     } else {
       const data = await gasGet({ action: 'getFolders' });
       // Ensure always Array
