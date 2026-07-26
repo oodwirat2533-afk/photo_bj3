@@ -403,6 +403,13 @@ function openUploadModal() {
   document.getElementById('selectedFilesList').innerHTML = '';
   document.getElementById('fileInput').value = '';
   document.getElementById('btnSubmitUpload').disabled = true;
+
+  const currentFolderId = state.navStack[state.navStack.length - 1].id;
+  const uploadSelect = document.getElementById('uploadFolderSelect');
+  if (currentFolderId !== 'root' && uploadSelect) {
+    uploadSelect.value = currentFolderId;
+  }
+
   openModal('uploadModal');
 }
 
