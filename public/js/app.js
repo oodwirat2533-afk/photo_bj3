@@ -481,11 +481,17 @@ function renderSubfolderView(subfolders, directPhotosData) {
 }
 
 function showPhotoSkeletons() {
+  document.getElementById('photoCountBadge').style.display = 'none';
   document.getElementById('galleryGrid').innerHTML = `
-    <div class="photo-card skeleton" style="height:220px;"></div>
-    <div class="photo-card skeleton" style="height:220px;"></div>
-    <div class="photo-card skeleton" style="height:220px;"></div>
-    <div class="photo-card skeleton" style="height:220px;"></div>`;
+    <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; text-align: center;">
+      <div style="width: 48px; height: 48px; border: 4px solid var(--border-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1.5rem;"></div>
+      <h3 style="color: var(--text-light); font-size: 1.25rem; margin-bottom: 0.5rem;">กำลังดึงข้อมูล...</h3>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">ระบบกำลังค้นหาและดึงรูปภาพจาก Google Drive<br>กรุณารอสักครู่ (ประมาณ 1-3 วินาที)</p>
+    </div>
+    <style>
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+  `;
 }
 
 function renderGalleryGrid(photosData, append = false) {
