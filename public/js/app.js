@@ -332,6 +332,7 @@ function buildAlbumCard(f, onClick) {
         <div class="folder-subtext">${f.isRoot ? 'แสดงภาพทั้งหมดในระบบ' : 'คลิกเพื่อเปิดดูอัลบั้ม'}</div>
       </div>
       <div class="album-arrow">›</div>
+}
     </div>`;
   return card;
 }
@@ -345,6 +346,18 @@ function extractPhotosList(data) {
     if (Array.isArray(data.directPhotos.items)) return data.directPhotos.items;
   }
   return [];
+}
+
+function forcePaint(element, callback) {
+  // Force a synchronous layout calculation
+  void element.offsetWidth;
+  
+  // Wait for 2 frames to guarantee the browser has painted the screen
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(callback, 10);
+    });
+  });
 }
 
 async function openFolder(folderId, folderName) {
@@ -375,14 +388,15 @@ async function openFolder(folderId, folderName) {
   document.getElementById('photoCountBadge').style.display = 'none';
   
   // Show global loader instantly
-  document.getElementById('globalLoader').style.display = 'flex';
+  const loader = document.getElementById('globalLoader');
+  loader.style.display = 'flex';
   
-  // Guarantee Safari paints the loader by pushing the heavy work to the next event loop tick
-  setTimeout(async () => {
+  // Absolutely guarantee Safari paints the loader before fetching
+  forcePaint(loader, async () => {
     try {
       const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
       const contents = await res.json();
-      document.getElementById('globalLoader').style.display = 'none';
+      loader.style.display = 'none';
       
       if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
         renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
