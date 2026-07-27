@@ -376,6 +376,9 @@ async function openFolder(folderId, folderName) {
   
   // Show global loader instantly
   document.getElementById('globalLoader').style.display = 'flex';
+  
+  // Yield thread for mobile Safari to paint the overlay
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
