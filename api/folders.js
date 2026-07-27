@@ -15,13 +15,12 @@ module.exports = async (req, res) => {
       const rootId = await db.getRootFolderId();
       if (!rootId) return res.status(200).json([]);
       const folders = await drive.listFolders(rootId);
-      let hidden = await db.getHiddenAlbums();
-      if (!Array.isArray(hidden)) {
-        if (typeof hidden === 'string') {
-          try { hidden = JSON.parse(hidden); } catch(e) { hidden = []; }
-        } else { hidden = []; }
+      const hiddenList = await db.getHiddenAlbums();
+      const hiddenMap = {};
+      if (Array.isArray(hiddenList)) {
+        hiddenList.forEach(id => { if (id) hiddenMap[String(id).trim()] = true; });
       }
-      const merged = folders.map(f => ({ ...f, isHidden: hidden.includes(f.id) }));
+      const merged = folders.map(f => ({ ...f, isHidden: !!hiddenMap[String(f.id).trim()] }));
       return res.status(200).json(merged);
     }
     

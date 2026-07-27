@@ -24,13 +24,15 @@ async function saveUserDatabase(userDb) {
 async function getHiddenAlbums() {
   const db = getRedis();
   const data = await db.get('hidden_albums');
+  if (!data) return [];
   if (Array.isArray(data)) return data;
   if (typeof data === 'string') {
     try {
       const parsed = JSON.parse(data);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed : (typeof parsed === 'object' ? Object.keys(parsed) : []);
     } catch(e) { return []; }
   }
+  if (typeof data === 'object') return Object.keys(data);
   return [];
 }
 
