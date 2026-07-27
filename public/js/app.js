@@ -780,9 +780,14 @@ function openDriveConfigModal() {
 
   fetch('/api/config')
     .then(r => r.json())
-    .then(info => {
-      infoDiv.innerHTML = `<strong>📁 โฟลเดอร์ปัจจุบัน:</strong><br>• ชื่อ: <strong>${escapeHtml(info.name)}</strong><br>• ID: <code>${info.id}</code><br>• <a href="${info.url}" target="_blank" style="color:#60a5fa;text-decoration:underline;">เปิดใน Google Drive ↗</a>`;
-      document.getElementById('driveUrlInput').value = info.url || '';
+    .then(data => {
+      if (data.folderInfo) {
+        const info = data.folderInfo;
+        infoDiv.innerHTML = `<strong>📁 โฟลเดอร์ปัจจุบัน:</strong><br>• ชื่อ: <strong>${escapeHtml(info.name)}</strong><br>• ID: <code>${info.id}</code><br>• <a href="${info.url}" target="_blank" style="color:#60a5fa;text-decoration:underline;">เปิดใน Google Drive ↗</a>`;
+        document.getElementById('driveUrlInput').value = info.url || '';
+      } else {
+        infoDiv.innerHTML = 'ยังไม่ได้ตั้งค่าโฟลเดอร์หลัก';
+      }
     })
     .catch(err => showToast('ดึงข้อมูลโฟลเดอร์ล้มเหลว', 'error'));
 }
@@ -797,7 +802,7 @@ async function submitDriveConfig() {
     const res = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ urlOrId, userEmail })
+      body: JSON.stringify({ rootFolderUrl: urlOrId, userEmail })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
