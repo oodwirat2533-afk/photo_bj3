@@ -512,11 +512,18 @@ async function loadNextPageOfPhotos() {
 function buildPhotoCard(photo) {
   const card = document.createElement('div');
   card.className = 'photo-card';
+  const isVid = photo.isVideo || (photo.mimeType && photo.mimeType.toLowerCase().startsWith('video/'));
+  const videoBadge = isVid
+    ? `<div style="position:absolute;top:10px;left:10px;background:rgba(239,68,68,0.9);color:#fff;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;display:flex;align-items:center;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:2;">▶️ วิดีโอ</div>`
+    : '';
+  const overlayText = isVid ? '▶️ คลิกเพื่อเล่นวิดีโอ' : '🔍 คลิกเพื่อขยายใหญ่';
+
   card.innerHTML = `
-    <div class="photo-img-wrapper" onclick="openLightbox('${photo.id}')">
+    <div class="photo-img-wrapper" onclick="openLightbox('${photo.id}')" style="position:relative;">
+      ${videoBadge}
       <img class="photo-img" src="${photo.thumbnailLink}" alt="${escapeHtml(photo.name)}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=Error+Loading'">
       <div class="photo-overlay">
-        <span style="font-size:0.8rem;color:#93c5fd;">🔍 คลิกเพื่อขยายใหญ่</span>
+        <span style="font-size:0.8rem;color:#93c5fd;">${overlayText}</span>
       </div>
     </div>
     <div class="photo-details">
@@ -591,7 +598,28 @@ async function openLightbox(photoId) {
   if (!photo) return;
   state.currentPhoto = photo;
   document.getElementById('lightboxTitle').textContent = photo.name;
-  document.getElementById('lightboxImage').src = photo.viewLink;
+
+  const imgElem = document.getElementById('lightboxImage');
+  const videoElem = document.getElementById('lightboxVideo');
+  const isVid = photo.isVideo || (photo.mimeType && photo.mimeType.toLowerCase().startsWith('video/'));
+
+  if (isVid) {
+    if (imgElem) imgElem.style.display = 'none';
+    if (videoElem) {
+      videoElem.style.display = 'block';
+      videoElem.src = `https://drive.google.com/file/d/${photo.id}/preview`;
+    }
+  } else {
+    if (videoElem) {
+      videoElem.style.display = 'none';
+      videoElem.src = '';
+    }
+    if (imgElem) {
+      imgElem.style.display = 'block';
+      imgElem.src = photo.viewLink;
+    }
+  }
+
   document.getElementById('lightboxDownloadBtn').href = photo.downloadLink;
 
   const btnDelete = document.getElementById('btnDeletePhoto');
@@ -916,6 +944,10 @@ function closeModal(id) {
   const modal = document.getElementById(id);
   if (modal) {
     modal.classList.remove('active');
+  }
+  if (id === 'lightboxModal') {
+    const videoElem = document.getElementById('lightboxVideo');
+    if (videoElem) videoElem.src = '';
   }
   if (!document.querySelector('.modal.active')) {
     document.body.classList.remove('modal-open');

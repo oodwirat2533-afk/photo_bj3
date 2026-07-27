@@ -23,18 +23,30 @@ function formatBytes(bytes, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-const IMAGE_MIMETYPES = [
+const MEDIA_MIMETYPES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 
-  'image/heic', 'image/heif', 'image/bmp', 'image/tiff', 'image/svg+xml'
+  'image/heic', 'image/heif', 'image/bmp', 'image/tiff', 'image/svg+xml',
+  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
+  'video/x-msvideo', 'video/x-matroska', 'video/3gpp', 'video/m4v', 'video/avi'
 ];
 
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.bmp', '.tiff', '.svg'];
+const MEDIA_EXTENSIONS = [
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.bmp', '.tiff', '.svg',
+  '.mp4', '.mov', '.webm', '.avi', '.mkv', '.3gp', '.m4v', '.ogv'
+];
 
-function isImageFile(mimeType, fileName) {
-  if (IMAGE_MIMETYPES.includes(mimeType)) return true;
+function isVideoFile(mimeType, fileName) {
+  if (mimeType && mimeType.toLowerCase().startsWith('video/')) return true;
   if (!fileName) return false;
   const ext = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
-  return IMAGE_EXTENSIONS.includes(`.${ext}`);
+  return ['.mp4', '.mov', '.webm', '.avi', '.mkv', '.3gp', '.m4v', '.ogv'].includes(`.${ext}`);
+}
+
+function isImageFile(mimeType, fileName) {
+  if (mimeType && (mimeType.toLowerCase().startsWith('image/') || mimeType.toLowerCase().startsWith('video/') || MEDIA_MIMETYPES.includes(mimeType))) return true;
+  if (!fileName) return false;
+  const ext = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
+  return MEDIA_EXTENSIONS.includes(`.${ext}`);
 }
 
 async function listFolders(parentId) {
@@ -80,14 +92,18 @@ async function listPhotos(folderId, offset = 0, limit = 50, search = '') {
   }
 
   const total = allFiles.length;
-  const items = allFiles.slice(offset, offset + limit).map(f => ({
-    id: f.id,
-    name: f.name,
-    mimeType: f.mimeType,
-    thumbnailLink: `https://lh3.googleusercontent.com/d/${f.id}=s300`,
-    viewLink: `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
-    downloadLink: `https://drive.google.com/uc?export=download&id=${f.id}`
-  }));
+  const items = allFiles.slice(offset, offset + limit).map(f => {
+    const isVid = isVideoFile(f.mimeType, f.name);
+    return {
+      id: f.id,
+      name: f.name,
+      mimeType: f.mimeType,
+      isVideo: isVid,
+      thumbnailLink: `https://lh3.googleusercontent.com/d/${f.id}=s300`,
+      viewLink: isVid ? `https://drive.google.com/file/d/${f.id}/preview` : `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
+      downloadLink: `https://drive.google.com/uc?export=download&id=${f.id}`
+    };
+  });
 
   const nextOffset = offset + limit;
   const hasMore = nextOffset < total;
@@ -241,15 +257,17 @@ async function searchPhotosRecursive(folderId, keyword) {
   
   return allImages.map(f => {
     const createdDate = f.createdTime ? new Date(f.createdTime) : new Date();
+    const isVid = isVideoFile(f.mimeType, f.name);
     return {
       id: f.id,
       name: f.name,
       size: f.size ? formatBytes(f.size) : '0 Bytes',
       mimeType: f.mimeType,
+      isVideo: isVid,
       created: createdDate.toLocaleDateString('th-TH'),
       createdIso: createdDate.toISOString(),
       thumbnailLink: `https://lh3.googleusercontent.com/d/${f.id}=s300`,
-      viewLink: `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
+      viewLink: isVid ? `https://drive.google.com/file/d/${f.id}/preview` : `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
       downloadLink: `https://drive.google.com/uc?export=download&id=${f.id}`
     };
   }).sort((a, b) => b.createdIso.localeCompare(a.createdIso));
