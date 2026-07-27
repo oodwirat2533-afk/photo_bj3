@@ -347,18 +347,21 @@ function extractPhotosList(data) {
   return [];
 }
 
-function forcePaint(element, callback) {
-  // Use a single simple setTimeout to yield to the browser's paint thread
-  setTimeout(callback, 50);
-}
-
 function openFolder(folderId, folderName) {
-  // Show global loader instantly as the ABSOLUTE FIRST thing
   const loader = document.getElementById('globalLoader');
-  loader.style.display = 'flex';
   
-  // Yield thread immediately so browser can paint the loader
-  forcePaint(loader, async () => {
+  // Show loader and force reflow
+  loader.style.display = 'flex';
+  void loader.offsetWidth; 
+  
+  // Start fade-in animation
+  loader.style.opacity = '1';
+  
+  // Use transitionend to guarantee the browser has painted the loader before we do anything else
+  const onTransitionEnd = async () => {
+    loader.removeEventListener('transitionend', onTransitionEnd);
+    
+    // Safety fallback: if transitionend fired, or if it didn't, we are now safe to proceed
     const lastIndex = state.navStack.length - 1;
     if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
       state.navStack[lastIndex].name = folderName;
@@ -389,7 +392,10 @@ function openFolder(folderId, folderName) {
     try {
       const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
       const contents = await res.json();
-      loader.style.display = 'none';
+      
+      // Fade out
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 200);
       
       if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
         renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
@@ -397,11 +403,18 @@ function openFolder(folderId, folderName) {
         renderGalleryGrid(contents.directPhotos || contents);
       }
     } catch (err) {
-      document.getElementById('globalLoader').style.display = 'none';
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 200);
       console.error(err);
       showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
     }
-  }, 100);
+  };
+
+  // Listen for the animation end
+  loader.addEventListener('transitionend', onTransitionEnd);
+  
+  // Safety timeout in case transitionend fails to fire on some browsers
+  setTimeout(onTransitionEnd, 150);
 }
 
 function renderSubfolderView(subfolders, directPhotosData) {
