@@ -143,7 +143,7 @@ async function getFolderContents(folderId, pageToken = null, limit = 50) {
   return {
     type: subfolders.length > 0 ? 'subfolders' : 'photos',
     subfolders,
-    directPhotos: subfolders.length > 0 ? { items: [], total: 0, hasMore: false, nextPageToken: null } : directPhotos
+    directPhotos
   };
 }
 
