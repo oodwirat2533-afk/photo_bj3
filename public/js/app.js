@@ -372,7 +372,11 @@ async function openFolder(folderId, folderName) {
   if (searchInputEl) searchInputEl.value = '';
 
   renderBreadcrumb();
+  document.getElementById('photoCountBadge').style.display = 'none';
   showPhotoSkeletons();
+  
+  // Yield thread for mobile Safari to paint skeletons
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
     const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
