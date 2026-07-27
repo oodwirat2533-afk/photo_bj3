@@ -1,45 +1,41 @@
-const GAS_API_URL = process.env.GAS_API_URL || 'https://script.google.com/macros/s/AKfycbxj_KsFJ89lpmxYQLlxnoZ9NoFeVMy_9gnIC0vDFImonUllNygnYZ7tNTyG0C0FBxDvWA/exec';
-
-async function gasGet(params) {
-  const url = GAS_API_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { redirect: 'follow' });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch (e) { throw new Error('GAS returned non-JSON: ' + text.substring(0, 200)); }
-}
-
-async function gasPost(body) {
-  const res = await fetch(GAS_API_URL, {
-    method: 'POST', redirect: 'follow',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch (e) { throw new Error('GAS returned non-JSON: ' + text.substring(0, 200)); }
-}
+const db = require('./lib/db');
+const drive = require('./lib/drive');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,DELETE');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
   try {
+    if (req.method === 'GET') {
+      const { action, fileId, folderId, keyword, offset = 0, limit = 50 } = req.query;
+      
+      if (action === 'getPhotoMetadata') {
+        const meta = await drive.getFileMetadata(fileId);
+        return res.status(200).json(meta);
+      }
+      
+      if (action === 'searchPhotos') {
+        const rootId = await db.getRootFolderId();
+        const photos = await drive.searchPhotosRecursive(rootId, keyword);
+        return res.status(200).json(photos);
+      }
+      
+      // Default get folder contents
+      const contents = await drive.getFolderContents(folderId, parseInt(offset), parseInt(limit));
+      return res.status(200).json(contents);
+    }
+    
     if (req.method === 'DELETE') {
-      const fileId = req.query.fileId;
-      const userEmail = req.query.userEmail || (req.body ? req.body.userEmail : '');
-      const data = await gasPost({ action: 'deletePhoto', fileId, userEmail });
-      res.status(200).json(data);
-    } else if (req.query.action === 'getPhotoMetadata') {
-      const data = await gasGet({ action: 'getPhotoMetadata', fileId: req.query.fileId });
-      res.status(200).json(data);
-    } else {
-      const { folderId = 'root', search = '', offset = '0', limit = '24' } = req.query;
-      const data = await gasGet({ action: 'getPhotos', folderId, search, offset, limit });
-      res.status(200).json(data);
+      const { userEmail, fileId } = req.body || req.query;
+      const ctx = await db.getUserContext((userEmail || '').toLowerCase().trim());
+      if (!ctx.isAdminOrHigher) return res.status(403).json({ error: 'Forbidden' });
+      
+      const result = await drive.deleteFile(fileId);
+      return res.status(200).json(result);
     }
   } catch (error) {
-    res.status(200).json({ error: error.message, items: [], type: 'photos' });
+    res.status(500).json({ error: error.message });
   }
 };

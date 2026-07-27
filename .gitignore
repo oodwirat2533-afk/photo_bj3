@@ -2,9 +2,9 @@ node_modules/
 .vercel
 .env
 .env.local
-.clasprc.json
-.clasp.json.bak
+.env.*
 *.log
 
-.vercel
-.env*
+# Service account key (NEVER commit this)
+service-account-key.json
+*-credentials.json
