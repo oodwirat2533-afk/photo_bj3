@@ -23,18 +23,21 @@ async function saveUserDatabase(userDb) {
 
 async function getHiddenAlbums() {
   const db = getRedis();
-  let data = await db.get('hidden_albums');
-  if (!data) return [];
+  const data = await db.get('hidden_albums');
+  if (Array.isArray(data)) return data;
   if (typeof data === 'string') {
-    try { data = JSON.parse(data); } catch(e) { return []; }
+    try {
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
   }
-  return Array.isArray(data) ? data : [];
+  return [];
 }
 
 async function saveHiddenAlbums(albumIds) {
   const db = getRedis();
   const arr = Array.isArray(albumIds) ? albumIds : [];
-  await db.set('hidden_albums', JSON.stringify(arr));
+  await db.set('hidden_albums', arr);
 }
 
 async function getRootFolderId() {
