@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
       
       // Check Cache
       const resolvedToken = pageToken || (offset === '0' || offset === 0 ? null : offset);
-      const cacheKey = `folder_${folderId}_${resolvedToken || '0'}_${limit}`;
+      const cacheKey = `v2_folder_${folderId}_${resolvedToken || '0'}_${limit}`;
       const redis = db.getRedis();
       try {
         const cached = await redis.get(cacheKey);

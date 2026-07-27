@@ -471,8 +471,7 @@ function renderSubfolderView(subfolders, directPhotosData) {
     setupInfiniteScroll();
   }
 
-  const badgeText = `${subfolders.length} โฟลเดอร์ย่อย` + (total > 0 ? ` • ทั้งหมด ${total} รูปภาพ` : (photosList.length > 0 ? ` • ${photosList.length} รูปภาพ` : ''));
-  document.getElementById('photoCountBadge').textContent = badgeText;
+  document.getElementById('photoCountBadge').style.display = 'none';
 }
 
 function showPhotoSkeletons() {
@@ -511,8 +510,7 @@ function renderGalleryGrid(photosData, append = false) {
     grid.innerHTML = '';
   }
 
-  const countBadgeText = total > 0 ? `กำลังแสดง ${state.photos.length} จากทั้งหมด ${total} รูปภาพ` : `${state.photos.length} รูปภาพ`;
-  document.getElementById('photoCountBadge').textContent = countBadgeText;
+  document.getElementById('photoCountBadge').style.display = 'none';
 
   if (!append && state.photos.length === 0) {
     grid.innerHTML = `
