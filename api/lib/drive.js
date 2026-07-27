@@ -73,7 +73,7 @@ async function listPhotos(folderId, offset = 0, limit = 50, search = '') {
   
   do {
     const res = await drive.files.list({
-      q: `'${folderId}' in parents and trashed = false`,
+      q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
       fields: 'nextPageToken, files(id, name, mimeType)',
       pageSize: 1000,
       pageToken: pageToken
@@ -233,7 +233,7 @@ async function searchPhotosRecursive(folderId, keyword) {
     let pageToken = null;
     do {
       const res = await drive.files.list({
-        q: `'${currentFolderId}' in parents and trashed = false`,
+        q: `'${currentFolderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
         fields: 'nextPageToken, files(id, name, mimeType, size, createdTime)',
         pageSize: 1000,
         pageToken: pageToken
