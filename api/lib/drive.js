@@ -117,8 +117,10 @@ async function getFolderContents(folderId, offset = 0, limit = 50) {
     return { type: 'photos', subfolders: [], directPhotos };
   }
   
-  const subfolders = await listFolders(folderId);
-  const directPhotos = await listPhotos(folderId, 0, limit);
+  const [subfolders, directPhotos] = await Promise.all([
+    listFolders(folderId),
+    listPhotos(folderId, 0, limit)
+  ]);
   
   return {
     type: subfolders.length > 0 ? 'subfolders' : 'photos',

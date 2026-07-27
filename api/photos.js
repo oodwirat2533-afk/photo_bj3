@@ -22,8 +22,22 @@ module.exports = async (req, res) => {
         return res.status(200).json(photos);
       }
       
+      // Check Cache
+      const cacheKey = `folder_${folderId}_${offset}_${limit}`;
+      const redis = db.getRedis();
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) return res.status(200).json(typeof cached === 'string' ? JSON.parse(cached) : cached);
+      } catch (e) { /* ignore cache error */ }
+
       // Default get folder contents
       const contents = await drive.getFolderContents(folderId, parseInt(offset), parseInt(limit));
+      
+      // Save to Cache (expires in 3 minutes = 180s)
+      try {
+        await redis.set(cacheKey, JSON.stringify(contents), { ex: 180 });
+      } catch (e) { /* ignore cache error */ }
+      
       return res.status(200).json(contents);
     }
     
