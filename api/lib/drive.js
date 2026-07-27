@@ -71,54 +71,62 @@ async function listPhotos(folderId, limit = 50, search = '', pageToken = null) {
   let allFiles = [];
   let currentToken = pageToken || null;
   
-  if (!search) {
-    do {
-      const res = await drive.files.list({
-        q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
-        fields: 'nextPageToken, files(id, name, mimeType)',
-        pageSize: 50,
-        pageToken: currentToken
-      });
-      
-      const files = res.data.files || [];
-      const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
-      
-      allFiles = allFiles.concat(imageFiles);
-      currentToken = res.data.nextPageToken;
-    } while (currentToken && allFiles.length < limit);
-  } else {
-    // Search mode requires fetching all to filter by name
-    do {
-      const res = await drive.files.list({
-        q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
-        fields: 'nextPageToken, files(id, name, mimeType)',
-        pageSize: 1000,
-        pageToken: currentToken
-      });
-      const files = res.data.files || [];
-      const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
-      allFiles = allFiles.concat(imageFiles);
-      currentToken = res.data.nextPageToken;
-    } while (currentToken);
-    const s = search.toLowerCase();
-    allFiles = allFiles.filter(f => f.name.toLowerCase().includes(s)).slice(0, limit);
-    currentToken = null; // Cannot paginate search properly this way
+  try {
+    if (!search) {
+      do {
+        const params = {
+          q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+          fields: 'nextPageToken, files(id, name, mimeType)',
+          pageSize: 50
+        };
+        if (currentToken) params.pageToken = currentToken;
+        
+        const res = await drive.files.list(params);
+        
+        const files = res.data.files || [];
+        const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
+        
+        allFiles = allFiles.concat(imageFiles);
+        currentToken = res.data.nextPageToken;
+      } while (currentToken && allFiles.length < limit);
+    } else {
+      do {
+        const params = {
+          q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+          fields: 'nextPageToken, files(id, name, mimeType)',
+          pageSize: 1000
+        };
+        if (currentToken) params.pageToken = currentToken;
+
+        const res = await drive.files.list(params);
+        const files = res.data.files || [];
+        const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
+        allFiles = allFiles.concat(imageFiles);
+        currentToken = res.data.nextPageToken;
+      } while (currentToken);
+      const s = search.toLowerCase();
+      allFiles = allFiles.filter(f => f.name.toLowerCase().includes(s)).slice(0, limit);
+      currentToken = null; 
+    }
+
+    const items = allFiles.slice(0, limit).map(f => {
+      const isVid = isVideoFile(f.mimeType, f.name);
+      return {
+        id: f.id,
+        name: f.name,
+        mimeType: f.mimeType,
+        isVideo: isVid,
+        thumbnailLink: `https://lh3.googleusercontent.com/d/${f.id}=s300`,
+        viewLink: isVid ? `https://drive.google.com/file/d/${f.id}/preview` : `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
+        downloadLink: `https://drive.google.com/uc?export=download&id=${f.id}`
+      };
+    });
+
+    return { items, total: 0, hasMore: !!currentToken, nextPageToken: currentToken };
+  } catch (error) {
+    console.error('Drive API Error in listPhotos:', error.message);
+    return { items: [], total: 0, hasMore: false, nextPageToken: null, error: error.message };
   }
-
-  const items = allFiles.slice(0, limit).map(f => {
-    const isVid = isVideoFile(f.mimeType, f.name);
-    return {
-      id: f.id,
-      name: f.name,
-      mimeType: f.mimeType,
-      isVideo: isVid,
-      thumbnailLink: `https://lh3.googleusercontent.com/d/${f.id}=s300`,
-      viewLink: isVid ? `https://drive.google.com/file/d/${f.id}/preview` : `https://lh3.googleusercontent.com/d/${f.id}=s1600`,
-      downloadLink: `https://drive.google.com/uc?export=download&id=${f.id}`
-    };
-  });
-
-  return { items, total: 0, hasMore: !!currentToken, nextPageToken: currentToken };
 }
 
 async function getFolderContents(folderId, pageToken = null, limit = 50) {
