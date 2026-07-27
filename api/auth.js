@@ -6,7 +6,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  const userEmail = (req.query.userEmail || '').toLowerCase().trim();
+  const parsedUrl = new URL(req.url, 'http://localhost');
+  const userEmail = (parsedUrl.searchParams.get('userEmail') || (req.query && req.query.userEmail) || '').toLowerCase().trim();
   try {
     if (!userEmail) {
       return res.status(200).json({
