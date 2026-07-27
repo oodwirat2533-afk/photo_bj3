@@ -349,19 +349,12 @@ function extractPhotosList(data) {
 
 function openFolder(folderId, folderName) {
   const loader = document.getElementById('globalLoader');
-  
-  // Show loader and force reflow
-  loader.style.display = 'flex';
-  void loader.offsetWidth; 
-  
-  // Start fade-in animation
   loader.style.opacity = '1';
+  loader.style.display = 'flex';
   
-  // Use transitionend to guarantee the browser has painted the loader before we do anything else
-  const onTransitionEnd = async () => {
-    loader.removeEventListener('transitionend', onTransitionEnd);
-    
-    // Safety fallback: if transitionend fired, or if it didn't, we are now safe to proceed
+  // A solid 300ms timeout breaks Safari's UI event batching context.
+  // This absolutely forces Safari to paint the loader before the fetch begins.
+  setTimeout(async () => {
     const lastIndex = state.navStack.length - 1;
     if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
       state.navStack[lastIndex].name = folderName;
@@ -393,9 +386,7 @@ function openFolder(folderId, folderName) {
       const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
       const contents = await res.json();
       
-      // Fade out
-      loader.style.opacity = '0';
-      setTimeout(() => { loader.style.display = 'none'; }, 200);
+      loader.style.display = 'none';
       
       if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
         renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
@@ -403,18 +394,11 @@ function openFolder(folderId, folderName) {
         renderGalleryGrid(contents.directPhotos || contents);
       }
     } catch (err) {
-      loader.style.opacity = '0';
-      setTimeout(() => { loader.style.display = 'none'; }, 200);
+      loader.style.display = 'none';
       console.error(err);
       showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
     }
-  };
-
-  // Listen for the animation end
-  loader.addEventListener('transitionend', onTransitionEnd);
-  
-  // Safety timeout in case transitionend fails to fire on some browsers
-  setTimeout(onTransitionEnd, 150);
+  }, 300);
 }
 
 function renderSubfolderView(subfolders, directPhotosData) {
