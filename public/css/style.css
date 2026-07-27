@@ -36,6 +36,7 @@
   box-sizing: border-box;
   font-family: 'Prompt', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
