@@ -285,9 +285,25 @@ function renderAlbumGrid(folders) {
     return;
   }
 
-  cleanFolders.forEach(f => {
-    albumGrid.appendChild(buildAlbumCard(f, () => openFolder(f.id, f.name)));
-  });
+  let currentIndex = 0;
+  const batchSize = 30;
+
+  function renderBatch() {
+    const fragment = document.createDocumentFragment();
+    const end = Math.min(currentIndex + batchSize, cleanFolders.length);
+    for (let i = currentIndex; i < end; i++) {
+      fragment.appendChild(buildAlbumCard(cleanFolders[i], () => openFolder(cleanFolders[i].id, cleanFolders[i].name)));
+    }
+    albumGrid.appendChild(fragment);
+    currentIndex = end;
+    if (currentIndex < cleanFolders.length) {
+      requestAnimationFrame(renderBatch);
+    }
+  }
+
+  if (cleanFolders.length > 0) {
+    renderBatch();
+  }
 }
 
 function buildAlbumCard(f, onClick) {
@@ -386,26 +402,55 @@ function renderSubfolderView(subfolders, directPhotosData) {
   const subGrid = document.createElement('div');
   subGrid.className = 'album-grid';
   subGrid.style.cssText = 'margin-bottom: 1.5rem; grid-column: 1/-1;';
-  subfolders.forEach(sub => {
-    subGrid.appendChild(buildAlbumCard(sub, () => openFolder(sub.id, sub.name)));
-  });
-  grid.appendChild(subGrid);
+  let currentIndex = 0;
+  const batchSize = 30;
 
-  if (photosList.length > 0) {
+  function renderFolderBatch() {
+    const fragment = document.createDocumentFragment();
+    const end = Math.min(currentIndex + batchSize, subfolders.length);
+    for (let i = currentIndex; i < end; i++) {
+      fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
+    }
+    subGrid.appendChild(fragment);
+    currentIndex = end;
+    if (currentIndex < subfolders.length) {
+      requestAnimationFrame(renderFolderBatch);
+    } else {
+      if (photosList.length > 0) renderDirectPhotos();
+      else setupInfiniteScroll();
+    }
+  }
+
+  function renderDirectPhotos() {
     const divider = document.createElement('div');
     divider.style.cssText = 'grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);';
     divider.innerHTML = `<span>📷 รูปภาพในอัลบั้มนี้ (แสดง ${photosList.length}${total > 0 ? ' จากทั้งหมด ' + total : ''} รูป)</span>`;
     grid.appendChild(divider);
 
+    const frag = document.createDocumentFragment();
     photosList.forEach(photo => {
-      grid.appendChild(buildPhotoCard(photo));
+      frag.appendChild(buildPhotoCard(photo));
     });
+    grid.appendChild(frag);
+    setupInfiniteScroll();
   }
+
+  grid.appendChild(subGrid);
+
+  if (subfolders.length > 0) {
+    renderFolderBatch();
+  } else if (photosList.length > 0) {
+    renderDirectPhotos();
+  } else {
+    setupInfiniteScroll();
+  }
+
+    // Handled by renderDirectPhotos() inside renderFolderBatch() now.
 
   const badgeText = `${subfolders.length} โฟลเดอร์ย่อย` + (total > 0 ? ` • ทั้งหมด ${total} รูปภาพ` : (photosList.length > 0 ? ` • ${photosList.length} รูปภาพ` : ''));
   document.getElementById('photoCountBadge').textContent = badgeText;
 
-  setupInfiniteScroll();
+  // Moved to renderDirectPhotos() or at the end of renderFolderBatch()
 }
 
 function showPhotoSkeletons() {
