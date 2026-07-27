@@ -167,8 +167,8 @@
         <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
           <div class="drop-icon">📁</div>
           <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">รองรับ JPG, PNG, WEBP, HEIC, GIF</div>
-          <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">รองรับ JPG, PNG, WEBP, HEIC, GIF, MP4, MOV</div>
+          <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display: none;" onchange="handleFileSelect(event)">
         </div>
         <div id="selectedFilesList" style="margin-top: 1rem; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: var(--text-muted);"></div>
       </div>
@@ -405,6 +405,6 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="js/app.js?v=3.4"></script>
+  <script src="js/app.js?v=3.5"></script>
 </body>
 </html>

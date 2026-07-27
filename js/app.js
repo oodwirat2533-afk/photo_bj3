@@ -697,7 +697,7 @@ function openUploadModal() {
 function handleFileSelect(e) { addFiles(Array.from(e.target.files)); }
 
 function addFiles(files) {
-  const valid = files.filter(f => f.type.startsWith('image/'));
+  const valid = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
   state.selectedFiles = state.selectedFiles.concat(valid);
   const container = document.getElementById('selectedFilesList');
   container.innerHTML = `<strong>เลือกไฟล์ทั้งหมด ${state.selectedFiles.length} รายการ:</strong><br>`;
