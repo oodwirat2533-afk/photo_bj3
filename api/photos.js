@@ -24,20 +24,14 @@ module.exports = async (req, res) => {
       
       // Check Cache
       const resolvedToken = pageToken || (offset === '0' || offset === 0 ? null : offset);
-      const cacheKey = `v3_folder_${folderId}_${resolvedToken || '0'}_${limit}`;
-      const redis = db.getRedis();
-      try {
-        const cached = await redis.get(cacheKey);
-        if (cached) return res.status(200).json(typeof cached === 'string' ? JSON.parse(cached) : cached);
-      } catch (e) { /* ignore cache error */ }
+      
+      if (!limit || isNaN(parseInt(limit))) {
+        return res.status(400).json({ error: 'Invalid limit parameter' });
+      }
 
       // Default get folder contents
       const contents = await drive.getFolderContents(folderId, resolvedToken, parseInt(limit));
       
-      // Save to Cache (expires in 1 hour = 3600s)
-      try {
-        await redis.set(cacheKey, JSON.stringify(contents), { ex: 3600 });
-      } catch (e) { /* ignore cache error */ }
       
       return res.status(200).json(contents);
     }
