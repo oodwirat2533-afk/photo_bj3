@@ -332,7 +332,6 @@ function buildAlbumCard(f, onClick) {
         <div class="folder-subtext">${f.isRoot ? 'แสดงภาพทั้งหมดในระบบ' : 'คลิกเพื่อเปิดดูอัลบั้ม'}</div>
       </div>
       <div class="album-arrow">›</div>
-}
     </div>`;
   return card;
 }
@@ -349,50 +348,44 @@ function extractPhotosList(data) {
 }
 
 function forcePaint(element, callback) {
-  // Force a synchronous layout calculation
-  void element.offsetWidth;
-  
-  // Wait for 2 frames to guarantee the browser has painted the screen
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(callback, 10);
-    });
-  });
+  // Use a single simple setTimeout to yield to the browser's paint thread
+  setTimeout(callback, 50);
 }
 
-async function openFolder(folderId, folderName) {
-  const lastIndex = state.navStack.length - 1;
-  if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
-    state.navStack[lastIndex].name = folderName;
-  } else {
-    const existingIndex = state.navStack.findIndex(item => item.id === folderId);
-    if (existingIndex !== -1) {
-      state.navStack = state.navStack.slice(0, existingIndex + 1);
-    } else {
-      state.navStack.push({ id: folderId, name: folderName });
-    }
-  }
-
-  state.currentFolderId = folderId;
-  state.currentOffset = 0;
-  state.hasMore = false;
-  state.isLoadingMore = false;
-  state.photos = [];
-
-  document.getElementById('viewAlbums').style.display = 'none';
-  document.getElementById('viewPhotos').style.display = 'block';
-  const searchInputEl = document.getElementById('searchInput');
-  if (searchInputEl) searchInputEl.value = '';
-
-  renderBreadcrumb();
-  document.getElementById('photoCountBadge').style.display = 'none';
-  
-  // Show global loader instantly
+function openFolder(folderId, folderName) {
+  // Show global loader instantly as the ABSOLUTE FIRST thing
   const loader = document.getElementById('globalLoader');
   loader.style.display = 'flex';
   
-  // Absolutely guarantee Safari paints the loader before fetching
+  // Yield thread immediately so browser can paint the loader
   forcePaint(loader, async () => {
+    const lastIndex = state.navStack.length - 1;
+    if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
+      state.navStack[lastIndex].name = folderName;
+    } else {
+      const existingIndex = state.navStack.findIndex(item => item.id === folderId);
+      if (existingIndex !== -1) {
+        state.navStack = state.navStack.slice(0, existingIndex + 1);
+      } else {
+        state.navStack.push({ id: folderId, name: folderName });
+      }
+    }
+
+    state.currentFolderId = folderId;
+    state.currentFolderName = folderName;
+    state.currentOffset = 0;
+    state.hasMore = false;
+    state.isLoadingMore = false;
+    state.photos = [];
+
+    document.getElementById('viewAlbums').style.display = 'none';
+    document.getElementById('viewPhotos').style.display = 'block';
+    const searchInputEl = document.getElementById('searchInput');
+    if (searchInputEl) searchInputEl.value = '';
+
+    renderBreadcrumb();
+    document.getElementById('photoCountBadge').style.display = 'none';
+
     try {
       const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
       const contents = await res.json();
