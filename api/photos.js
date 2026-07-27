@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'GET') {
-      const { action, fileId, folderId, keyword, offset = 0, limit = 50 } = req.query;
+      const { action, fileId, folderId, keyword, offset = 0, limit = 50, pageToken = '' } = req.query;
       
       if (action === 'getPhotoMetadata') {
         const meta = await drive.getFileMetadata(fileId);
@@ -23,7 +23,8 @@ module.exports = async (req, res) => {
       }
       
       // Check Cache
-      const cacheKey = `folder_${folderId}_${offset}_${limit}`;
+      const resolvedToken = pageToken || (offset === '0' || offset === 0 ? null : offset);
+      const cacheKey = `folder_${folderId}_${resolvedToken || '0'}_${limit}`;
       const redis = db.getRedis();
       try {
         const cached = await redis.get(cacheKey);
@@ -31,7 +32,7 @@ module.exports = async (req, res) => {
       } catch (e) { /* ignore cache error */ }
 
       // Default get folder contents
-      const contents = await drive.getFolderContents(folderId, parseInt(offset), parseInt(limit));
+      const contents = await drive.getFolderContents(folderId, resolvedToken, parseInt(limit));
       
       // Save to Cache (expires in 1 hour = 3600s)
       try {

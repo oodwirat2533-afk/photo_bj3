@@ -374,7 +374,7 @@ async function openFolder(folderId, folderName) {
   showPhotoSkeletons();
 
   try {
-    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&offset=0&limit=24`);
+    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
     const contents = await res.json();
     if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
       renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
@@ -398,12 +398,12 @@ function renderSubfolderView(subfolders, directPhotosData) {
 
   if (directPhotosData && directPhotosData.hasMore !== undefined) {
     hasMore = directPhotosData.hasMore;
-    nextOffset = directPhotosData.nextOffset;
-    total = directPhotosData.total;
+    nextOffset = directPhotosData.nextPageToken || directPhotosData.nextOffset;
+    total = directPhotosData.total || 0;
   } else if (directPhotosData && directPhotosData.directPhotos && directPhotosData.directPhotos.hasMore !== undefined) {
     hasMore = directPhotosData.directPhotos.hasMore;
-    nextOffset = directPhotosData.nextOffset;
-    total = directPhotosData.total;
+    nextOffset = directPhotosData.directPhotos.nextPageToken || directPhotosData.directPhotos.nextOffset;
+    total = directPhotosData.directPhotos.total || 0;
   }
 
   state.hasMore = hasMore;
@@ -471,12 +471,8 @@ function renderSubfolderView(subfolders, directPhotosData) {
     setupInfiniteScroll();
   }
 
-    // Handled by renderDirectPhotos() inside renderFolderBatch() now.
-
   const badgeText = `${subfolders.length} โฟลเดอร์ย่อย` + (total > 0 ? ` • ทั้งหมด ${total} รูปภาพ` : (photosList.length > 0 ? ` • ${photosList.length} รูปภาพ` : ''));
   document.getElementById('photoCountBadge').textContent = badgeText;
-
-  // Moved to renderDirectPhotos() or at the end of renderFolderBatch()
 }
 
 function showPhotoSkeletons() {
@@ -497,12 +493,12 @@ function renderGalleryGrid(photosData, append = false) {
 
   if (photosData && photosData.hasMore !== undefined) {
     hasMore = photosData.hasMore;
-    nextOffset = photosData.nextOffset;
-    total = photosData.total;
+    nextOffset = photosData.nextPageToken || photosData.nextOffset;
+    total = photosData.total || 0;
   } else if (photosData && photosData.directPhotos && photosData.directPhotos.hasMore !== undefined) {
     hasMore = photosData.directPhotos.hasMore;
-    nextOffset = photosData.nextOffset;
-    total = photosData.total;
+    nextOffset = photosData.directPhotos.nextPageToken || photosData.directPhotos.nextOffset;
+    total = photosData.directPhotos.total || 0;
   }
 
   state.hasMore = hasMore;
@@ -569,7 +565,7 @@ async function loadNextPageOfPhotos() {
   state.isLoadingMore = true;
 
   try {
-    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(state.currentFolderId)}&offset=${state.currentOffset}&limit=24`);
+    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(state.currentFolderId)}&pageToken=${encodeURIComponent(state.currentOffset)}&limit=24`);
     const contents = await res.json();
     removeInfiniteSentinel();
     renderGalleryGrid(contents.directPhotos || contents, true);

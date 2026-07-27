@@ -66,33 +66,46 @@ async function listFolders(parentId) {
   }));
 }
 
-async function listPhotos(folderId, offset = 0, limit = 50, search = '') {
+async function listPhotos(folderId, limit = 50, search = '', pageToken = null) {
   const drive = getDriveClient();
   let allFiles = [];
-  let pageToken = null;
+  let currentToken = pageToken || null;
   
-  do {
-    const res = await drive.files.list({
-      q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
-      fields: 'nextPageToken, files(id, name, mimeType)',
-      pageSize: 1000,
-      pageToken: pageToken
-    });
-    
-    const files = res.data.files || [];
-    const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
-    
-    allFiles = allFiles.concat(imageFiles);
-    pageToken = res.data.nextPageToken;
-  } while (pageToken);
-
-  if (search) {
+  if (!search) {
+    do {
+      const res = await drive.files.list({
+        q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+        fields: 'nextPageToken, files(id, name, mimeType)',
+        pageSize: 50,
+        pageToken: currentToken
+      });
+      
+      const files = res.data.files || [];
+      const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
+      
+      allFiles = allFiles.concat(imageFiles);
+      currentToken = res.data.nextPageToken;
+    } while (currentToken && allFiles.length < limit);
+  } else {
+    // Search mode requires fetching all to filter by name
+    do {
+      const res = await drive.files.list({
+        q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+        fields: 'nextPageToken, files(id, name, mimeType)',
+        pageSize: 1000,
+        pageToken: currentToken
+      });
+      const files = res.data.files || [];
+      const imageFiles = files.filter(f => isImageFile(f.mimeType, f.name));
+      allFiles = allFiles.concat(imageFiles);
+      currentToken = res.data.nextPageToken;
+    } while (currentToken);
     const s = search.toLowerCase();
-    allFiles = allFiles.filter(f => f.name.toLowerCase().includes(s));
+    allFiles = allFiles.filter(f => f.name.toLowerCase().includes(s)).slice(0, limit);
+    currentToken = null; // Cannot paginate search properly this way
   }
 
-  const total = allFiles.length;
-  const items = allFiles.slice(offset, offset + limit).map(f => {
+  const items = allFiles.slice(0, limit).map(f => {
     const isVid = isVideoFile(f.mimeType, f.name);
     return {
       id: f.id,
@@ -105,15 +118,12 @@ async function listPhotos(folderId, offset = 0, limit = 50, search = '') {
     };
   });
 
-  const nextOffset = offset + limit;
-  const hasMore = nextOffset < total;
-
-  return { items, total, hasMore, nextOffset };
+  return { items, total: 0, hasMore: !!currentToken, nextPageToken: currentToken };
 }
 
-async function getFolderContents(folderId, offset = 0, limit = 50) {
-  if (offset > 0) {
-    const directPhotos = await listPhotos(folderId, offset, limit);
+async function getFolderContents(folderId, pageToken = null, limit = 50) {
+  if (pageToken) {
+    const directPhotos = await listPhotos(folderId, limit, '', pageToken);
     return { type: 'photos', subfolders: [], directPhotos };
   }
   
@@ -123,11 +133,11 @@ async function getFolderContents(folderId, offset = 0, limit = 50) {
     return {
       type: 'subfolders',
       subfolders,
-      directPhotos: { items: [], total: 0, hasMore: false, nextOffset: 0 }
+      directPhotos: { items: [], total: 0, hasMore: false, nextPageToken: null }
     };
   }
 
-  const directPhotos = await listPhotos(folderId, 0, limit);
+  const directPhotos = await listPhotos(folderId, limit, '', null);
   
   return {
     type: 'photos',
