@@ -127,22 +127,15 @@ async function getFolderContents(folderId, pageToken = null, limit = 50) {
     return { type: 'photos', subfolders: [], directPhotos };
   }
   
-  const subfolders = await listFolders(folderId);
-  
-  if (subfolders.length > 0) {
-    return {
-      type: 'subfolders',
-      subfolders,
-      directPhotos: { items: [], total: 0, hasMore: false, nextPageToken: null }
-    };
-  }
-
-  const directPhotos = await listPhotos(folderId, limit, '', null);
+  const [subfolders, directPhotos] = await Promise.all([
+    listFolders(folderId),
+    listPhotos(folderId, limit, '', null)
+  ]);
   
   return {
-    type: 'photos',
-    subfolders: [],
-    directPhotos
+    type: subfolders.length > 0 ? 'subfolders' : 'photos',
+    subfolders,
+    directPhotos: subfolders.length > 0 ? { items: [], total: 0, hasMore: false, nextPageToken: null } : directPhotos
   };
 }
 

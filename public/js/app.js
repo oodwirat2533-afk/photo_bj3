@@ -286,7 +286,8 @@ function renderAlbumGrid(folders) {
   }
 
   let currentIndex = 0;
-  const batchSize = window.innerWidth > 768 ? 10000 : 30;
+  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+  const batchSize = isDesktop ? 10000 : 30;
 
   function renderBatch() {
     const fragment = document.createDocumentFragment();
@@ -414,7 +415,8 @@ function renderSubfolderView(subfolders, directPhotosData) {
   subGrid.className = 'album-grid';
   subGrid.style.cssText = 'margin-bottom: 1.5rem; grid-column: 1/-1;';
   let currentFolderIndex = 0;
-  const folderBatchSize = window.innerWidth > 768 ? 10000 : 30;
+  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+  const folderBatchSize = isDesktop ? 10000 : 30;
 
   function renderFolderBatch() {
     const fragment = document.createDocumentFragment();
