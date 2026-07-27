@@ -377,24 +377,24 @@ async function openFolder(folderId, folderName) {
   // Show global loader instantly
   document.getElementById('globalLoader').style.display = 'flex';
   
-  // Yield thread for mobile Safari to paint the overlay
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  try {
-    const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
-    const contents = await res.json();
-    document.getElementById('globalLoader').style.display = 'none';
-    
-    if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
-      renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
-    } else {
-      renderGalleryGrid(contents.directPhotos || contents);
+  // Guarantee Safari paints the loader by pushing the heavy work to the next event loop tick
+  setTimeout(async () => {
+    try {
+      const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
+      const contents = await res.json();
+      document.getElementById('globalLoader').style.display = 'none';
+      
+      if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
+        renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
+      } else {
+        renderGalleryGrid(contents.directPhotos || contents);
+      }
+    } catch (err) {
+      document.getElementById('globalLoader').style.display = 'none';
+      console.error(err);
+      showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
     }
-  } catch (err) {
-    document.getElementById('globalLoader').style.display = 'none';
-    console.error(err);
-    showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
-  }
+  }, 100);
 }
 
 function renderSubfolderView(subfolders, directPhotosData) {
