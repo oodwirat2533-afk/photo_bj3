@@ -46,13 +46,16 @@ async function setRootFolderId(folderId) {
 
 async function determineUserRole(email, primarySuperAdmin, scriptOwnerEmail) {
   if (!email) return 'GUEST';
+  const cleanEmail = email.toLowerCase().trim();
+  const cleanPrimary = (primarySuperAdmin || 'ood.wirat2533@gmail.com').toLowerCase().trim();
+  const cleanOwner = (scriptOwnerEmail || cleanPrimary).toLowerCase().trim();
   
-  if (email === primarySuperAdmin || email === scriptOwnerEmail) {
+  if (cleanEmail === cleanPrimary || cleanEmail === cleanOwner) {
     return 'SUPER_ADMIN';
   }
   
   const userDb = await getUserDatabase();
-  const userRecord = userDb[email];
+  const userRecord = userDb[cleanEmail];
   
   if (userRecord && userRecord.role) {
     return userRecord.role;
@@ -62,20 +65,21 @@ async function determineUserRole(email, primarySuperAdmin, scriptOwnerEmail) {
 }
 
 async function getUserContext(userEmail) {
-  const primarySuperAdmin = process.env.PRIMARY_SUPER_ADMIN;
-  const scriptOwnerEmail = process.env.SCRIPT_OWNER_EMAIL || process.env.PRIMARY_SUPER_ADMIN;
+  const cleanEmail = (userEmail || '').toLowerCase().trim();
+  const primarySuperAdmin = (process.env.PRIMARY_SUPER_ADMIN || 'ood.wirat2533@gmail.com').toLowerCase().trim();
+  const scriptOwnerEmail = (process.env.SCRIPT_OWNER_EMAIL || primarySuperAdmin).toLowerCase().trim();
   
-  const role = await determineUserRole(userEmail, primarySuperAdmin, scriptOwnerEmail);
+  const role = await determineUserRole(cleanEmail, primarySuperAdmin, scriptOwnerEmail);
   const isSuperAdmin = role === 'SUPER_ADMIN';
   const isAdminOrHigher = role === 'SUPER_ADMIN' || role === 'ADMIN';
   const isCanUpload = isAdminOrHigher || role === 'ASSISTANT_ADMIN';
   const canCreateAlbum = isSuperAdmin;
   
-  const isFixed = userEmail === primarySuperAdmin || userEmail === scriptOwnerEmail;
-  const profileComplete = await getProfileComplete(userEmail);
+  const isFixed = cleanEmail === primarySuperAdmin || cleanEmail === scriptOwnerEmail;
+  const profileComplete = await getProfileComplete(cleanEmail);
   
   return {
-    email: userEmail,
+    email: cleanEmail,
     role,
     isFixed,
     isSuperAdmin,
@@ -87,15 +91,17 @@ async function getUserContext(userEmail) {
 }
 
 async function getProfileComplete(email) {
-  const primarySuperAdmin = process.env.PRIMARY_SUPER_ADMIN;
-  const scriptOwnerEmail = process.env.SCRIPT_OWNER_EMAIL || process.env.PRIMARY_SUPER_ADMIN;
+  if (!email) return true;
+  const cleanEmail = email.toLowerCase().trim();
+  const primarySuperAdmin = (process.env.PRIMARY_SUPER_ADMIN || 'ood.wirat2533@gmail.com').toLowerCase().trim();
+  const scriptOwnerEmail = (process.env.SCRIPT_OWNER_EMAIL || primarySuperAdmin).toLowerCase().trim();
   
-  if (email === primarySuperAdmin || email === scriptOwnerEmail) {
+  if (cleanEmail === primarySuperAdmin || cleanEmail === scriptOwnerEmail) {
     return true;
   }
   
   const userDb = await getUserDatabase();
-  const userRecord = userDb[email];
+  const userRecord = userDb[cleanEmail];
   
   if (!userRecord) return true;
   return userRecord.profileComplete !== false;
