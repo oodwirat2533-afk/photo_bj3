@@ -15,23 +15,35 @@ module.exports = async (req, res) => {
       const rootId = await db.getRootFolderId();
       if (!rootId) return res.status(200).json([]);
       const folders = await drive.listFolders(rootId);
-      const hidden = await db.getHiddenAlbums();
+      let hidden = await db.getHiddenAlbums();
+      if (!Array.isArray(hidden)) {
+        if (typeof hidden === 'string') {
+          try { hidden = JSON.parse(hidden); } catch(e) { hidden = []; }
+        } else { hidden = []; }
+      }
       const merged = folders.map(f => ({ ...f, isHidden: hidden.includes(f.id) }));
       return res.status(200).json(merged);
     }
     
     if (req.method === 'POST') {
-      const { action, folderId, folderName } = req.body;
+      const { action, folderName } = req.body;
       if (action === 'toggleVisibility') {
         if (!ctx.isSuperAdmin) return res.status(403).json({ error: 'Forbidden' });
+        const targetAlbumId = req.body.albumId || req.body.folderId;
+        if (!targetAlbumId) return res.status(400).json({ error: 'Missing albumId' });
+        const shouldHide = req.body.isHidden !== undefined ? !!req.body.isHidden : true;
+        
         let hidden = await db.getHiddenAlbums();
-        if (hidden.includes(folderId)) {
-          hidden = hidden.filter(id => id !== folderId);
+        if (!Array.isArray(hidden)) hidden = [];
+        
+        if (shouldHide) {
+          if (!hidden.includes(targetAlbumId)) hidden.push(targetAlbumId);
         } else {
-          hidden.push(folderId);
+          hidden = hidden.filter(id => id !== targetAlbumId);
         }
+        
         await db.saveHiddenAlbums(hidden);
-        return res.status(200).json({ success: true, isHidden: hidden.includes(folderId) });
+        return res.status(200).json({ success: true, isHidden: hidden.includes(targetAlbumId) });
       }
       
       // Default createFolder
