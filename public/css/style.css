@@ -330,7 +330,7 @@ button {
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 650px;
+  max-width: 100%;
 }
 
 .hero-title {
@@ -346,6 +346,13 @@ button {
   font-size: 0.95rem;
   color: var(--text-muted);
   line-height: 1.6;
+  white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+  .hero-desc {
+    white-space: normal;
+  }
 }
 
 .pending-alert {
