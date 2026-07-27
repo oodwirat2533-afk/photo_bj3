@@ -294,10 +294,21 @@ function renderAlbumGrid(folders) {
     for (let i = currentIndex; i < end; i++) {
       fragment.appendChild(buildAlbumCard(cleanFolders[i], () => openFolder(cleanFolders[i].id, cleanFolders[i].name)));
     }
+    
+    const btn = document.getElementById('btnLoadMoreMainFolders');
+    if (btn) btn.remove();
+    
     albumGrid.appendChild(fragment);
     currentIndex = end;
+    
     if (currentIndex < cleanFolders.length) {
-      requestAnimationFrame(renderBatch);
+      const moreBtn = document.createElement('button');
+      moreBtn.id = 'btnLoadMoreMainFolders';
+      moreBtn.className = 'btn btn-secondary';
+      moreBtn.style.cssText = 'grid-column: 1/-1; width: 100%; margin-top: 1rem; padding: 12px; font-size: 1rem;';
+      moreBtn.innerHTML = `⬇️ แสดงอัลบั้มเพิ่มเติม (${cleanFolders.length - currentIndex} อัลบั้ม)`;
+      moreBtn.onclick = renderBatch;
+      albumGrid.appendChild(moreBtn);
     }
   }
 
@@ -402,20 +413,35 @@ function renderSubfolderView(subfolders, directPhotosData) {
   const subGrid = document.createElement('div');
   subGrid.className = 'album-grid';
   subGrid.style.cssText = 'margin-bottom: 1.5rem; grid-column: 1/-1;';
-  let currentIndex = 0;
-  const batchSize = 30;
+  let currentFolderIndex = 0;
+  const folderBatchSize = 30;
 
   function renderFolderBatch() {
     const fragment = document.createDocumentFragment();
-    const end = Math.min(currentIndex + batchSize, subfolders.length);
-    for (let i = currentIndex; i < end; i++) {
+    const end = Math.min(currentFolderIndex + folderBatchSize, subfolders.length);
+    for (let i = currentFolderIndex; i < end; i++) {
       fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
     }
+    
+    const btn = document.getElementById('btnLoadMoreSubFolders');
+    if (btn) btn.remove();
+    
     subGrid.appendChild(fragment);
-    currentIndex = end;
-    if (currentIndex < subfolders.length) {
-      requestAnimationFrame(renderFolderBatch);
-    } else {
+    
+    const firstRender = (currentFolderIndex === 0);
+    currentFolderIndex = end;
+    
+    if (currentFolderIndex < subfolders.length) {
+      const moreBtn = document.createElement('button');
+      moreBtn.id = 'btnLoadMoreSubFolders';
+      moreBtn.className = 'btn btn-secondary';
+      moreBtn.style.cssText = 'grid-column: 1/-1; width: 100%; margin-top: 1rem; padding: 12px; font-size: 1rem;';
+      moreBtn.innerHTML = `⬇️ แสดงโฟลเดอร์เพิ่มเติม (${subfolders.length - currentFolderIndex} โฟลเดอร์)`;
+      moreBtn.onclick = renderFolderBatch;
+      subGrid.appendChild(moreBtn);
+    }
+    
+    if (firstRender) {
       if (photosList.length > 0) renderDirectPhotos();
       else setupInfiniteScroll();
     }
