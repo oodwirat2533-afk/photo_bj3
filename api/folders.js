@@ -14,6 +14,14 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const rootId = await db.getRootFolderId();
       if (!rootId) return res.status(200).json([]);
+      
+      const cacheKey = `root_folders_${rootId}`;
+      const redis = db.getRedis();
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) return res.status(200).json(typeof cached === 'string' ? JSON.parse(cached) : cached);
+      } catch (e) { /* ignore cache error */ }
+
       const folders = await drive.listFolders(rootId);
       const hiddenList = await db.getHiddenAlbums();
       const hiddenMap = {};
@@ -21,6 +29,11 @@ module.exports = async (req, res) => {
         hiddenList.forEach(id => { if (id) hiddenMap[String(id).trim()] = true; });
       }
       const merged = folders.map(f => ({ ...f, isHidden: !!hiddenMap[String(f.id).trim()] }));
+      
+      try {
+        await redis.set(cacheKey, JSON.stringify(merged), { ex: 3600 });
+      } catch (e) { /* ignore cache error */ }
+      
       return res.status(200).json(merged);
     }
     

@@ -33,9 +33,9 @@ module.exports = async (req, res) => {
       // Default get folder contents
       const contents = await drive.getFolderContents(folderId, parseInt(offset), parseInt(limit));
       
-      // Save to Cache (expires in 3 minutes = 180s)
+      // Save to Cache (expires in 1 hour = 3600s)
       try {
-        await redis.set(cacheKey, JSON.stringify(contents), { ex: 180 });
+        await redis.set(cacheKey, JSON.stringify(contents), { ex: 3600 });
       } catch (e) { /* ignore cache error */ }
       
       return res.status(200).json(contents);
