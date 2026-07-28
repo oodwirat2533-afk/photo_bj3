@@ -1,47 +1,54 @@
-const { sql } = require('@vercel/postgres');
+const { Redis } = require('@upstash/redis');
 require('dotenv').config({ path: '.env.local' });
 const bcrypt = require('bcryptjs');
 
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '',
+  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
+});
+
 async function main() {
   try {
-    // Create admins table
-    await sql`
-      CREATE TABLE IF NOT EXISTS admins (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-    console.log('Created admins table');
-
-    // Create drive_urls table
-    await sql`
-      CREATE TABLE IF NOT EXISTS drive_urls (
-        id SERIAL PRIMARY KEY,
-        url TEXT NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-    console.log('Created drive_urls table');
-
-    // Insert a default admin (admin / admin123) if none exists
-    const adminCheck = await sql`SELECT * FROM admins WHERE username = 'admin'`;
-    if (adminCheck.rowCount === 0) {
+    console.log('Connecting to Redis...');
+    
+    // Check if admin user exists
+    const existingAdmin = await redis.hget('admins', 'admin');
+    if (!existingAdmin) {
       const hash = await bcrypt.hash('admin123', 10);
-      await sql`
-        INSERT INTO admins (username, password_hash)
-        VALUES ('admin', ${hash})
-      `;
-      console.log('Inserted default admin');
+      await redis.hset('admins', { admin: hash });
+      console.log('Created default admin (Username: admin, Password: admin123)');
+    } else {
+      console.log('Admin user already exists');
     }
 
-    console.log('Database setup complete');
+    // Initialize drive_urls if empty
+    const urls = await redis.get('drive_urls');
+    if (!urls) {
+      const sampleUrls = [
+        {
+          id: '1',
+          title: 'กิจกรรมกีฬาสี 2569',
+          description: 'อัลบั้มรวมภาพกิจกรรมกีฬาสีประจำปี',
+          url: 'https://drive.google.com/drive/folders/sample1',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '2',
+          title: 'พิธีไหว้ครู',
+          description: 'วิดีโอบันทึกภาพพิธีไหว้ครู',
+          url: 'https://drive.google.com/drive/folders/sample2',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      await redis.set('drive_urls', sampleUrls);
+      console.log('Inserted sample drive URLs');
+    } else {
+      console.log('drive_urls already initialized');
+    }
+
+    console.log('Redis setup complete!');
   } catch (error) {
-    console.error('Error setting up database:', error);
+    console.error('Error setting up Redis:', error);
   }
 }
 
