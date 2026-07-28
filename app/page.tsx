@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Settings } from 'lucide-react';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -123,9 +123,25 @@ export default function Home() {
     <div style={{ padding: '1rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header & Navigation */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 className="page-title" style={{ marginBottom: '1rem' }}>
-          คลังภาพและวิดีโอ
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>
+            คลังภาพและวิดีโอ
+          </h1>
+          <a 
+            href="/admin" 
+            style={{ 
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem', 
+              color: 'var(--color-text-muted)', textDecoration: 'none',
+              padding: '0.5rem', borderRadius: 'var(--radius-md)',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            title="ตั้งค่าระบบ"
+          >
+            <Settings size={20} />
+          </a>
+        </div>
         
         {folderHistory.length > 0 && (
           <button 
