@@ -1,54 +1,62 @@
-const { Redis } = require('@upstash/redis');
 require('dotenv').config({ path: '.env.local' });
+const { sql } = require('@vercel/postgres');
 const bcrypt = require('bcryptjs');
-
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
-});
 
 async function main() {
   try {
-    console.log('Connecting to Redis...');
+    console.log('Connecting to Postgres Database...');
     
-    // Check if admin user exists
-    const existingAdmin = await redis.hget('admins', 'admin');
-    if (!existingAdmin) {
+    // Ensure connection string exists
+    if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
+      // If DATABASE_URL exists, set POSTGRES_URL to it for @vercel/postgres
+      if (process.env.DATABASE_URL) {
+        process.env.POSTGRES_URL = process.env.DATABASE_URL;
+      } else {
+        throw new Error('ไม่พบ POSTGRES_URL หรือ DATABASE_URL ในไฟล์ .env.local');
+      }
+    } else if (!process.env.POSTGRES_URL && process.env.DATABASE_URL) {
+      process.env.POSTGRES_URL = process.env.DATABASE_URL;
+    }
+
+    // Create admins table
+    await sql`
+      CREATE TABLE IF NOT EXISTS admins (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    console.log('✅ Created admins table');
+
+    // Create drive_urls table
+    await sql`
+      CREATE TABLE IF NOT EXISTS drive_urls (
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    console.log('✅ Created drive_urls table');
+
+    // Insert a default admin (admin / admin123) if none exists
+    const adminCheck = await sql`SELECT * FROM admins WHERE username = 'admin'`;
+    if (adminCheck.rowCount === 0) {
       const hash = await bcrypt.hash('admin123', 10);
-      await redis.hset('admins', { admin: hash });
-      console.log('Created default admin (Username: admin, Password: admin123)');
+      await sql`
+        INSERT INTO admins (username, password_hash)
+        VALUES ('admin', ${hash})
+      `;
+      console.log('✅ Inserted default admin (User: admin, Pass: admin123)');
     } else {
-      console.log('Admin user already exists');
+      console.log('ℹ️ Admin user already exists');
     }
 
-    // Initialize drive_urls if empty
-    const urls = await redis.get('drive_urls');
-    if (!urls) {
-      const sampleUrls = [
-        {
-          id: '1',
-          title: 'กิจกรรมกีฬาสี 2569',
-          description: 'อัลบั้มรวมภาพกิจกรรมกีฬาสีประจำปี',
-          url: 'https://drive.google.com/drive/folders/sample1',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: 'พิธีไหว้ครู',
-          description: 'วิดีโอบันทึกภาพพิธีไหว้ครู',
-          url: 'https://drive.google.com/drive/folders/sample2',
-          createdAt: new Date().toISOString()
-        }
-      ];
-      await redis.set('drive_urls', sampleUrls);
-      console.log('Inserted sample drive URLs');
-    } else {
-      console.log('drive_urls already initialized');
-    }
-
-    console.log('Redis setup complete!');
+    console.log('🎉 Database setup complete successfully!');
   } catch (error) {
-    console.error('Error setting up Redis:', error);
+    console.error('❌ Error setting up database:', error);
   }
 }
 
