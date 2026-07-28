@@ -404,15 +404,34 @@ function renderSubfolderView(subfolders, directPhotosData) {
   const subGrid = document.createElement('div');
   subGrid.className = 'album-grid';
   subGrid.style.cssText = 'margin-bottom: 1.5rem; grid-column: 1/-1;';
+  if (subfolders && subfolders.length > 0) {
     const fragment = document.createDocumentFragment();
-  for (let i = 0; i < subfolders.length; i++) {
-    fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
+    for (let i = 0; i < subfolders.length; i++) {
+      fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
+    }
+    subGrid.appendChild(fragment);
+    grid.appendChild(subGrid);
   }
-  subGrid.appendChild(fragment);
-  grid.appendChild(subGrid); else if (photosList.length > 0) {
-    renderDirectPhotos();
-  } else {
-    setupInfiniteScroll();
+
+  if (photosList.length > 0) {
+    const pFragment = document.createDocumentFragment();
+    photosList.forEach((p, idx) => {
+      pFragment.appendChild(buildPhotoCard(p, idx));
+    });
+    grid.appendChild(pFragment);
+  }
+
+  const btn = document.getElementById('btnLoadMorePhotos');
+  if (btn) btn.remove();
+
+  if (state.hasMore) {
+    const moreBtn = document.createElement('button');
+    moreBtn.id = 'btnLoadMorePhotos';
+    moreBtn.className = 'btn btn-secondary';
+    moreBtn.style.cssText = 'grid-column: 1/-1; width: 100%; margin-top: 1rem; padding: 12px; font-size: 1rem;';
+    moreBtn.innerHTML = '⬇️ โหลดรูปภาพเพิ่มเติม';
+    moreBtn.onclick = loadMorePhotos;
+    grid.appendChild(moreBtn);
   }
 
   document.getElementById('photoCountBadge').style.display = 'none';
