@@ -349,56 +349,59 @@ function extractPhotosList(data) {
 
 function openFolder(folderId, folderName) {
   const loader = document.getElementById('globalLoader');
-  loader.style.opacity = '1';
   loader.style.display = 'flex';
   
-  // A solid 300ms timeout breaks Safari's UI event batching context.
-  // This absolutely forces Safari to paint the loader before the fetch begins.
-  setTimeout(async () => {
-    const lastIndex = state.navStack.length - 1;
-    if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
-      state.navStack[lastIndex].name = folderName;
-    } else {
-      const existingIndex = state.navStack.findIndex(item => item.id === folderId);
-      if (existingIndex !== -1) {
-        state.navStack = state.navStack.slice(0, existingIndex + 1);
-      } else {
-        state.navStack.push({ id: folderId, name: folderName });
-      }
-    }
+  // Force iOS Safari to repaint before blocking the thread with fetch
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(async () => {
+        loader.style.opacity = '1';
+        const lastIndex = state.navStack.length - 1;
+        if (lastIndex >= 0 && state.navStack[lastIndex].id === folderId) {
+          state.navStack[lastIndex].name = folderName;
+        } else {
+          const existingIndex = state.navStack.findIndex(item => item.id === folderId);
+          if (existingIndex !== -1) {
+            state.navStack = state.navStack.slice(0, existingIndex + 1);
+          } else {
+            state.navStack.push({ id: folderId, name: folderName });
+          }
+        }
 
-    state.currentFolderId = folderId;
-    state.currentFolderName = folderName;
-    state.currentOffset = 0;
-    state.hasMore = false;
-    state.isLoadingMore = false;
-    state.photos = [];
+        state.currentFolderId = folderId;
+        state.currentFolderName = folderName;
+        state.currentOffset = 0;
+        state.hasMore = false;
+        state.isLoadingMore = false;
+        state.photos = [];
 
-    document.getElementById('viewAlbums').style.display = 'none';
-    document.getElementById('viewPhotos').style.display = 'block';
-    const searchInputEl = document.getElementById('searchInput');
-    if (searchInputEl) searchInputEl.value = '';
+        document.getElementById('viewAlbums').style.display = 'none';
+        document.getElementById('viewPhotos').style.display = 'block';
+        const searchInputEl = document.getElementById('searchInput');
+        if (searchInputEl) searchInputEl.value = '';
 
-    renderBreadcrumb();
-    document.getElementById('photoCountBadge').style.display = 'none';
+        renderBreadcrumb();
+        document.getElementById('photoCountBadge').style.display = 'none';
 
-    try {
-      const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
-      const contents = await res.json();
-      
-      loader.style.display = 'none';
-      
-      if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
-        renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
-      } else {
-        renderGalleryGrid(contents.directPhotos || contents);
-      }
-    } catch (err) {
-      loader.style.display = 'none';
-      console.error(err);
-      showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
-    }
-  }, 300);
+        try {
+          const res = await fetch(`/api/photos?folderId=${encodeURIComponent(folderId)}&pageToken=&limit=24`);
+          const contents = await res.json();
+          
+          loader.style.display = 'none';
+          
+          if (contents.type === 'subfolders' && Array.isArray(contents.subfolders) && contents.subfolders.length > 0) {
+            renderSubfolderView(contents.subfolders, contents.directPhotos || contents);
+          } else {
+            renderGalleryGrid(contents.directPhotos || contents);
+          }
+        } catch (err) {
+          loader.style.display = 'none';
+          console.error(err);
+          showToast('ไม่สามารถโหลดรูปภาพในโฟลเดอร์ได้: ' + err.message, 'error');
+        }
+      }, 50);
+    });
+  });
 }
 
 function renderSubfolderView(subfolders, directPhotosData) {

@@ -319,6 +319,7 @@ button {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+  transform: translateZ(0);
 }
 
 .hero-overlay {
