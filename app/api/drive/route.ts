@@ -29,8 +29,8 @@ export async function GET(request: Request) {
         if (isAFolder && !isBFolder) return -1;
         if (!isAFolder && isBFolder) return 1;
         
-        // Sort by name (supports Thai and natural numbers)
-        return a.name.localeCompare(b.name, 'th', { numeric: true });
+        // Sort by name descending (supports Thai and natural numbers)
+        return b.name.localeCompare(a.name, 'th', { numeric: true });
       });
     }
 
