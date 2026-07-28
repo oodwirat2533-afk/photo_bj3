@@ -12,20 +12,19 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Auth State
+  // Auth & Modal State
   const [session, setSession] = useState<any>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [showConfirmLogout, setShowConfirmLogout] = useState(false);
 
   // 1. Fetch Session & Current URL
   useEffect(() => {
-    // Fetch session status
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
         if (data && Object.keys(data).length > 0) {
           setSession(data);
           
-          // Only fetch URL if the user is an admin
           if (data.user?.isAdmin) {
             fetch('/api/urls')
               .then((res) => res.json())
@@ -72,6 +71,10 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirmLogout = () => {
+    signOut({ callbackUrl: '/' });
   };
 
   if (checkingSession || (session?.user?.isAdmin && fetching)) {
@@ -135,7 +138,7 @@ export default function AdminPage() {
 
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
-              onClick={() => signOut()} 
+              onClick={() => setShowConfirmLogout(true)} 
               className="btn" 
               style={{ flex: 1, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
@@ -146,6 +149,47 @@ export default function AdminPage() {
             </Link>
           </div>
         </div>
+
+        {/* Logout Modal */}
+        {showConfirmLogout && (
+          <div 
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+              backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+              display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
+              backdropFilter: 'blur(3px)'
+            }}
+            onClick={() => setShowConfirmLogout(false)}
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="card" 
+              style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}
+            >
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>ยืนยันการออกจากระบบ</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                คุณต้องการออกจากระบบและกลับไปที่หน้าหลักใช่หรือไม่?
+              </p>
+              
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button 
+                  onClick={() => setShowConfirmLogout(false)}
+                  className="btn"
+                  style={{ flex: 1, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  onClick={handleConfirmLogout}
+                  className="btn btn-primary"
+                  style={{ flex: 1, backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+                >
+                  ออกจากระบบ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -162,7 +206,7 @@ export default function AdminPage() {
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{session.user.email}</p>
           </div>
           <button 
-            onClick={() => signOut()} 
+            onClick={() => setShowConfirmLogout(true)} 
             className="btn" 
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
           >
@@ -212,6 +256,47 @@ export default function AdminPage() {
           </button>
         </form>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showConfirmLogout && (
+        <div 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+            display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
+            backdropFilter: 'blur(3px)'
+          }}
+          onClick={() => setShowConfirmLogout(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="card" 
+            style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>ยืนยันการออกจากระบบ</h3>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              คุณต้องการออกจากระบบและกลับไปที่หน้าหลักใช่หรือไม่?
+            </p>
+            
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button 
+                onClick={() => setShowConfirmLogout(false)}
+                className="btn"
+                style={{ flex: 1, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              >
+                ยกเลิก
+              </button>
+              <button 
+                onClick={handleConfirmLogout}
+                className="btn btn-primary"
+                style={{ flex: 1, backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+              >
+                ออกจากระบบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
