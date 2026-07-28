@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server';
-import { sql, DriveUrl } from '@/lib/db';
-import { jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-key-change-in-production'
-);
+import { sql } from '@/lib/db';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 async function verifyAdmin() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('admin_token')?.value;
-    if (!token) return false;
-    await jwtVerify(token, JWT_SECRET);
-    return true;
-  } catch {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !session.user.email) {
+      return false;
+    }
+    const adminEmail = process.env.ADMIN_EMAIL;
+    return session.user.email === adminEmail;
+  } catch (e) {
+    console.error('Session verify error:', e);
     return false;
   }
 }
