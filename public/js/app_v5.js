@@ -285,37 +285,11 @@ function renderAlbumGrid(folders) {
     return;
   }
 
-  let currentIndex = 0;
-  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const batchSize = isDesktop ? 10000 : 30;
-
-  function renderBatch() {
     const fragment = document.createDocumentFragment();
-    const end = Math.min(currentIndex + batchSize, cleanFolders.length);
-    for (let i = currentIndex; i < end; i++) {
-      fragment.appendChild(buildAlbumCard(cleanFolders[i], () => openFolder(cleanFolders[i].id, cleanFolders[i].name)));
-    }
-    
-    const btn = document.getElementById('btnLoadMoreMainFolders');
-    if (btn) btn.remove();
-    
-    albumGrid.appendChild(fragment);
-    currentIndex = end;
-    
-    if (currentIndex < cleanFolders.length) {
-      const moreBtn = document.createElement('button');
-      moreBtn.id = 'btnLoadMoreMainFolders';
-      moreBtn.className = 'btn btn-secondary';
-      moreBtn.style.cssText = 'grid-column: 1/-1; width: 100%; margin-top: 1rem; padding: 12px; font-size: 1rem;';
-      moreBtn.innerHTML = `⬇️ แสดงอัลบั้มเพิ่มเติม (${cleanFolders.length - currentIndex} อัลบั้ม)`;
-      moreBtn.onclick = renderBatch;
-      albumGrid.appendChild(moreBtn);
-    }
+  for (let i = 0; i < cleanFolders.length; i++) {
+    fragment.appendChild(buildAlbumCard(cleanFolders[i], () => openFolder(cleanFolders[i].id, cleanFolders[i].name)));
   }
-
-  if (cleanFolders.length > 0) {
-    renderBatch();
-  }
+  albumGrid.appendChild(fragment);
 }
 
 function buildAlbumCard(f, onClick) {
@@ -430,60 +404,12 @@ function renderSubfolderView(subfolders, directPhotosData) {
   const subGrid = document.createElement('div');
   subGrid.className = 'album-grid';
   subGrid.style.cssText = 'margin-bottom: 1.5rem; grid-column: 1/-1;';
-  let currentFolderIndex = 0;
-  const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-  const folderBatchSize = isDesktop ? 10000 : 30;
-
-  function renderFolderBatch() {
     const fragment = document.createDocumentFragment();
-    const end = Math.min(currentFolderIndex + folderBatchSize, subfolders.length);
-    for (let i = currentFolderIndex; i < end; i++) {
-      fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
-    }
-    
-    const btn = document.getElementById('btnLoadMoreSubFolders');
-    if (btn) btn.remove();
-    
-    subGrid.appendChild(fragment);
-    
-    const firstRender = (currentFolderIndex === 0);
-    currentFolderIndex = end;
-    
-    if (currentFolderIndex < subfolders.length) {
-      const moreBtn = document.createElement('button');
-      moreBtn.id = 'btnLoadMoreSubFolders';
-      moreBtn.className = 'btn btn-secondary';
-      moreBtn.style.cssText = 'grid-column: 1/-1; width: 100%; margin-top: 1rem; padding: 12px; font-size: 1rem;';
-      moreBtn.innerHTML = `⬇️ แสดงโฟลเดอร์เพิ่มเติม (${subfolders.length - currentFolderIndex} โฟลเดอร์)`;
-      moreBtn.onclick = renderFolderBatch;
-      subGrid.appendChild(moreBtn);
-    }
-    
-    if (firstRender) {
-      if (photosList.length > 0) renderDirectPhotos();
-      else setupInfiniteScroll();
-    }
+  for (let i = 0; i < subfolders.length; i++) {
+    fragment.appendChild(buildAlbumCard(subfolders[i], () => openFolder(subfolders[i].id, subfolders[i].name)));
   }
-
-  function renderDirectPhotos() {
-    const divider = document.createElement('div');
-    divider.style.cssText = 'grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);';
-    divider.innerHTML = `<span>📷 รูปภาพในอัลบั้มนี้ (แสดง ${photosList.length}${total > 0 ? ' จากทั้งหมด ' + total : ''} รูป)</span>`;
-    grid.appendChild(divider);
-
-    const frag = document.createDocumentFragment();
-    photosList.forEach(photo => {
-      frag.appendChild(buildPhotoCard(photo));
-    });
-    grid.appendChild(frag);
-    setupInfiniteScroll();
-  }
-
-  grid.appendChild(subGrid);
-
-  if (subfolders.length > 0) {
-    renderFolderBatch();
-  } else if (photosList.length > 0) {
+  subGrid.appendChild(fragment);
+  grid.appendChild(subGrid); else if (photosList.length > 0) {
     renderDirectPhotos();
   } else {
     setupInfiniteScroll();

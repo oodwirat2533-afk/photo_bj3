@@ -64,8 +64,7 @@ button {
 
 /* NAVBAR & HEADER */
 .navbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
   background: rgba(15, 23, 42, 0.95);
   border-bottom: 1px solid var(--border-light);
@@ -88,13 +87,12 @@ button {
 .brand-icon {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: var(--primary);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.35rem;
-  box-shadow: var(--shadow-glow);
   color: white;
 }
 
@@ -128,7 +126,6 @@ button {
 .search-box input:focus {
   outline: none;
   border-color: var(--secondary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
   background: rgba(30, 41, 59, 0.95);
 }
 
@@ -309,21 +306,17 @@ button {
 }
 
 .hero-banner {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.5), rgba(15, 23, 42, 0.8)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop') center/cover;
+  background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   padding: 2.5rem 2rem;
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  transform: translateZ(0);
 }
 
 .hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.5) 100%);
+  display: none;
 }
 
 .hero-content {
@@ -336,9 +329,7 @@ button {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(90deg, #ffffff, #93c5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
 }
 
 .hero-desc {
@@ -398,14 +389,11 @@ button {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--transition-normal);
   position: relative;
 }
 
 .album-card:hover {
-  transform: translateY(-3px);
   border-color: var(--secondary);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
 }
 
 .folder-card-body {
