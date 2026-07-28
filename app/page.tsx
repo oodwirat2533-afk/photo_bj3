@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Settings } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Settings, LogIn } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -33,6 +34,20 @@ export default function Home() {
 
   // Modal State
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
+
+  // Session State
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) {
+          setSession(data);
+        }
+      })
+      .catch((err) => console.error('Session fetch error:', err));
+  }, []);
 
   // 1. Fetch Root Folder URL from DB
   useEffect(() => {
@@ -127,20 +142,30 @@ export default function Home() {
           <h1 className="page-title" style={{ margin: 0 }}>
             คลังภาพและวิดีโอ
           </h1>
-          <a 
-            href="/admin" 
-            style={{ 
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem', 
-              color: 'var(--color-text-muted)', textDecoration: 'none',
-              padding: '0.5rem', borderRadius: 'var(--radius-md)',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            title="ตั้งค่าระบบ"
-          >
-            <Settings size={20} />
-          </a>
+          {session?.user?.isAdmin ? (
+            <a 
+              href="/admin" 
+              className="btn btn-primary"
+              style={{ 
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem', 
+                padding: '0.5rem 1rem', fontSize: '0.875rem', textDecoration: 'none'
+              }}
+            >
+              <Settings size={18} /> ตั้งค่าระบบ (Admin)
+            </a>
+          ) : (
+            <button 
+              onClick={() => signIn('google', { callbackUrl: '/admin' })} 
+              className="btn"
+              style={{ 
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem', 
+                backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                padding: '0.5rem 1rem', fontSize: '0.875rem', cursor: 'pointer'
+              }}
+            >
+              <LogIn size={18} /> เข้าสู่ระบบ Admin
+            </button>
+          )}
         </div>
         
         {folderHistory.length > 0 && (
