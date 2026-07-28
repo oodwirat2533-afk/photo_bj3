@@ -14,12 +14,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id,name,mimeType,thumbnailLink,webContentLink,webViewLink)&orderBy=folder,name`;
+    const url = `https://www.googleapis.com/drive/v3/files?pageSize=1000&q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id,name,mimeType,thumbnailLink,webContentLink,webViewLink)`;
     const response = await fetch(url);
     const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to fetch from Google Drive');
+    }
+
+    if (data.files) {
+      data.files.sort((a: any, b: any) => {
+        const isAFolder = a.mimeType === 'application/vnd.google-apps.folder';
+        const isBFolder = b.mimeType === 'application/vnd.google-apps.folder';
+        if (isAFolder && !isBFolder) return -1;
+        if (!isAFolder && isBFolder) return 1;
+        
+        // Sort by name (supports Thai and natural numbers)
+        return a.name.localeCompare(b.name, 'th', { numeric: true });
+      });
     }
 
     return NextResponse.json(data);
