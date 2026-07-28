@@ -42,8 +42,9 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       // Send properties to the client, like an access_token from a provider.
-      if (session.user) {
-        session.user.isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+      if (session.user && session.user.email) {
+        const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+        session.user.isAdmin = adminEmails.includes(session.user.email.toLowerCase());
       }
       session.accessToken = token.accessToken as string;
       return session;

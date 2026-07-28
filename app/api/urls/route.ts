@@ -9,8 +9,8 @@ async function verifyAdmin() {
     if (!session || !session.user || !session.user.email) {
       return false;
     }
-    const adminEmail = process.env.ADMIN_EMAIL;
-    return session.user.email === adminEmail;
+    const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+    return adminEmails.includes(session.user.email.toLowerCase());
   } catch (e) {
     console.error('Session verify error:', e);
     return false;
