@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { redis, DriveUrl } from '@/lib/redis';
+import { sql, DriveUrl } from '@/lib/db';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
@@ -24,8 +24,10 @@ async function verifyAdmin() {
 // GET: Public - List all drive URLs
 export async function GET() {
   try {
-    const urls = (await redis.get<DriveUrl[]>('drive_urls')) || [];
-    return NextResponse.json(urls);
+    const result = await sql`
+      SELECT id, title, url, description, created_at FROM drive_urls ORDER BY created_at DESC;
+    `;
+    return NextResponse.json(result.rows as DriveUrl[]);
   } catch (error) {
     console.error('Error fetching URLs:', error);
     return NextResponse.json({ error: 'ไม่สามารถดึงข้อมูลได้' }, { status: 500 });
@@ -46,20 +48,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'กรุณาระบุชื่อเรื่องและ URL' }, { status: 400 });
     }
 
-    const currentUrls = (await redis.get<DriveUrl[]>('drive_urls')) || [];
+    const result = await sql`
+      INSERT INTO drive_urls (title, url, description)
+      VALUES (${title}, ${url}, ${description || ''})
+      RETURNING id, title, url, description, created_at;
+    `;
 
-    const newMedia: DriveUrl = {
-      id: Date.now().toString(),
-      title,
-      url,
-      description: description || '',
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedUrls = [newMedia, ...currentUrls];
-    await redis.set('drive_urls', updatedUrls);
-
-    return NextResponse.json({ success: true, item: newMedia });
+    return NextResponse.json({ success: true, item: result.rows[0] });
   } catch (error) {
     console.error('Error adding URL:', error);
     return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล' }, { status: 500 });
@@ -81,10 +76,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ไม่พบ ID ที่ต้องการลบ' }, { status: 400 });
     }
 
-    const currentUrls = (await redis.get<DriveUrl[]>('drive_urls')) || [];
-    const updatedUrls = currentUrls.filter((item) => item.id !== id);
-
-    await redis.set('drive_urls', updatedUrls);
+    await sql`
+      DELETE FROM drive_urls WHERE id = ${id};
+    `;
 
     return NextResponse.json({ success: true });
   } catch (error) {

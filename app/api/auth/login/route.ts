@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { redis } from '@/lib/redis';
+import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 
@@ -18,17 +18,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch password hash from Redis hash 'admins'
-    const passwordHash = await redis.hget<string>('admins', username);
+    // Query admin user from Postgres
+    const result = await sql`
+      SELECT * FROM admins WHERE username = ${username} LIMIT 1;
+    `;
 
-    if (!passwordHash) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
         { status: 401 }
       );
     }
 
-    const isValid = await bcrypt.compare(password, passwordHash);
+    const admin = result.rows[0];
+    const isValid = await bcrypt.compare(password, admin.password_hash);
 
     if (!isValid) {
       return NextResponse.json(
@@ -38,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // Generate JWT token
-    const token = await new SignJWT({ username })
+    const token = await new SignJWT({ username: admin.username })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('1d')
       .sign(JWT_SECRET);
