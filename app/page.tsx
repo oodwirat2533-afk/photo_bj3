@@ -31,6 +31,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal State
+  const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
+
   // 1. Fetch Root Folder URL from DB
   useEffect(() => {
     fetch('/api/urls')
@@ -89,6 +92,16 @@ export default function Home() {
     setFolderHistory(newHistory);
     setCurrentFolderId(prevFolder);
   };
+
+  // Prevent scrolling when modal is open
+  useEffect(() => {
+    if (selectedFile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [selectedFile]);
 
   // UI States
   if (!rootFolderId && !loading) {
@@ -173,13 +186,11 @@ export default function Home() {
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>ไฟล์รูปภาพ/วิดีโอ</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                 {mediaFiles.map(file => (
-                  <a 
+                  <div 
                     key={file.id} 
-                    href={file.webViewLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                    onClick={() => setSelectedFile(file)}
                     style={{ 
-                      display: 'block', textDecoration: 'none', color: 'inherit',
+                      display: 'block', cursor: 'pointer', color: 'inherit',
                       backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
                       overflow: 'hidden', border: '1px solid var(--color-border)',
                       transition: 'all 0.2s ease', position: 'relative'
@@ -194,6 +205,11 @@ export default function Home() {
                           alt={file.name}
                           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                         />
+                        {file.mimeType.includes('video') && (
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '1rem', color: 'white' }}>
+                            <Video size={32} />
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -207,9 +223,8 @@ export default function Home() {
                       <span style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
                         {file.name}
                       </span>
-                      <ExternalLink size={14} style={{ color: 'var(--color-text-muted)' }} />
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
             </div>
@@ -221,6 +236,64 @@ export default function Home() {
             </div>
           )}
         </>
+      )}
+
+      {/* Lightbox / Modal for Viewing Media */}
+      {selectedFile && (
+        <div 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999,
+            display: 'flex', flexDirection: 'column',
+            justifyContent: 'center', alignItems: 'center', padding: '1rem',
+            backdropFilter: 'blur(5px)'
+          }}
+          onClick={() => setSelectedFile(null)}
+        >
+          <button 
+            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+            style={{
+              position: 'absolute', top: '1.5rem', right: '2rem',
+              background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white',
+              fontSize: '2rem', cursor: 'pointer', width: '48px', height: '48px',
+              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          >
+            &times;
+          </button>
+          
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '100%', maxHeight: '85vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {selectedFile.mimeType.includes('video') ? (
+              <iframe 
+                src={`https://drive.google.com/file/d/${selectedFile.id}/preview`} 
+                style={{ width: '85vw', height: '80vh', border: 'none', borderRadius: '8px', backgroundColor: '#000' }}
+                allow="autoplay"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <img 
+                src={selectedFile.thumbnailLink ? selectedFile.thumbnailLink.replace('=s220', '=s2048') : ''}
+                alt={selectedFile.name}
+                style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '4px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+              />
+            )}
+          </div>
+          
+          <div onClick={(e) => e.stopPropagation()} style={{ color: 'white', marginTop: '1.5rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>{selectedFile.name}</p>
+            <a 
+              href={selectedFile.webViewLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: '#aaa', textDecoration: 'underline', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            >
+              เปิดใน Google Drive <ExternalLink size={14} />
+            </a>
+          </div>
+        </div>
       )}
     </div>
   );
