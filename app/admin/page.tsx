@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { signIn, signOut } from 'next-auth/react';
-import { Lock, LogOut, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { Lock, LogOut, ShieldAlert, ArrowLeft, Trash2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -11,6 +11,12 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Admin Management State
+  const [admins, setAdmins] = useState<string[]>([]);
+  const [masterAdmins, setMasterAdmins] = useState<string[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
 
   // Auth & Modal State
   const [session, setSession] = useState<any>(null);
@@ -26,14 +32,18 @@ export default function AdminPage() {
           setSession(data);
           
           if (data.user?.isAdmin) {
-            fetch('/api/urls')
-              .then((res) => res.json())
-              .then((urlData) => {
-                if (urlData && urlData.url) {
-                  setUrl(urlData.url);
+            Promise.all([
+              fetch('/api/urls').then(res => res.json()),
+              fetch('/api/admins').then(res => res.json())
+            ])
+              .then(([urlData, adminData]) => {
+                if (urlData && urlData.url) setUrl(urlData.url);
+                if (adminData && adminData.admins) {
+                  setAdmins(adminData.admins);
+                  setMasterAdmins(adminData.masterAdmins || []);
                 }
               })
-              .catch((err) => console.error('Failed to fetch URL:', err))
+              .catch((err) => console.error('Failed to fetch data:', err))
               .finally(() => setFetching(false));
           } else {
             setFetching(false);
@@ -70,6 +80,44 @@ export default function AdminPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail) return;
+    setAdminLoading(true);
+    try {
+      const res = await fetch('/api/admins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newAdminEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setAdmins(prev => [...prev, data.email]);
+      setNewAdminEmail('');
+      alert('เพิ่มแอดมินสำเร็จ');
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (email: string) => {
+    if (!confirm(`ยืนยันการลบ ${email} ออกจากการเป็นแอดมิน?`)) return;
+    try {
+      const res = await fetch('/api/admins', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setAdmins(prev => prev.filter(a => a !== email));
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
     }
   };
 
@@ -255,6 +303,64 @@ export default function AdminPage() {
             {loading ? 'กำลังบันทึก...' : 'บันทึกลิงก์โฟลเดอร์'}
           </button>
         </form>
+      </div>
+
+      {/* Admin Management Section */}
+      <div className="card" style={{ maxWidth: '600px', marginTop: '2rem' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <UserPlus size={20} /> จัดการผู้ดูแลระบบ
+        </h2>
+        
+        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+          เพิ่มอีเมลของบุคลากรที่ต้องการให้สามารถเข้ามาจัดการโฟลเดอร์หรืออัปโหลด/ลบรูปภาพได้
+        </p>
+
+        <form onSubmit={handleAddAdmin} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
+          <input
+            type="email"
+            className="input-field"
+            value={newAdminEmail}
+            onChange={(e) => setNewAdminEmail(e.target.value)}
+            placeholder="email@example.com"
+            required
+            style={{ flex: 1 }}
+          />
+          <button type="submit" className="btn btn-primary" disabled={adminLoading}>
+            {adminLoading ? 'กำลังเพิ่ม...' : 'เพิ่ม Admin'}
+          </button>
+        </form>
+
+        <div>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            รายชื่อ Admin ปัจจุบัน
+          </h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {admins.map((email) => {
+              const isMaster = masterAdmins.includes(email);
+              return (
+                <li key={email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: 500 }}>{email}</span>
+                    {isMaster && (
+                      <span style={{ fontSize: '0.7rem', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '0.125rem 0.5rem', borderRadius: '1rem', fontWeight: 600 }}>
+                        Master
+                      </span>
+                    )}
+                  </div>
+                  {!isMaster && (
+                    <button 
+                      onClick={() => handleDeleteAdmin(email)}
+                      style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
+                      title="ลบ Admin"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
 
       {/* Logout Confirmation Modal */}

@@ -1,6 +1,8 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+import { sql } from '@/lib/db';
+
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
@@ -34,17 +36,29 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async jwt({ token, account }) {
-      // Persist the OAuth access_token right after signin
       if (account) {
         token.accessToken = account.access_token;
       }
       return token;
     },
     async session({ session, token }) {
-      // Send properties to the client, like an access_token from a provider.
       if (session.user && session.user.email) {
-        const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
-        session.user.isAdmin = adminEmails.includes(session.user.email.toLowerCase());
+        const cleanEmail = session.user.email.toLowerCase();
+        const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+        
+        let isAdmin = masterAdmins.includes(cleanEmail);
+        
+        // If not master admin, check DB
+        if (!isAdmin) {
+          try {
+            const dbCheck = await sql`SELECT email FROM admin_emails WHERE email = ${cleanEmail}`;
+            if (dbCheck.rows.length > 0) isAdmin = true;
+          } catch (e) {
+            console.error('DB Admin check error:', e);
+          }
+        }
+        
+        session.user.isAdmin = isAdmin;
       }
       session.accessToken = token.accessToken as string;
       return session;

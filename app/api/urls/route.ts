@@ -10,7 +10,13 @@ async function verifyAdmin() {
       return false;
     }
     const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
-    return adminEmails.includes(session.user.email.toLowerCase());
+    const cleanEmail = session.user.email.toLowerCase();
+    
+    if (adminEmails.includes(cleanEmail)) return true;
+    
+    // Check in DB
+    const result = await sql`SELECT email FROM admin_emails WHERE email = ${cleanEmail}`;
+    return result.rows.length > 0;
   } catch (e) {
     console.error('Session verify error:', e);
     return false;
