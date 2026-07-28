@@ -1,26 +1,22 @@
-import { GoogleAuth } from 'google-auth-library';
+import { OAuth2Client } from 'google-auth-library';
 
-export async function getServiceAccountToken() {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  let privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+export async function getDriveAccessToken() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
-  if (!clientEmail || !privateKey) {
-    throw new Error('Google Service Account credentials missing from environment variables.');
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Google OAuth credentials (including Refresh Token) missing from environment variables.');
   }
 
-  // Handle newlines in private key if they were escaped
-  privateKey = privateKey.replace(/\\n/g, '\n');
+  const oAuth2Client = new OAuth2Client(clientId, clientSecret);
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
-  const auth = new GoogleAuth({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  });
+  const { token } = await oAuth2Client.getAccessToken();
 
-  const client = await auth.getClient();
-  const accessToken = await client.getAccessToken();
+  if (!token) {
+    throw new Error('Failed to generate access token from refresh token.');
+  }
 
-  return accessToken.token;
+  return token;
 }

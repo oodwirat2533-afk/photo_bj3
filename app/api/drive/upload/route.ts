@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { getServiceAccountToken } from '@/lib/google-auth';
+import { getDriveAccessToken } from '@/lib/google-auth';
 
 export async function POST(request: Request) {
   try {
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     googleFormData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     googleFormData.append('file', file);
 
-    const token = await getServiceAccountToken();
+    const token = await getDriveAccessToken();
 
     const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,thumbnailLink,webContentLink,webViewLink', {
       method: 'POST',

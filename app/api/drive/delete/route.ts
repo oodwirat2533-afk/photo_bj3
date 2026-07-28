@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { getServiceAccountToken } from '@/lib/google-auth';
+import { getDriveAccessToken } from '@/lib/google-auth';
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing fileId' }, { status: 400 });
     }
 
-    const token = await getServiceAccountToken();
+    const token = await getDriveAccessToken();
 
     const deleteRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
       method: 'DELETE',
