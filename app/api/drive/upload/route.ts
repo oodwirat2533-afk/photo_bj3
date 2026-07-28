@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { getServiceAccountToken } from '@/lib/google-auth';
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user?.isAdmin || !session.accessToken) {
+    if (!session || !session.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -26,10 +27,12 @@ export async function POST(request: Request) {
     googleFormData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     googleFormData.append('file', file);
 
+    const token = await getServiceAccountToken();
+
     const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,thumbnailLink,webContentLink,webViewLink', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${token}`,
       },
       body: googleFormData,
     });

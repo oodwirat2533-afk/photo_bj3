@@ -5,7 +5,6 @@ import { sql } from '@/lib/db';
 
 declare module "next-auth" {
   interface Session {
-    accessToken?: string;
     user?: {
       name?: string | null;
       email?: string | null;
@@ -20,14 +19,6 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      authorization: {
-        params: {
-          scope: "openid email profile https://www.googleapis.com/auth/drive",
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
@@ -35,13 +26,7 @@ export const authOptions: AuthOptions = {
     signIn: '/admin',
   },
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      return token;
-    },
-    async session({ session, token }) {
+    async session({ session }) {
       if (session.user && session.user.email) {
         const cleanEmail = session.user.email.toLowerCase();
         const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
@@ -60,7 +45,6 @@ export const authOptions: AuthOptions = {
         
         session.user.isAdmin = isAdmin;
       }
-      session.accessToken = token.accessToken as string;
       return session;
     }
   }
