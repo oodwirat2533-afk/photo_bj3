@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Settings, LogIn } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Settings, LogIn, Trash2, UploadCloud } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 
 // Extract folder ID from Google Drive URL
@@ -37,6 +37,57 @@ export default function Home() {
 
   // Session State
   const [session, setSession] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !currentFolderId) return;
+    
+    setUploading(true);
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folderId', currentFolderId);
+
+    try {
+      const res = await fetch('/api/drive/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to upload');
+      
+      // Refresh files list
+      setFiles(prev => [data.file, ...prev]);
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
+    } finally {
+      setUploading(false);
+      e.target.value = ''; // Reset input
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, fileId: string) => {
+    e.stopPropagation();
+    if (!confirm('ยืนยันการลบไฟล์นี้ออกจาก Google Drive ใช่หรือไม่?')) return;
+    
+    try {
+      const res = await fetch('/api/drive/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete');
+      }
+      
+      // Remove from state
+      setFiles(prev => prev.filter(f => f.id !== fileId));
+      if (selectedFile?.id === fileId) setSelectedFile(null);
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -168,15 +219,36 @@ export default function Home() {
           )}
         </div>
         
-        {folderHistory.length > 0 && (
-          <button 
-            onClick={handleBackClick}
-            className="btn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
-          >
-            <ArrowLeft size={16} /> ย้อนกลับ
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {folderHistory.length > 0 && (
+            <button 
+              onClick={handleBackClick}
+              className="btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+            >
+              <ArrowLeft size={16} /> ย้อนกลับ
+            </button>
+          )}
+
+          {session?.user?.isAdmin && currentFolderId && (
+            <label 
+              className="btn btn-primary"
+              style={{ 
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
+                cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.7 : 1 
+              }}
+            >
+              <UploadCloud size={16} /> {uploading ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์'}
+              <input 
+                type="file" 
+                accept="image/*,video/*"
+                hidden 
+                onChange={handleUpload} 
+                disabled={uploading}
+              />
+            </label>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -239,6 +311,21 @@ export default function Home() {
                     onMouseOver={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                   >
+                    {session?.user?.isAdmin && (
+                      <button
+                        onClick={(e) => handleDelete(e, file.id)}
+                        style={{
+                          position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10,
+                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-danger)',
+                          border: 'none', borderRadius: '50%', padding: '0.5rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: 'var(--shadow-sm)'
+                        }}
+                        title="ลบรูปภาพนี้"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                     {file.thumbnailLink ? (
                       <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: '#f0f0f0' }}>
                         <img 
