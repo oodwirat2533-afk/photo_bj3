@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2 } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical } from 'lucide-react';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -40,6 +40,14 @@ export default function Home() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdown(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // 1. Fetch Session & Check Onboarding
   useEffect(() => {
@@ -302,6 +310,8 @@ export default function Home() {
   const canUpload = session?.user?.isAdmin && !isRootFolder;
   const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : true);
   const canRename = session?.user?.role === 'superadmin' || session?.user?.role === 'admin';
+  const canDeleteFolder = session?.user?.role === 'superadmin';
+  const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -404,37 +414,55 @@ export default function Home() {
                     onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     <Folder size={24} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4rem' }}>
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '2.5rem' }}>
                       {folder.name}
                     </span>
                     
-                    {canRename && (
-                      <button
-                        onClick={(e) => handleRename(e, folder.id, folder.name)}
-                        style={{
-                          position: 'absolute', top: '50%', right: session?.user?.role === 'superadmin' ? '3.5rem' : '1rem', transform: 'translateY(-50%)',
-                          backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--color-text)',
-                          border: 'none', borderRadius: '50%', padding: '0.4rem',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        title="เปลี่ยนชื่อโฟลเดอร์"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                    )}
-                    {session?.user?.role === 'superadmin' && (
-                      <button
-                        onClick={(e) => handleDelete(e, folder.id)}
-                        style={{
-                          position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)',
-                          backgroundColor: 'rgba(255,0,0,0.05)', color: 'var(--color-danger)',
-                          border: 'none', borderRadius: '50%', padding: '0.4rem',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        title="ลบโฟลเดอร์นี้"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    {(canRename || canDeleteFolder) && (
+                      <div style={{ position: 'absolute', top: '50%', right: '0.5rem', transform: 'translateY(-50%)' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
+                          style={{
+                            backgroundColor: 'transparent', color: 'var(--color-text-muted)',
+                            border: 'none', borderRadius: '50%', padding: '0.4rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                        >
+                          <MoreVertical size={20} />
+                        </button>
+                        
+                        {activeDropdown === folder.id && (
+                          <div 
+                            style={{
+                              position: 'absolute', top: '100%', right: 0, zIndex: 50,
+                              backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                              borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                              minWidth: '150px', overflow: 'hidden', marginTop: '0.25rem'
+                            }}
+                          >
+                            {canRename && (
+                              <button
+                                onClick={(e) => { setActiveDropdown(null); handleRename(e, folder.id, folder.name); }}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-background)'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <Edit2 size={16} /> เปลี่ยนชื่อ
+                              </button>
+                            )}
+                            {canDeleteFolder && (
+                              <button
+                                onClick={(e) => { setActiveDropdown(null); handleDelete(e, folder.id); }}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--color-danger)' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <Trash2 size={16} /> ลบโฟลเดอร์
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -460,35 +488,52 @@ export default function Home() {
                     onMouseOver={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                   >
-                    {canRename && (
-                      <button
-                        onClick={(e) => handleRename(e, file.id, file.name)}
-                        style={{
-                          position: 'absolute', top: '0.5rem', right: (session?.user?.isAdmin && session?.user?.role !== 'assistant_admin') ? '3rem' : '0.5rem', zIndex: 10,
-                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-text)',
-                          border: 'none', borderRadius: '50%', padding: '0.5rem',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: 'var(--shadow-sm)'
-                        }}
-                        title="เปลี่ยนชื่อไฟล์"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                    )}
-                    {session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (
-                      <button
-                        onClick={(e) => handleDelete(e, file.id)}
-                        style={{
-                          position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10,
-                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-danger)',
-                          border: 'none', borderRadius: '50%', padding: '0.5rem',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: 'var(--shadow-sm)'
-                        }}
-                        title="ลบรูปภาพนี้"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    {(canRename || canDeleteFile) && (
+                      <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === file.id ? null : file.id); }}
+                          style={{
+                            backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-text)',
+                            border: 'none', borderRadius: '50%', padding: '0.5rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: 'var(--shadow-sm)'
+                          }}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+
+                        {activeDropdown === file.id && (
+                          <div 
+                            style={{
+                              position: 'absolute', top: '100%', right: 0, zIndex: 50,
+                              backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                              borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                              minWidth: '150px', overflow: 'hidden', marginTop: '0.25rem'
+                            }}
+                          >
+                            {canRename && (
+                              <button
+                                onClick={(e) => { setActiveDropdown(null); handleRename(e, file.id, file.name); }}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-background)'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <Edit2 size={16} /> เปลี่ยนชื่อ
+                              </button>
+                            )}
+                            {canDeleteFile && (
+                              <button
+                                onClick={(e) => { setActiveDropdown(null); handleDelete(e, file.id); }}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '0.875rem', color: 'var(--color-danger)' }}
+                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <Trash2 size={16} /> ลบรูปภาพ
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                     {file.thumbnailLink ? (
                       <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: '#f0f0f0' }}>
