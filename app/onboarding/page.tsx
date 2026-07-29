@@ -22,12 +22,12 @@ export default function OnboardingPage() {
       .then((data) => {
         if (data && Object.keys(data).length > 0) {
           setSession(data);
-          // If already onboarded, send to admin
+          // If already onboarded, send to home
           if (data.user?.isOnboarded) {
-            router.push('/admin');
+            router.push('/');
           }
         } else {
-          router.push('/admin');
+          router.push('/');
         }
       })
       .catch((err) => console.error('Session fetch error:', err))
@@ -66,7 +66,7 @@ export default function OnboardingPage() {
       }
 
       // Reload the page to refresh session or redirect
-      window.location.href = '/admin';
+      window.location.href = '/';
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
       setLoading(false);

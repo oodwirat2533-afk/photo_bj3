@@ -8,22 +8,22 @@ export default withAuth(
     
     // Paths
     const pathname = req.nextUrl.pathname;
-    const isAdminDashboard = pathname === '/admin' || pathname.startsWith('/admin/');
     const isOnboardingPage = pathname.startsWith('/onboarding');
     
     // If logged in, check role and onboarding
     if (isAuth && token) {
       const isOnboarded = token.isOnboarded;
-      const isAdmin = token.isAdmin;
-
-      // 2. If not onboarded and trying to access admin dashboard, redirect to onboarding
-      if (isAdminDashboard && !isOnboarded) {
-        return NextResponse.redirect(new URL('/onboarding', req.url));
-      }
-
-      // 3. If onboarded and trying to access onboarding, redirect to dashboard
-      if (isOnboardingPage && isOnboarded) {
-        return NextResponse.redirect(new URL('/admin', req.url));
+      const isOnboardingPage = req.nextUrl.pathname.startsWith('/onboarding');
+  
+      // Protect onboarding page: only for un-onboarded admins
+      if (isOnboardingPage) {
+        if (!token?.isAdmin) {
+          return NextResponse.redirect(new URL('/', req.url));
+        }
+        if (token?.isOnboarded) {
+          return NextResponse.redirect(new URL('/', req.url));
+        }
+        return NextResponse.next();
       }
     }
 
@@ -37,5 +37,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*', '/onboarding/:path*']
+  matcher: ['/onboarding']
 };
