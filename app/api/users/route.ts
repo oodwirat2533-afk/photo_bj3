@@ -23,7 +23,25 @@ export async function GET() {
       ORDER BY created_at DESC
     `;
 
-    return new Response(JSON.stringify({ users: result.rows }), {
+    const dbUsers = result.rows;
+    const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+    
+    for (const adminEmail of masterAdmins) {
+      if (adminEmail && !dbUsers.find(u => u.email === adminEmail)) {
+        dbUsers.unshift({
+          email: adminEmail,
+          role: 'superadmin',
+          title: '',
+          first_name: 'System',
+          last_name: 'Admin',
+          subject_group: '',
+          is_onboarded: true,
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({ users: dbUsers }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
