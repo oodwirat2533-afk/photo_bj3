@@ -179,7 +179,7 @@ export default function UsersSettingsPage() {
                       </div>
                       {u.first_name && (
                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                          {u.title}{u.first_name} {u.last_name} ({u.subject_group})
+                          {u.title}{u.first_name} {u.last_name} {u.subject_group ? `(${u.subject_group})` : ''}
                         </div>
                       )}
                       <div style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>

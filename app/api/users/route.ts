@@ -31,10 +31,10 @@ export async function GET() {
         dbUsers.unshift({
           email: adminEmail,
           role: 'superadmin',
-          title: '',
-          first_name: 'System',
-          last_name: 'Admin',
-          subject_group: '',
+          title: null,
+          first_name: null,
+          last_name: null,
+          subject_group: null,
           is_onboarded: true,
           created_at: new Date().toISOString()
         });
