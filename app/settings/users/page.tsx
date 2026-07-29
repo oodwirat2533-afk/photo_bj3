@@ -172,7 +172,7 @@ export default function UsersSettingsPage() {
                           disabled={isMasterAdmin}
                           style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
                         >
-                          {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Superadmin</option>}
+                          { (session?.user?.email === 'ood.wirat2533@gmail.com' || isSuperadmin) && <option value="superadmin">Superadmin</option> }
                           <option value="admin">Admin</option>
                           <option value="assistant_admin">ผู้ช่วย Admin</option>
                         </select>
