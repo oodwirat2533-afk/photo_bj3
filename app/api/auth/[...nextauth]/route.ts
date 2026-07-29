@@ -10,6 +10,8 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       isAdmin?: boolean;
+      role?: string;
+      isOnboarded?: boolean;
     };
   }
 }
@@ -22,28 +24,47 @@ export const authOptions: AuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   pages: {
     signIn: '/admin',
   },
   callbacks: {
-    async session({ session }) {
-      if (session.user && session.user.email) {
-        const cleanEmail = session.user.email.toLowerCase();
+    async jwt({ token, user, account, profile, isNewUser }) {
+      if (token.email) {
+        const cleanEmail = token.email.toLowerCase();
         const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
         
-        let isAdmin = masterAdmins.includes(cleanEmail);
+        let isMasterAdmin = masterAdmins.includes(cleanEmail);
         
-        // If not master admin, check DB
-        if (!isAdmin) {
-          try {
-            const dbCheck = await sql`SELECT email FROM admin_emails WHERE email = ${cleanEmail}`;
-            if (dbCheck.rows.length > 0) isAdmin = true;
-          } catch (e) {
-            console.error('DB Admin check error:', e);
-          }
+        if (isMasterAdmin) {
+          token.isAdmin = true;
+          token.role = 'superadmin';
+          token.isOnboarded = true; 
+        } else {
+          token.isAdmin = false;
         }
         
-        session.user.isAdmin = isAdmin;
+        try {
+          const dbCheck = await sql`SELECT role, is_onboarded FROM users WHERE email = ${cleanEmail}`;
+          if (dbCheck.rows.length > 0) {
+            const dbUser = dbCheck.rows[0];
+            token.isAdmin = true;
+            token.role = dbUser.role; // 'admin' or 'assistant_admin'
+            token.isOnboarded = dbUser.is_onboarded;
+          }
+        } catch (e) {
+          console.error('DB Admin check error:', e);
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.isAdmin = token.isAdmin as boolean;
+        session.user.role = token.role as string;
+        session.user.isOnboarded = token.isOnboarded as boolean;
       }
       return session;
     }
