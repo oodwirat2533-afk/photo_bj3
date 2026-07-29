@@ -125,17 +125,39 @@ export default function Home() {
     
     try {
       const uploadPromises = filesToUpload.map(async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folderId', currentFolderId);
-
-        const res = await fetch('/api/drive/upload', {
+        // 1. Init resumable upload session
+        const initRes = await fetch('/api/drive/init-upload', {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: file.name,
+            mimeType: file.type,
+            folderId: currentFolderId
+          })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to upload ' + file.name);
-        return data.file;
+        
+        const initData = await initRes.json();
+        if (!initRes.ok) throw new Error(initData.error || 'Failed to initialize upload for ' + file.name);
+        
+        const uploadUrl = initData.uploadUrl;
+        if (!uploadUrl) throw new Error('No upload URL returned for ' + file.name);
+
+        // 2. Upload file directly to Google Drive via PUT
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: file
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error('Upload failed for ' + file.name);
+        }
+        
+        // 3. Return the file metadata that Google API responds with on successful upload
+        const data = await uploadRes.json();
+        return data;
       });
 
       const results = await Promise.allSettled(uploadPromises);
