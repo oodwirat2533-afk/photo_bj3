@@ -412,7 +412,8 @@ export default function Home() {
                       padding: '1rem', backgroundColor: 'var(--color-surface)', 
                       border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
                       cursor: 'pointer', transition: 'all 0.2s ease',
-                      boxShadow: 'var(--shadow-sm)', position: 'relative'
+                      boxShadow: 'var(--shadow-sm)', position: 'relative',
+                      zIndex: activeDropdown === folder.id ? 100 : 1
                     }}
                     onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -487,7 +488,8 @@ export default function Home() {
                       display: 'block', cursor: 'pointer', color: 'inherit',
                       backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
                       overflow: 'hidden', border: '1px solid var(--color-border)',
-                      transition: 'all 0.2s ease', position: 'relative'
+                      transition: 'all 0.2s ease', position: 'relative',
+                      zIndex: activeDropdown === file.id ? 100 : 1
                     }}
                     onMouseOver={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
