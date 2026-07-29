@@ -31,6 +31,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Session & Global Auth State
   const [session, setSession] = useState<any>(null);
@@ -97,7 +98,7 @@ export default function Home() {
         setError('ไม่สามารถโหลดข้อมูลจาก Google Drive ได้');
       })
       .finally(() => setLoading(false));
-  }, [currentFolderId]);
+  }, [currentFolderId, refreshTrigger]);
 
   // Gallery Handlers
   const handleFolderClick = (folderId: string, folderName: string) => {
@@ -120,20 +121,26 @@ export default function Home() {
     if (!e.target.files || e.target.files.length === 0 || !currentFolderId) return;
     
     setUploading(true);
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folderId', currentFolderId);
-
+    const filesToUpload = Array.from(e.target.files);
+    
     try {
-      const res = await fetch('/api/drive/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload');
+      const uploadedFiles = [];
+      for (const file of filesToUpload) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folderId', currentFolderId);
+
+        const res = await fetch('/api/drive/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to upload ' + file.name);
+        
+        uploadedFiles.push(data.file);
+      }
       
-      setFiles(prev => [data.file, ...prev]);
+      setFiles(prev => [...uploadedFiles, ...prev]);
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
     } finally {
@@ -186,6 +193,7 @@ export default function Home() {
       
       setFiles(prev => prev.filter(f => f.id !== fileId));
       if (selectedFile?.id === fileId) setSelectedFile(null);
+      setRefreshTrigger(prev => prev + 1);
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
     }
@@ -254,6 +262,7 @@ export default function Home() {
                 <input 
                   type="file" 
                   accept="image/*,video/*"
+                  multiple
                   hidden 
                   onChange={handleUpload} 
                   disabled={uploading}
