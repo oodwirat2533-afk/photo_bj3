@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function OnboardingPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+
+  const [session, setSession] = useState<any>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const [title, setTitle] = useState('นาย');
   const [firstName, setFirstName] = useState('');
@@ -15,13 +16,30 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  if (status === 'loading') {
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) {
+          setSession(data);
+          // If already onboarded, send to admin
+          if (data.user?.isOnboarded) {
+            router.push('/admin');
+          }
+        } else {
+          router.push('/admin');
+        }
+      })
+      .catch((err) => console.error('Session fetch error:', err))
+      .finally(() => setCheckingSession(false));
+  }, [router]);
+
+  if (checkingSession) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/admin');
-    return null;
+  if (!session) {
+    return null; // will be redirected
   }
 
   const email = session?.user?.email || '';
@@ -48,7 +66,7 @@ export default function OnboardingPage() {
       }
 
       // Reload the page to refresh session or redirect
-      window.location.href = '/admin/dashboard';
+      window.location.href = '/admin';
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
       setLoading(false);
