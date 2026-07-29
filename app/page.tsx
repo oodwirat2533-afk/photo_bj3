@@ -122,7 +122,31 @@ export default function Home() {
     if (!e.target.files || e.target.files.length === 0 || !currentFolderId) return;
     
     setUploading(true);
-    const filesToUpload = Array.from(e.target.files);
+    const rawFilesToUpload = Array.from(e.target.files);
+    
+    // ตรวจสอบไฟล์ชื่อซ้ำ
+    const existingFileNames = new Set(files.map(f => f.name));
+    const duplicateFiles: string[] = [];
+    const filesToUpload: File[] = [];
+
+    for (const file of rawFilesToUpload) {
+      if (existingFileNames.has(file.name)) {
+        duplicateFiles.push(file.name);
+      } else {
+        filesToUpload.push(file);
+      }
+    }
+
+    if (duplicateFiles.length > 0) {
+      alert(`ระบบตรวจพบไฟล์ชื่อซ้ำ และจะข้ามการอัปโหลดไฟล์เหล่านี้:\n\n- ${duplicateFiles.join('\n- ')}\n\n(หากต้องการอัปโหลด กรุณาเปลี่ยนชื่อไฟล์ก่อน)`);
+    }
+
+    if (filesToUpload.length === 0) {
+      setUploading(false);
+      e.target.value = '';
+      return;
+    }
+
     setUploadStatus({ total: filesToUpload.length, message: 'กำลังเตรียมการอัปโหลด...' });
     
     try {
