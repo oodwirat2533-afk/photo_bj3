@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { sql } from '@/lib/db';
 
+const MASTER_EMAIL = 'ood.wirat2533@gmail.com';
+
 // Superadmin only: Get all users
 export async function GET() {
   try {
@@ -54,6 +56,14 @@ export async function POST(req: Request) {
         headers: { 'Content-Type': 'application/json' },
       });
     }
+    
+    // Only MASTER_EMAIL can assign superadmin role
+    if (role === 'superadmin' && session.user?.email !== MASTER_EMAIL) {
+      return new Response(JSON.stringify({ error: 'Only the master admin can assign the superadmin role.' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     const cleanEmail = email.toLowerCase();
     
@@ -85,6 +95,63 @@ export async function POST(req: Request) {
   }
 }
 
+// Superadmin only: Edit user role
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user?.role !== 'superadmin') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { email, role } = await req.json();
+
+    if (!email || !role) {
+      return new Response(JSON.stringify({ error: 'Missing email or role' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Only MASTER_EMAIL can assign superadmin role
+    if (role === 'superadmin' && session.user?.email !== MASTER_EMAIL) {
+      return new Response(JSON.stringify({ error: 'Only the master admin can assign the superadmin role.' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cleanEmail = email.toLowerCase();
+    
+    // Prevent modifying the master admin
+    if (cleanEmail === MASTER_EMAIL) {
+      return new Response(JSON.stringify({ error: 'Cannot modify master admin role' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Update user role
+    await sql`
+      UPDATE users SET role = ${role} WHERE email = ${cleanEmail}
+    `;
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error: any) {
+    console.error('Edit user error:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 // Superadmin only: Delete user
 export async function DELETE(req: Request) {
   try {
@@ -108,8 +175,7 @@ export async function DELETE(req: Request) {
 
     const cleanEmail = email.trim().toLowerCase();
     
-    const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
-    if (masterAdmins.includes(cleanEmail)) {
+    if (cleanEmail === MASTER_EMAIL) {
       return new Response(JSON.stringify({ error: 'Cannot delete master admin' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },

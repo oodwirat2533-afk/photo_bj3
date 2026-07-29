@@ -132,6 +132,22 @@ export default function AdminPage() {
     }
   };
 
+  const handleEditRole = async (email: string, role: string) => {
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setUsers(prev => prev.map(u => u.email === email ? { ...u, role } : u));
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+  };
+
   const handleConfirmLogout = () => {
     signOut({ callbackUrl: '/' });
   };
@@ -349,7 +365,9 @@ export default function AdminPage() {
               className="input-field"
               style={{ flex: '0 0 140px', padding: '0.5rem' }}
             >
-              <option value="superadmin">Superadmin</option>
+              {session?.user?.email === 'ood.wirat2533@gmail.com' && (
+                <option value="superadmin">Superadmin</option>
+              )}
               <option value="admin">Admin</option>
               <option value="assistant_admin">ผู้ช่วย Admin</option>
             </select>
@@ -370,9 +388,19 @@ export default function AdminPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ fontWeight: 500 }}>{u.email}</span>
-                        <span style={{ fontSize: '0.7rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', padding: '0.125rem 0.5rem', borderRadius: '1rem', fontWeight: 600 }}>
-                          {roleLabels[u.role] || u.role}
-                        </span>
+                        
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleEditRole(u.email, e.target.value)}
+                          className="input-field"
+                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          {session?.user?.email === 'ood.wirat2533@gmail.com' && (
+                            <option value="superadmin">Superadmin</option>
+                          )}
+                          <option value="admin">Admin</option>
+                          <option value="assistant_admin">ผู้ช่วย Admin</option>
+                        </select>
                       </div>
                       {u.first_name && (
                         <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
