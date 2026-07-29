@@ -349,6 +349,7 @@ export default function AdminPage() {
               className="input-field"
               style={{ flex: '0 0 140px', padding: '0.5rem' }}
             >
+              <option value="superadmin">Superadmin</option>
               <option value="admin">Admin</option>
               <option value="assistant_admin">ผู้ช่วย Admin</option>
             </select>
@@ -362,7 +363,7 @@ export default function AdminPage() {
               รายชื่อผู้ใช้งานในระบบ
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {users.map((u) => {
+              {users.filter(u => u.email !== session.user.email).map((u) => {
                 const isSuperadmin = u.role === 'superadmin';
                 return (
                   <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
