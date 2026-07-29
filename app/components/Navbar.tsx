@@ -10,6 +10,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [session, setSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [showConfirmLogout, setShowConfirmLogout] = useState(false);
 
   // Fetch session on mount
@@ -56,26 +57,79 @@ export default function Navbar() {
               </Link>
               
               {/* Desktop Menu */}
-              <div className="desktop-menu" style={{ display: 'none' }}>
-                {navLinks.map(link => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link 
-                      key={link.href} 
-                      href={link.href}
+              <div className="desktop-menu" style={{ display: 'none', position: 'relative' }}>
+                <Link 
+                  href="/"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                    textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
+                    backgroundColor: pathname === '/' ? 'var(--color-primary-light)' : 'transparent',
+                    color: pathname === '/' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <ImageIcon size={18} /> คลังภาพ
+                </Link>
+                
+                {isSuperadmin && (
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                         padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
-                        textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-                        backgroundColor: isActive ? 'var(--color-primary-light)' : 'transparent',
-                        color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                        transition: 'all 0.2s'
+                        border: 'none', background: 'transparent',
+                        fontSize: '0.875rem', fontWeight: 500,
+                        color: 'var(--color-text-muted)',
+                        cursor: 'pointer', transition: 'all 0.2s'
                       }}
+                      onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                      onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                     >
-                      {link.icon} {link.label}
-                    </Link>
-                  );
-                })}
+                      <Settings size={18} /> ตั้งค่าระบบ
+                    </button>
+
+                    {isSettingsDropdownOpen && (
+                      <div 
+                        style={{
+                          position: 'absolute', top: 'calc(100% + 0.5rem)', left: 0,
+                          backgroundColor: 'white', borderRadius: 'var(--radius-md)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)',
+                          minWidth: '220px', zIndex: 100, display: 'flex', flexDirection: 'column',
+                          padding: '0.5rem'
+                        }}
+                      >
+                        <Link 
+                          href="/settings/drive"
+                          onClick={() => setIsSettingsDropdownOpen(false)}
+                          style={{
+                            padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                            color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                            display: 'flex', alignItems: 'center', gap: '0.5rem'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Settings size={16} /> จัดการลิงก์ Google Drive
+                        </Link>
+                        <Link 
+                          href="/settings/users"
+                          onClick={() => setIsSettingsDropdownOpen(false)}
+                          style={{
+                            padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                            color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                            display: 'flex', alignItems: 'center', gap: '0.5rem'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Users size={16} /> จัดการผู้ดูแลระบบ
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
