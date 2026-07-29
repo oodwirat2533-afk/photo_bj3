@@ -14,6 +14,7 @@ export default withAuth(
     if (isAuth && token) {
       const isOnboarded = token.isOnboarded;
       const isOnboardingPage = req.nextUrl.pathname.startsWith('/onboarding');
+      const isSettingsPage = req.nextUrl.pathname.startsWith('/settings');
   
       // Protect onboarding page: only for un-onboarded admins
       if (isOnboardingPage) {
@@ -21,6 +22,14 @@ export default withAuth(
           return NextResponse.redirect(new URL('/', req.url));
         }
         if (token?.isOnboarded) {
+          return NextResponse.redirect(new URL('/', req.url));
+        }
+        return NextResponse.next();
+      }
+
+      // Protect settings page: only for superadmins
+      if (isSettingsPage) {
+        if (!token?.isAdmin || token?.role !== 'superadmin') {
           return NextResponse.redirect(new URL('/', req.url));
         }
         return NextResponse.next();
@@ -37,5 +46,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/onboarding']
+  matcher: ['/onboarding', '/settings/:path*']
 };
