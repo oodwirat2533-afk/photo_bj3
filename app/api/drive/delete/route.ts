@@ -10,6 +10,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (session.user?.role === 'assistant_admin') {
+      return NextResponse.json({ error: 'ผู้ช่วย Admin ไม่มีสิทธิ์ลบรูปภาพ' }, { status: 403 });
+    }
+
     const { fileId } = await request.json();
 
     if (!fileId) {

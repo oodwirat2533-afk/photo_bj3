@@ -311,7 +311,7 @@ export default function Home() {
                     onMouseOver={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                   >
-                    {session?.user?.isAdmin && (
+                    {session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (
                       <button
                         onClick={(e) => handleDelete(e, file.id)}
                         style={{
