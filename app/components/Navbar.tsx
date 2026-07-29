@@ -52,7 +52,16 @@ export default function Navbar() {
           <div style={{ display: 'flex', justifyContent: 'space-between', height: '64px' }}>
             {/* Left side: Logo & Desktop Links */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <Link href="/" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Link 
+                href="/" 
+                onClick={(e) => {
+                  if (pathname === '/') {
+                    e.preventDefault();
+                    window.dispatchEvent(new Event('go-home'));
+                  }
+                }}
+                style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
                 <ImageIcon size={24} /> คลังภาพ ร.ร.
               </Link>
               
@@ -74,6 +83,12 @@ export default function Navbar() {
                   <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
                     <Link 
                       href="/"
+                      onClick={(e) => {
+                        if (pathname === '/') {
+                          e.preventDefault();
+                          window.dispatchEvent(new Event('go-home'));
+                        }
+                      }}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                         padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
@@ -189,7 +204,13 @@ export default function Navbar() {
                   <Link 
                     key={link.href} 
                     href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false);
+                      if (link.href === '/' && pathname === '/') {
+                        e.preventDefault();
+                        window.dispatchEvent(new Event('go-home'));
+                      }
+                    }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '0.75rem',
                       padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',

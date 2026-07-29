@@ -70,6 +70,18 @@ export default function Home() {
       .catch((err) => console.error('Session fetch error:', err));
   }, []);
 
+  // Listen to global go-home event
+  useEffect(() => {
+    const handleGoHome = () => {
+      if (rootFolderId) {
+        setCurrentFolderId(rootFolderId);
+        setFolderHistory([]);
+      }
+    };
+    window.addEventListener('go-home', handleGoHome);
+    return () => window.removeEventListener('go-home', handleGoHome);
+  }, [rootFolderId]);
+
   // 2. Fetch Root Folder URL from DB
   useEffect(() => {
     fetch('/api/urls')
