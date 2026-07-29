@@ -171,7 +171,7 @@ export default function Home() {
 
   const handleDelete = async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation();
-    if (!confirm('ยืนยันการลบไฟล์นี้ออกจาก Google Drive ใช่หรือไม่?')) return;
+    if (!confirm('ยืนยันการลบรายการนี้ออกจาก Google Drive ใช่หรือไม่? (ระวัง: หากลบโฟลเดอร์ ไฟล์ข้างในจะถูกลบด้วย)')) return;
     
     try {
       const res = await fetch('/api/drive/delete', {
@@ -302,15 +302,30 @@ export default function Home() {
                       padding: '1rem', backgroundColor: 'var(--color-surface)', 
                       border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
                       cursor: 'pointer', transition: 'all 0.2s ease',
-                      boxShadow: 'var(--shadow-sm)'
+                      boxShadow: 'var(--shadow-sm)', position: 'relative'
                     }}
                     onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                     onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     <Folder size={24} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '2rem' }}>
                       {folder.name}
                     </span>
+                    
+                    {session?.user?.role === 'superadmin' && (
+                      <button
+                        onClick={(e) => handleDelete(e, folder.id)}
+                        style={{
+                          position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)',
+                          backgroundColor: 'rgba(255,0,0,0.05)', color: 'var(--color-danger)',
+                          border: 'none', borderRadius: '50%', padding: '0.4rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        title="ลบโฟลเดอร์นี้"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
