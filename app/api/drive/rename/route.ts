@@ -1,45 +1,40 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
-import { google } from 'googleapis';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]/route";
+import { getDriveAccessToken } from '@/lib/google-auth';
 
-const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
-
-export async function PATCH(req: Request) {
+export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session || !['superadmin', 'admin'].includes(session.user?.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, name } = await req.json();
+    const { id, name } = await request.json();
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Missing id or name' }, { status: 400 });
     }
 
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: privateKey,
+    const token = await getDriveAccessToken();
+
+    const renameRes = await fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
-      scopes: SCOPES,
+      body: JSON.stringify({ name })
     });
 
-    const drive = google.drive({ version: 'v3', auth });
-
-    await drive.files.update({
-      fileId: id,
-      requestBody: {
-        name: name,
-      },
-    });
+    if (!renameRes.ok) {
+      const data = await renameRes.json().catch(() => ({}));
+      throw new Error(data.error?.message || 'Failed to rename file in Google Drive');
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Drive Rename Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Rename Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
