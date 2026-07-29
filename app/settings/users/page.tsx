@@ -158,6 +158,8 @@ export default function UsersSettingsPage() {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {users.filter(u => u.email !== session.user.email).map((u) => {
                 const isSuperadmin = u.role === 'superadmin';
+                const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
+                
                 return (
                   <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -167,7 +169,8 @@ export default function UsersSettingsPage() {
                           value={u.role}
                           onChange={(e) => handleEditRole(u.email, e.target.value)}
                           className="input-field"
-                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                          disabled={isMasterAdmin}
+                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
                         >
                           {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Superadmin</option>}
                           <option value="admin">Admin</option>
