@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2 } from 'lucide-react';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -265,6 +265,26 @@ export default function Home() {
     }
   };
 
+  const handleRename = async (e: React.MouseEvent, id: string, oldName: string) => {
+    e.stopPropagation();
+    const newName = prompt('ระบุชื่อใหม่:', oldName);
+    if (!newName || newName.trim() === '' || newName === oldName) return;
+
+    try {
+      const res = await fetch('/api/drive/rename', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name: newName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unknown error');
+      
+      setRefreshTrigger(prev => prev + 1);
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: ' + err.message);
+    }
+  };
+
   // Prevent scrolling when modal is open
   useEffect(() => {
     if (selectedFile) {
@@ -281,6 +301,7 @@ export default function Home() {
   const isRootFolder = currentFolderId === rootFolderId;
   const canUpload = session?.user?.isAdmin && !isRootFolder;
   const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : true);
+  const canRename = session?.user?.role === 'superadmin' || session?.user?.role === 'admin';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -383,10 +404,24 @@ export default function Home() {
                     onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     <Folder size={24} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '2rem' }}>
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4rem' }}>
                       {folder.name}
                     </span>
                     
+                    {canRename && (
+                      <button
+                        onClick={(e) => handleRename(e, folder.id, folder.name)}
+                        style={{
+                          position: 'absolute', top: '50%', right: session?.user?.role === 'superadmin' ? '3.5rem' : '1rem', transform: 'translateY(-50%)',
+                          backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--color-text)',
+                          border: 'none', borderRadius: '50%', padding: '0.4rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        title="เปลี่ยนชื่อโฟลเดอร์"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
                     {session?.user?.role === 'superadmin' && (
                       <button
                         onClick={(e) => handleDelete(e, folder.id)}
@@ -425,6 +460,21 @@ export default function Home() {
                     onMouseOver={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                   >
+                    {canRename && (
+                      <button
+                        onClick={(e) => handleRename(e, file.id, file.name)}
+                        style={{
+                          position: 'absolute', top: '0.5rem', right: (session?.user?.isAdmin && session?.user?.role !== 'assistant_admin') ? '3rem' : '0.5rem', zIndex: 10,
+                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-text)',
+                          border: 'none', borderRadius: '50%', padding: '0.5rem',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: 'var(--shadow-sm)'
+                        }}
+                        title="เปลี่ยนชื่อไฟล์"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
                     {session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (
                       <button
                         onClick={(e) => handleDelete(e, file.id)}
