@@ -124,8 +124,7 @@ export default function Home() {
     const filesToUpload = Array.from(e.target.files);
     
     try {
-      const uploadedFiles = [];
-      for (const file of filesToUpload) {
+      const uploadPromises = filesToUpload.map(async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folderId', currentFolderId);
@@ -136,11 +135,30 @@ export default function Home() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to upload ' + file.name);
-        
-        uploadedFiles.push(data.file);
+        return data.file;
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+      
+      const successfulUploads: any[] = [];
+      const failedUploads: string[] = [];
+      
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          successfulUploads.push(result.value);
+        } else {
+          failedUploads.push(filesToUpload[index].name);
+        }
+      });
+      
+      if (successfulUploads.length > 0) {
+        setFiles(prev => [...successfulUploads, ...prev]);
+        setRefreshTrigger(prev => prev + 1);
       }
       
-      setFiles(prev => [...uploadedFiles, ...prev]);
+      if (failedUploads.length > 0) {
+        alert('อัปโหลดล้มเหลวสำหรับไฟล์:\n' + failedUploads.join('\n'));
+      }
     } catch (err: any) {
       alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
     } finally {
