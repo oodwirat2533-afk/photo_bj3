@@ -149,49 +149,56 @@ export default function UsersSettingsPage() {
           <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             รายชื่อผู้ใช้งานในระบบ
           </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {users.filter(u => u.email !== session.user.email).map((u) => {
-              const isSuperadmin = u.role === 'superadmin';
-              return (
-                <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>{u.email}</span>
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleEditRole(u.email, e.target.value)}
-                        className="input-field"
-                        style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-                      >
-                        {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Superadmin</option>}
-                        <option value="admin">Admin</option>
-                        <option value="assistant_admin">ผู้ช่วย Admin</option>
-                      </select>
-                    </div>
-                    {u.first_name && (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        {u.title}{u.first_name} {u.last_name} ({u.subject_group})
+          
+          {users.filter(u => u.email !== session.user.email).length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: 'var(--color-surface)', border: '1px dashed var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>ยังไม่มีผู้ใช้งานอื่นในระบบ</p>
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {users.filter(u => u.email !== session.user.email).map((u) => {
+                const isSuperadmin = u.role === 'superadmin';
+                return (
+                  <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>{u.email}</span>
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleEditRole(u.email, e.target.value)}
+                          className="input-field"
+                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Superadmin</option>}
+                          <option value="admin">Admin</option>
+                          <option value="assistant_admin">ผู้ช่วย Admin</option>
+                        </select>
                       </div>
-                    )}
-                    <div style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
-                      {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
+                      {u.first_name && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                          {u.title}{u.first_name} {u.last_name} ({u.subject_group})
+                        </div>
+                      )}
+                      <div style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
+                        {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
+                      </div>
                     </div>
-                  </div>
-                  {!isSuperadmin && (
-                    <button 
-                      onClick={() => handleDeleteAdmin(u.email)}
-                      style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      title="ลบผู้ใช้"
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                    {!isSuperadmin && (
+                      <button 
+                        onClick={() => handleDeleteAdmin(u.email)}
+                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="ลบผู้ใช้"
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
     </div>
