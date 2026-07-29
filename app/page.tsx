@@ -32,6 +32,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<{ total: number, message: string } | null>(null);
 
   // Session & Global Auth State
   const [session, setSession] = useState<any>(null);
@@ -122,6 +123,7 @@ export default function Home() {
     
     setUploading(true);
     const filesToUpload = Array.from(e.target.files);
+    setUploadStatus({ total: filesToUpload.length, message: 'กำลังเตรียมการอัปโหลด...' });
     
     try {
       const uploadPromises = filesToUpload.map(async (file) => {
@@ -175,6 +177,7 @@ export default function Home() {
       });
       
       if (successfulUploads.length > 0) {
+        setUploadStatus({ total: filesToUpload.length, message: 'กำลังอัปเดตข้อมูล...' });
         setFiles(prev => [...successfulUploads, ...prev]);
         setRefreshTrigger(prev => prev + 1);
       }
@@ -186,6 +189,7 @@ export default function Home() {
       alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
     } finally {
       setUploading(false);
+      setUploadStatus(null);
       e.target.value = '';
     }
   };
@@ -562,6 +566,39 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Uploading Overlay Modal */}
+      {uploading && uploadStatus && (
+        <div 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999,
+            display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div 
+            className="card" 
+            style={{ 
+              maxWidth: '400px', width: '100%', padding: '3rem 2rem', 
+              backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            }}
+          >
+            <div style={{ width: '50px', height: '50px', borderRadius: '50%', border: '4px solid var(--color-border)', borderTopColor: 'var(--color-primary)', animation: 'spin 1s linear infinite', marginBottom: '1.5rem' }}></div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
+              กำลังอัปโหลด {uploadStatus.total} ไฟล์
+            </h3>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+              {uploadStatus.message}
+            </p>
+            <p style={{ color: 'var(--color-danger)', fontSize: '0.85rem', marginTop: '1rem', fontWeight: 500 }}>
+              * กรุณาอย่าปิดหรือรีเฟรชหน้านี้ จนกว่าการอัปโหลดจะเสร็จสิ้น
+            </p>
           </div>
         </div>
       )}
