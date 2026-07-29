@@ -44,7 +44,11 @@ export default function Home() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setActiveDropdown(null);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.dropdown-container')) {
+        setActiveDropdown(null);
+      }
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -419,7 +423,7 @@ export default function Home() {
                     </span>
                     
                     {(canRename || canDeleteFolder) && (
-                      <div style={{ position: 'absolute', top: '50%', right: '0.5rem', transform: 'translateY(-50%)' }}>
+                      <div className="dropdown-container" style={{ position: 'absolute', top: '50%', right: '0.5rem', transform: 'translateY(-50%)' }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
                           style={{
@@ -489,7 +493,7 @@ export default function Home() {
                     onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                   >
                     {(canRename || canDeleteFile) && (
-                      <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+                      <div className="dropdown-container" style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === file.id ? null : file.id); }}
                           style={{
