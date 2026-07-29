@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus } from 'lucide-react';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -35,6 +35,9 @@ export default function Home() {
   // Session & Global Auth State
   const [session, setSession] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
 
   // 1. Fetch Session & Check Onboarding
   useEffect(() => {
@@ -139,6 +142,33 @@ export default function Home() {
     }
   };
 
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim() || !currentFolderId) return;
+
+    setCreatingFolder(true);
+    try {
+      const res = await fetch('/api/drive/create-folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folderName: newFolderName.trim(),
+          parentFolderId: currentFolderId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create folder');
+
+      setFiles(prev => [data.folder, ...prev]);
+      setShowCreateFolder(false);
+      setNewFolderName('');
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาดในการสร้างโฟลเดอร์: ' + err.message);
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
   const handleDelete = async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation();
     if (!confirm('ยืนยันการลบไฟล์นี้ออกจาก Google Drive ใช่หรือไม่?')) return;
@@ -174,6 +204,10 @@ export default function Home() {
   const folders = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
   const mediaFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
 
+  const isRootFolder = currentFolderId === rootFolderId;
+  const canUpload = session?.user?.isAdmin && !isRootFolder;
+  const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : true);
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       
@@ -194,24 +228,39 @@ export default function Home() {
             )}
           </div>
 
-          {session?.user?.isAdmin && currentFolderId && (
-            <label 
-              className="btn btn-primary"
-              style={{ 
-                display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
-                cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.7 : 1 
-              }}
-            >
-              <UploadCloud size={16} /> {uploading ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์'}
-              <input 
-                type="file" 
-                accept="image/*,video/*"
-                hidden 
-                onChange={handleUpload} 
-                disabled={uploading}
-              />
-            </label>
-          )}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {canCreateFolder && currentFolderId && (
+              <button
+                onClick={() => setShowCreateFolder(true)}
+                className="btn"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+                  backgroundColor: 'white', border: '1px solid var(--color-border)'
+                }}
+              >
+                <FolderPlus size={16} /> สร้างโฟลเดอร์
+              </button>
+            )}
+
+            {canUpload && currentFolderId && (
+              <label 
+                className="btn btn-primary"
+                style={{ 
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', 
+                  cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.7 : 1 
+                }}
+              >
+                <UploadCloud size={16} /> {uploading ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์'}
+                <input 
+                  type="file" 
+                  accept="image/*,video/*"
+                  hidden 
+                  onChange={handleUpload} 
+                  disabled={uploading}
+                />
+              </label>
+            )}
+          </div>
         </div>
       </div>
 
@@ -397,6 +446,57 @@ export default function Home() {
             >
               เปิดใน Google Drive <ExternalLink size={14} />
             </a>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Creating Folder */}
+      {showCreateFolder && (
+        <div 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+            display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
+            backdropFilter: 'blur(3px)'
+          }}
+          onClick={() => setShowCreateFolder(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="card" 
+            style={{ maxWidth: '400px', width: '100%', padding: '2rem', backgroundColor: 'white', borderRadius: 'var(--radius-lg)' }}
+          >
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>สร้างโฟลเดอร์ใหม่</h3>
+            <form onSubmit={handleCreateFolder}>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="ชื่อโฟลเดอร์"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                required
+                autoFocus
+                style={{ marginBottom: '1.5rem' }}
+              />
+              
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button 
+                  type="button"
+                  onClick={() => setShowCreateFolder(false)}
+                  className="btn"
+                  style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={creatingFolder}
+                >
+                  {creatingFolder ? 'กำลังสร้าง...' : 'สร้างโฟลเดอร์'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
