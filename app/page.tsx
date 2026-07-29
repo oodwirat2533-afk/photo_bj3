@@ -138,10 +138,7 @@ export default function Home() {
     }
 
     if (duplicateFiles.length > 0) {
-      alert(`ระบบตรวจพบไฟล์ชื่อซ้ำ และจะข้ามการอัปโหลดไฟล์เหล่านี้:\n\n- ${duplicateFiles.join('\n- ')}\n\n(หากต้องการอัปโหลด กรุณาเปลี่ยนชื่อไฟล์ก่อน)`);
-    }
-
-    if (filesToUpload.length === 0) {
+      alert(`ไม่อนุญาตให้อัปโหลด เนื่องจากพบไฟล์ชื่อซ้ำอยู่ในโฟลเดอร์นี้แล้ว:\n\n- ${duplicateFiles.join('\n- ')}\n\nกรุณาเปลี่ยนชื่อไฟล์ที่ซ้ำก่อนทำการอัปโหลดใหม่ทั้งหมด`);
       setUploading(false);
       e.target.value = '';
       return;
