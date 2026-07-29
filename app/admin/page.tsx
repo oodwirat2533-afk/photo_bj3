@@ -33,6 +33,12 @@ export default function AdminPage() {
           setSession(data);
           
           if (data.user?.isAdmin) {
+            // Check onboarding
+            if (!data.user?.isOnboarded) {
+              window.location.href = '/onboarding';
+              return;
+            }
+
             Promise.all([
               fetch('/api/urls').then(res => res.json()),
               // If superadmin, fetch all users from the new API
@@ -42,7 +48,6 @@ export default function AdminPage() {
                 if (urlData && urlData.url) setUrl(urlData.url);
                 if (userData && userData.users) {
                   setUsers(userData.users);
-                  // We don't strictly need masterAdmins from API if we just protect delete
                 }
               })
               .catch((err) => console.error('Failed to fetch data:', err))
