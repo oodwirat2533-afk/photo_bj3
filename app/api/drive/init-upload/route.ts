@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, mimeType, folderId } = await request.json();
+    const { name, mimeType, size, folderId } = await request.json();
 
     if (!name || !folderId) {
       return NextResponse.json({ error: 'Missing name or folderId' }, { status: 400 });
@@ -24,12 +24,16 @@ export async function POST(request: Request) {
     const token = await getDriveAccessToken();
 
     // 1. Request a resumable upload URI from Google Drive API
+    const origin = request.headers.get('origin') || '';
+    
     const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,thumbnailLink,webContentLink,webViewLink', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
         'X-Upload-Content-Type': mimeType || 'application/octet-stream',
+        ...(size ? { 'X-Upload-Content-Length': size.toString() } : {}),
+        ...(origin ? { 'Origin': origin } : {})
       },
       body: JSON.stringify(metadata),
     });

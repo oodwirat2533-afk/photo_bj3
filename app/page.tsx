@@ -132,6 +132,7 @@ export default function Home() {
           body: JSON.stringify({
             name: file.name,
             mimeType: file.type,
+            size: file.size,
             folderId: currentFolderId
           })
         });
