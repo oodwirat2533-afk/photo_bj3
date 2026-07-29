@@ -13,9 +13,10 @@ export default function AdminPage() {
   const [success, setSuccess] = useState('');
 
   // Admin Management State
-  const [admins, setAdmins] = useState<string[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [masterAdmins, setMasterAdmins] = useState<string[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminRole, setNewAdminRole] = useState('admin');
   const [adminLoading, setAdminLoading] = useState(false);
 
   // Auth & Modal State
@@ -34,13 +35,14 @@ export default function AdminPage() {
           if (data.user?.isAdmin) {
             Promise.all([
               fetch('/api/urls').then(res => res.json()),
-              fetch('/api/admins').then(res => res.json())
+              // If superadmin, fetch all users from the new API
+              data.user?.role === 'superadmin' ? fetch('/api/users').then(res => res.json()) : Promise.resolve(null)
             ])
-              .then(([urlData, adminData]) => {
+              .then(([urlData, userData]) => {
                 if (urlData && urlData.url) setUrl(urlData.url);
-                if (adminData && adminData.admins) {
-                  setAdmins(adminData.admins);
-                  setMasterAdmins(adminData.masterAdmins || []);
+                if (userData && userData.users) {
+                  setUsers(userData.users);
+                  // We don't strictly need masterAdmins from API if we just protect delete
                 }
               })
               .catch((err) => console.error('Failed to fetch data:', err))
@@ -88,16 +90,24 @@ export default function AdminPage() {
     if (!newAdminEmail) return;
     setAdminLoading(true);
     try {
-      const res = await fetch('/api/admins', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newAdminEmail }),
+        body: JSON.stringify({ email: newAdminEmail, role: newAdminRole }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setAdmins(prev => [...prev, data.email]);
+      
+      // Refresh user list
+      const fetchRes = await fetch('/api/users');
+      const fetchData = await fetchRes.json();
+      if (fetchData.users) {
+        setUsers(fetchData.users);
+      }
+      
       setNewAdminEmail('');
-      alert('เพิ่มแอดมินสำเร็จ');
+      setNewAdminRole('admin');
+      alert('เพิ่มผู้ใช้สำเร็จ');
     } catch (err: any) {
       alert('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
@@ -106,16 +116,17 @@ export default function AdminPage() {
   };
 
   const handleDeleteAdmin = async (email: string) => {
-    if (!confirm(`ยืนยันการลบ ${email} ออกจากการเป็นแอดมิน?`)) return;
+    if (!confirm(`ยืนยันการลบ ${email} ออกจากระบบ?`)) return;
     try {
-      const res = await fetch('/api/admins', {
+      const res = await fetch('/api/users', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setAdmins(prev => prev.filter(a => a !== email));
+      
+      setUsers(prev => prev.filter(u => u.email !== email));
     } catch (err: any) {
       alert('เกิดข้อผิดพลาด: ' + err.message);
     }
@@ -242,16 +253,22 @@ export default function AdminPage() {
     );
   }
 
+  const roleLabels: Record<string, string> = {
+    'superadmin': 'Superadmin',
+    'admin': 'Admin',
+    'assistant_admin': 'ผู้ช่วย Admin'
+  };
+
   // State 3: LOGGED IN & IS ADMIN
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>ตั้งค่าโฟลเดอร์ Google Drive หลัก</h1>
+        <h1 className="page-title" style={{ margin: 0 }}>ตั้งค่าระบบคลังภาพ</h1>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ textAlign: 'right', fontSize: '0.875rem' }}>
             <p style={{ fontWeight: 600 }}>{session.user.name}</p>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{session.user.email}</p>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{session.user.email} ({roleLabels[session.user.role] || 'Admin'})</p>
           </div>
           <button 
             onClick={() => setShowConfirmLogout(true)} 
@@ -265,7 +282,7 @@ export default function AdminPage() {
 
       <div className="card" style={{ maxWidth: '600px' }}>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
-          ลิงก์โฟลเดอร์คลังภาพโรงเรียน
+          ลิงก์โฟลเดอร์ Google Drive หลัก
         </h2>
         
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
@@ -305,63 +322,82 @@ export default function AdminPage() {
         </form>
       </div>
 
-      {/* Admin Management Section */}
-      <div className="card" style={{ maxWidth: '600px', marginTop: '2rem' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <UserPlus size={20} /> จัดการผู้ดูแลระบบ
-        </h2>
-        
-        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-          เพิ่มอีเมลของบุคลากรที่ต้องการให้สามารถเข้ามาจัดการโฟลเดอร์หรืออัปโหลด/ลบรูปภาพได้
-        </p>
+      {/* Admin Management Section - ONLY FOR SUPERADMIN */}
+      {session.user.role === 'superadmin' && (
+        <div className="card" style={{ maxWidth: '600px', marginTop: '2rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <UserPlus size={20} /> จัดการผู้ดูแลระบบ
+          </h2>
+          
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+            เพิ่มอีเมลของบุคลากรที่ต้องการให้สามารถเข้ามาจัดการโฟลเดอร์หรืออัปโหลด/ลบรูปภาพได้
+          </p>
 
-        <form onSubmit={handleAddAdmin} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-          <input
-            type="email"
-            className="input-field"
-            value={newAdminEmail}
-            onChange={(e) => setNewAdminEmail(e.target.value)}
-            placeholder="email@example.com"
-            required
-            style={{ flex: 1 }}
-          />
-          <button type="submit" className="btn btn-primary" disabled={adminLoading}>
-            {adminLoading ? 'กำลังเพิ่ม...' : 'เพิ่ม Admin'}
-          </button>
-        </form>
+          <form onSubmit={handleAddAdmin} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            <input
+              type="email"
+              className="input-field"
+              value={newAdminEmail}
+              onChange={(e) => setNewAdminEmail(e.target.value)}
+              placeholder="email@example.com"
+              required
+              style={{ flex: '1 1 200px' }}
+            />
+            <select
+              value={newAdminRole}
+              onChange={(e) => setNewAdminRole(e.target.value)}
+              className="input-field"
+              style={{ flex: '0 0 140px', padding: '0.5rem' }}
+            >
+              <option value="admin">Admin</option>
+              <option value="assistant_admin">ผู้ช่วย Admin</option>
+            </select>
+            <button type="submit" className="btn btn-primary" disabled={adminLoading} style={{ flex: '0 0 auto' }}>
+              {adminLoading ? 'กำลังเพิ่ม...' : 'เพิ่มผู้ใช้'}
+            </button>
+          </form>
 
-        <div>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            รายชื่อ Admin ปัจจุบัน
-          </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {admins.map((email) => {
-              const isMaster = masterAdmins.includes(email);
-              return (
-                <li key={email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 500 }}>{email}</span>
-                    {isMaster && (
-                      <span style={{ fontSize: '0.7rem', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '0.125rem 0.5rem', borderRadius: '1rem', fontWeight: 600 }}>
-                        Master
-                      </span>
+          <div>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              รายชื่อผู้ใช้งานในระบบ
+            </h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {users.map((u) => {
+                const isSuperadmin = u.role === 'superadmin';
+                return (
+                  <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 500 }}>{u.email}</span>
+                        <span style={{ fontSize: '0.7rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', padding: '0.125rem 0.5rem', borderRadius: '1rem', fontWeight: 600 }}>
+                          {roleLabels[u.role] || u.role}
+                        </span>
+                      </div>
+                      {u.first_name && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                          {u.title}{u.first_name} {u.last_name} ({u.subject_group})
+                        </div>
+                      )}
+                      <div style={{ fontSize: '0.75rem', color: u.is_onboarded ? 'green' : 'orange' }}>
+                        {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบ'}
+                      </div>
+                    </div>
+                    {!isSuperadmin && (
+                      <button 
+                        onClick={() => handleDeleteAdmin(u.email)}
+                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
+                        title="ลบผู้ใช้"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     )}
-                  </div>
-                  {!isMaster && (
-                    <button 
-                      onClick={() => handleDeleteAdmin(email)}
-                      style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
-                      title="ลบ Admin"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Logout Confirmation Modal */}
       {showConfirmLogout && (

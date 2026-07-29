@@ -84,3 +84,49 @@ export async function POST(req: Request) {
     });
   }
 }
+
+// Superadmin only: Delete user
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user?.role !== 'superadmin') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { email } = await req.json();
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: 'Missing email' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    
+    const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+    if (masterAdmins.includes(cleanEmail)) {
+      return new Response(JSON.stringify({ error: 'Cannot delete master admin' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    await sql`DELETE FROM users WHERE email = ${cleanEmail}`;
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error: any) {
+    console.error('Delete user error:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
