@@ -9,14 +9,7 @@ async function verifyAdmin() {
     if (!session || !session.user || !session.user.email) {
       return false;
     }
-    const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
-    const cleanEmail = session.user.email.toLowerCase();
-    
-    if (adminEmails.includes(cleanEmail)) return true;
-    
-    // Check in DB
-    const result = await sql`SELECT email FROM admin_emails WHERE email = ${cleanEmail}`;
-    return result.rows.length > 0;
+    return session.user.role === 'superadmin';
   } catch (e) {
     console.error('Session verify error:', e);
     return false;

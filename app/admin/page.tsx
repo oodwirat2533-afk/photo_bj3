@@ -301,47 +301,49 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div className="card" style={{ maxWidth: '600px' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
-          ลิงก์โฟลเดอร์ Google Drive หลัก
-        </h2>
-        
-        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-          กรอกลิงก์โฟลเดอร์ Google Drive หลักเพียงลิงก์เดียว ระบบจะแสดงโฟลเดอร์ย่อยทั้งหมดที่อยู่ในลิงก์นี้ให้นักเรียนดูในหน้าหลักโดยอัตโนมัติ
-        </p>
+      {session.user.role === 'superadmin' && (
+        <div className="card" style={{ maxWidth: '600px' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>
+            ลิงก์โฟลเดอร์ Google Drive หลัก
+          </h2>
+          
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+            กรอกลิงก์โฟลเดอร์ Google Drive หลักเพียงลิงก์เดียว ระบบจะแสดงโฟลเดอร์ย่อยทั้งหมดที่อยู่ในลิงก์นี้ให้นักเรียนดูในหน้าหลักโดยอัตโนมัติ
+          </p>
 
-        {error && (
-          <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-            {error}
-          </div>
-        )}
+          {error && (
+            <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              {error}
+            </div>
+          )}
 
-        {success && (
-          <div style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-            {success}
-          </div>
-        )}
+          {success && (
+            <div style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              {success}
+            </div>
+          )}
 
-        <form onSubmit={handleUpdateUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Google Drive Folder URL
-            </label>
-            <input
-              type="url"
-              className="input-field"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://drive.google.com/drive/folders/..."
-              required
-            />
-          </div>
+          <form onSubmit={handleUpdateUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                Google Drive Folder URL
+              </label>
+              <input
+                type="url"
+                className="input-field"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://drive.google.com/drive/folders/..."
+                required
+              />
+            </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={loading}>
-            {loading ? 'กำลังบันทึก...' : 'บันทึกลิงก์โฟลเดอร์'}
-          </button>
-        </form>
-      </div>
+            <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={loading}>
+              {loading ? 'กำลังบันทึก...' : 'บันทึกลิงก์โฟลเดอร์'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Admin Management Section - ONLY FOR SUPERADMIN */}
       {session.user.role === 'superadmin' && (
