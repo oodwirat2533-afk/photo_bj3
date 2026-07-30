@@ -696,7 +696,7 @@ export default function Home() {
           </div>
           
           <div onClick={(e) => e.stopPropagation()} style={{ color: 'white', marginTop: '1.5rem', textAlign: 'center' }}>
-            <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>{selectedFile.name}</p>
+
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
               <a 
                 href={selectedFile.webContentLink || selectedFile.webViewLink} 
