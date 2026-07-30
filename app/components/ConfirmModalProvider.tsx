@@ -52,7 +52,7 @@ export function ConfirmModalProvider({ children }: { children: ReactNode }) {
             onClick={(e) => e.stopPropagation()} 
             className="card animate-fade-in" 
             style={{ 
-              maxWidth: '420px', width: '100%', padding: '2rem', textAlign: 'center', 
+              maxWidth: '500px', width: '100%', padding: '2rem', textAlign: 'center', 
               backgroundColor: 'white', borderRadius: 'var(--radius-xl)',
               boxShadow: 'var(--shadow-xl)'
             }}
@@ -60,7 +60,7 @@ export function ConfirmModalProvider({ children }: { children: ReactNode }) {
             <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text-main)' }}>
               {options.title}
             </h3>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', marginBottom: '2rem' }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', marginBottom: '2rem', lineHeight: '1.5' }}>
               {options.message}
             </p>
             

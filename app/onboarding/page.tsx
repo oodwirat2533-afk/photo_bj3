@@ -85,38 +85,27 @@ export default function OnboardingPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', backgroundColor: 'var(--color-bg, #f8fafc)' }}>
+      <div className="card" style={{ maxWidth: '480px', width: '100%', padding: '2.5rem 2rem', backgroundColor: 'white', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06))' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.5rem' }}>
             กรอกข้อมูลส่วนตัว
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
             สำหรับการเข้าสู่ระบบครั้งแรก
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {error && <div style={{ color: 'var(--color-danger, #ef4444)', fontSize: '0.875rem', textAlign: 'center', backgroundColor: '#fef2f2', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
           
-          <div className="rounded-md shadow-sm space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">อีเมล (ไม่สามารถแก้ไขได้)</label>
-              <input
-                id="email"
-                type="email"
-                readOnly
-                value={email}
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none sm:text-sm"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">คำนำหน้าชื่อ</label>
+              <label htmlFor="title" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)', marginBottom: '0.5rem' }}>คำนำหน้าชื่อ</label>
               <select
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'white', color: 'var(--color-text)', fontSize: '0.875rem', outline: 'none' }}
                 required
               >
                 <option value="นาย">นาย</option>
@@ -126,38 +115,49 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">ชื่อ</label>
+              <label htmlFor="firstName" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)', marginBottom: '0.5rem' }}>ชื่อ</label>
               <input
                 id="firstName"
                 type="text"
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'white', color: 'var(--color-text)', fontSize: '0.875rem', outline: 'none' }}
                 placeholder="ชื่อ"
               />
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">นามสกุล</label>
+              <label htmlFor="lastName" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)', marginBottom: '0.5rem' }}>นามสกุล</label>
               <input
                 id="lastName"
                 type="text"
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'white', color: 'var(--color-text)', fontSize: '0.875rem', outline: 'none' }}
                 placeholder="นามสกุล"
               />
             </div>
 
             <div>
-              <label htmlFor="subjectGroup" className="block text-sm font-medium text-gray-700">กลุ่มสาระการเรียนรู้</label>
+              <label htmlFor="email" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)', marginBottom: '0.5rem' }}>อีเมล (ไม่สามารถแก้ไขได้)</label>
+              <input
+                id="email"
+                type="email"
+                readOnly
+                value={email}
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface, #f1f5f9)', color: 'var(--color-text-muted)', fontSize: '0.875rem', cursor: 'not-allowed' }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="subjectGroup" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)', marginBottom: '0.5rem' }}>กลุ่มสาระการเรียนรู้</label>
               <select
                 id="subjectGroup"
                 value={subjectGroup}
                 onChange={(e) => setSubjectGroup(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'white', color: 'var(--color-text)', fontSize: '0.875rem', outline: 'none' }}
                 required
               >
                 {subjects.map(subject => (
@@ -167,11 +167,12 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          <div>
+          <div style={{ marginTop: '0.5rem' }}>
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, display: 'flex', justifyContent: 'center', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
             >
               {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
             </button>

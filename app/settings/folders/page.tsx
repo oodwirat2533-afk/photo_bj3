@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, Folder } from 'lucide-react';
+import { Eye, EyeOff, Folder, ArrowLeft, Home } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -99,6 +99,23 @@ export default function FoldersSettingsPage() {
 
   return (
     <div style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <button 
+          onClick={() => window.history.back()}
+          className="btn"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+        >
+          <ArrowLeft size={16} /> ย้อนกลับ
+        </button>
+        <Link 
+          href="/"
+          className="btn"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+        >
+          <Home size={16} /> หน้าหลัก
+        </Link>
+      </div>
+
       <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '2rem' }}>จัดการโฟลเดอร์ที่แสดง</h1>
 
       {error && (

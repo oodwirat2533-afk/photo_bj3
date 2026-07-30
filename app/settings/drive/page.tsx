@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Settings, ArrowLeft, Home } from 'lucide-react';
 
 export default function DriveSettingsPage() {
   const [adminUrl, setAdminUrl] = useState('');
@@ -69,7 +70,24 @@ export default function DriveSettingsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <button 
+          onClick={() => window.history.back()}
+          className="btn"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+        >
+          <ArrowLeft size={16} /> ย้อนกลับ
+        </button>
+        <Link 
+          href="/"
+          className="btn"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+        >
+          <Home size={16} /> หน้าหลัก
+        </Link>
+      </div>
+
       <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Settings size={28} style={{ color: 'var(--color-primary)' }} />
         <h1 className="page-title" style={{ margin: 0 }}>ตั้งค่าลิงก์ Google Drive</h1>
