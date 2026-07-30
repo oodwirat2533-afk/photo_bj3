@@ -160,7 +160,7 @@ input, textarea {
 .responsive-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(var(--grid-cols-desktop, 6), minmax(0, 1fr));
 }
 
 .responsive-grid-wide {
@@ -169,8 +169,118 @@ input, textarea {
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
 }
 
+.desktop-slider {
+  display: flex !important;
+}
+.mobile-slider {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(var(--grid-cols-desktop, 3), minmax(0, 1fr));
+  }
+}
+
+/* Navbar Brand Responsive Styles */
+.navbar-logo-box {
+  width: 42px;
+  height: 42px;
+  background-color: #3b82f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  flex-shrink: 0;
+}
+
+.navbar-brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.navbar-brand-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #d97706;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
-  .responsive-grid, .responsive-grid-wide {
+  .desktop-slider {
+    display: none !important;
+  }
+  .mobile-slider {
+    display: flex !important;
+  }
+
+  .responsive-grid {
+    grid-template-columns: repeat(var(--grid-cols-mobile, 3), minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .responsive-grid-wide {
     grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  }
+
+  .navbar-logo-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .navbar-brand-title {
+    font-size: 0.85rem;
+  }
+  .navbar-brand-subtitle {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .navbar-brand-title {
+    font-size: 0.76rem;
+  }
+  .navbar-brand-subtitle {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .navbar-brand-title {
+    font-size: 0.68rem;
+  }
+}
+
+.user-subject-group {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  margin-left: 0.5rem;
+}
+
+.user-subject-group::before {
+  content: "(";
+}
+
+.user-subject-group::after {
+  content: ")";
+}
+
+@media (max-width: 640px) {
+  .user-subject-group {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+  
+  .user-subject-group::before,
+  .user-subject-group::after {
+    display: none;
   }
 }

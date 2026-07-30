@@ -68,7 +68,7 @@ export default function Navbar() {
                   <ImageIcon size={20} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <span className="navbar-brand-title">School Photo Hub</span>
+                  <span className="navbar-brand-title">คลังรูปโรงเรียนบรรหารแจ่มใสวิทยา 3</span>
                   <span className="navbar-brand-subtitle">พัฒนาโดย ครูวิรัตน์ ธีรพิพัฒนปัญญา</span>
                 </div>
               </div>
