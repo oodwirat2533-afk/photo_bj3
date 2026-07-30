@@ -87,7 +87,7 @@ export default function FoldersSettingsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '2rem' }}>จัดการโฟลเดอร์ที่แสดง</h1>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid var(--color-primary-light)', borderTopColor: 'var(--color-primary)', animation: 'spin 1s linear infinite' }}></div>
@@ -98,7 +98,7 @@ export default function FoldersSettingsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '2rem' }}>จัดการโฟลเดอร์ที่แสดง</h1>
 
       {error && (
@@ -133,32 +133,42 @@ export default function FoldersSettingsPage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <Folder size={20} style={{ color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, textDecoration: isHidden ? 'line-through' : 'none', color: isHidden ? 'var(--color-text-muted)' : 'var(--color-text)' }}>
+                    <span style={{ fontWeight: 500, color: isHidden ? 'var(--color-text-muted)' : 'var(--color-text)' }}>
                       {folder.name}
                     </span>
                   </div>
                   
-                  <button
-                    onClick={() => toggleVisibility(folder.id, isHidden)}
-                    className="btn"
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.5rem',
-                      backgroundColor: isHidden ? '#f0fdf4' : '#fef2f2', 
-                      color: isHidden ? '#166534' : 'var(--color-danger)',
-                      borderColor: isHidden ? '#bbf7d0' : '#fecaca',
-                      padding: '0.5rem 1rem'
-                    }}
-                  >
-                    {isHidden ? (
-                      <>
-                        <Eye size={16} /> แสดงโฟลเดอร์
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff size={16} /> ซ่อนโฟลเดอร์
-                      </>
-                    )}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)', fontWeight: 500 }}>
+                      {isHidden ? 'ซ่อน' : 'แสดง'}
+                    </span>
+                    <div
+                      onClick={() => toggleVisibility(folder.id, isHidden)}
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        backgroundColor: isHidden ? '#e5e7eb' : 'var(--color-primary)',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: 'white',
+                          borderRadius: '50%',
+                          position: 'absolute',
+                          top: '2px',
+                          left: isHidden ? '2px' : '22px',
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               );
             })}
