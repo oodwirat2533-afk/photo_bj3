@@ -202,34 +202,30 @@ export default function Navbar() {
                             >
                               <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
                             </Link>
+
+                            <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }} />
+
+                            <button
+                              onClick={() => {
+                                setIsSettingsDropdownOpen(false);
+                                setShowConfirmLogout(true);
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem', fontSize: '0.875rem',
+                                color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                border: 'none', background: 'transparent', width: '100%',
+                                cursor: 'pointer', textAlign: 'left'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <LogOut size={16} /> ออกจากระบบ
+                            </button>
                           </div>
                         )}
                       </div>
                     )}
-                    
-                    {/* Logout Button */}
-                    <button
-                      onClick={() => setShowConfirmLogout(true)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        padding: '0.5rem 0.9rem', borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--color-border)', backgroundColor: 'white',
-                        fontSize: '0.875rem', fontWeight: 500,
-                        color: 'var(--color-danger)',
-                        cursor: 'pointer', transition: 'all 0.2s',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fef2f2';
-                        e.currentTarget.style.borderColor = 'var(--color-danger)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = 'white';
-                        e.currentTarget.style.borderColor = 'var(--color-border)';
-                      }}
-                    >
-                      <LogOut size={18} /> ออกจากระบบ
-                    </button>
                   </div>
 
                   {!session?.user && (
