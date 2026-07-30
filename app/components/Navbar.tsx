@@ -96,7 +96,7 @@ export default function Navbar() {
 
                   {/* Desktop Menu */}
                   <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
-                    {pathname.startsWith('/settings') && (
+                    {pathname && pathname !== '/' && pathname.startsWith('/settings') && (
                       <Link 
                         href="/"
                         style={{
