@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogIn, LogOut, Settings, Users, Image as ImageIcon, Menu, X, Folder, Home } from 'lucide-react';
+import { LogIn, LogOut, Settings, Users, Image as ImageIcon, Menu, X, Folder } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
 
 export default function Navbar() {
@@ -25,23 +25,12 @@ export default function Navbar() {
       .catch((err) => console.error('Session fetch error:', err));
   }, []);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.settings-dropdown-container')) {
-        setIsSettingsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleConfirmLogout = () => {
     signOut({ callbackUrl: '/' });
   };
 
   const roleLabels: Record<string, string> = {
-    'superadmin': 'Super Admin',
+    'superadmin': 'Superadmin',
     'admin': 'Admin',
     'assistant_admin': 'ผู้ช่วย Admin'
   };
@@ -49,6 +38,7 @@ export default function Navbar() {
   const isSuperadmin = session?.user?.role === 'superadmin';
 
   const navLinks = [
+    { href: '/', label: 'หน้าแรก', icon: <ImageIcon size={18} /> },
     ...(isSuperadmin ? [
       { href: '/settings/drive', label: 'จัดการลิงก์ Google Drive', icon: <Settings size={18} /> },
       { href: '/settings/users', label: 'จัดการผู้ดูแลระบบ', icon: <Users size={18} /> },
@@ -59,19 +49,22 @@ export default function Navbar() {
   return (
     <>
       <nav style={{ backgroundColor: 'var(--color-surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 50, boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 1rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', height: '64px' }}>
             {/* Left side: Logo & Desktop Links */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div className="navbar-logo-box">
-                  <ImageIcon size={20} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <span className="navbar-brand-title">คลังรูปโรงเรียนบรรหารแจ่มใสวิทยา 3</span>
-                  <span className="navbar-brand-subtitle">พัฒนาโดย ครูวิรัตน์ ธีรพิพัฒนปัญญา</span>
-                </div>
-              </div>
+              <Link 
+                href="/" 
+                onClick={(e) => {
+                  if (pathname === '/') {
+                    e.preventDefault();
+                    window.dispatchEvent(new Event('go-home'));
+                  }
+                }}
+                style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <ImageIcon size={24} /> คลังภาพ ร.ร.
+              </Link>
               
               {/* Desktop menu moved to right side */}
             </div>
@@ -82,73 +75,47 @@ export default function Navbar() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                   {session?.user ? (
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>
-                        {session.user.name} <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>({roleLabels[session.user.role] || 'Admin'})</span>
-                      </span>
-                      {session.user.email && (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>
-                          {session.user.email}
-                        </span>
-                      )}
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>{session.user.name}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 500, lineHeight: 1.2 }}>{roleLabels[session.user.role] || 'Admin'}</span>
                     </div>
                   ) : null}
 
                   {/* Desktop Menu */}
                   <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
-                    
-                    {pathname !== '/' && (
-                      <Link
-                        href="/"
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.5rem',
-                          padding: '0.5rem 0.9rem', borderRadius: 'var(--radius-md)',
-                          border: '1px solid var(--color-border)', backgroundColor: 'white',
-                          fontSize: '0.875rem', fontWeight: 500,
-                          color: 'var(--color-text)',
-                          textDecoration: 'none', transition: 'all 0.2s',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.borderColor = 'var(--color-primary)';
-                          e.currentTarget.style.color = 'var(--color-primary)';
-                          e.currentTarget.style.backgroundColor = 'var(--color-primary-light)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.borderColor = 'var(--color-border)';
-                          e.currentTarget.style.color = 'var(--color-text)';
-                          e.currentTarget.style.backgroundColor = 'white';
-                        }}
-                      >
-                        <Home size={18} /> หน้าหลัก
-                      </Link>
-                    )}
+                    <Link 
+                      href="/"
+                      onClick={(e) => {
+                        if (pathname === '/') {
+                          e.preventDefault();
+                          window.dispatchEvent(new Event('go-home'));
+                        }
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
+                        backgroundColor: pathname === '/' ? 'var(--color-primary-light)' : 'transparent',
+                        color: pathname === '/' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <ImageIcon size={18} /> หน้าแรก
+                    </Link>
                     
                     {isSuperadmin && (
-                      <div className="settings-dropdown-container" style={{ position: 'relative' }}>
+                      <div style={{ position: 'relative' }}>
                         <button 
                           onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: '0.5rem',
-                            padding: '0.5rem 0.9rem', borderRadius: 'var(--radius-md)',
-                            border: isSettingsDropdownOpen ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            backgroundColor: isSettingsDropdownOpen ? 'var(--color-primary-light)' : 'white',
+                            padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                            border: 'none', background: 'transparent',
                             fontSize: '0.875rem', fontWeight: 500,
-                            color: isSettingsDropdownOpen ? 'var(--color-primary)' : 'var(--color-text)',
-                            cursor: 'pointer', transition: 'all 0.2s',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                            color: 'var(--color-text-muted)',
+                            cursor: 'pointer', transition: 'all 0.2s'
                           }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--color-primary)';
-                            e.currentTarget.style.color = 'var(--color-primary)';
-                            e.currentTarget.style.backgroundColor = 'var(--color-primary-light)';
-                          }}
-                          onMouseOut={(e) => {
-                            if (!isSettingsDropdownOpen) {
-                              e.currentTarget.style.borderColor = 'var(--color-border)';
-                              e.currentTarget.style.color = 'var(--color-text)';
-                              e.currentTarget.style.backgroundColor = 'white';
-                            }
-                          }}
+                          onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                          onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                         >
                           <Settings size={18} /> ตั้งค่าระบบ
                         </button>
@@ -189,7 +156,7 @@ export default function Navbar() {
                             >
                               <Users size={16} /> จัดการผู้ดูแลระบบ
                             </Link>
-                             <Link 
+                            <Link 
                               href="/settings/folders"
                               onClick={() => setIsSettingsDropdownOpen(false)}
                               style={{
@@ -202,58 +169,37 @@ export default function Navbar() {
                             >
                               <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
                             </Link>
-
-                            <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }} />
-
-                            <button
-                              onClick={() => {
-                                setIsSettingsDropdownOpen(false);
-                                setShowConfirmLogout(true);
-                              }}
-                              style={{
-                                padding: '0.75rem 1rem', fontSize: '0.875rem',
-                                color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)',
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                border: 'none', background: 'transparent', width: '100%',
-                                cursor: 'pointer', textAlign: 'left'
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                              <LogOut size={16} /> ออกจากระบบ
-                            </button>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {!session?.user && (
+                  {session?.user ? (
+                    <button 
+                      onClick={() => setShowConfirmLogout(true)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#fef2f2', color: 'var(--color-danger)', cursor: 'pointer', transition: 'background 0.2s' }}
+                      title="ออกจากระบบ"
+                    >
+                      <LogOut size={16} />
+                    </button>
+                  ) : (
                     <button 
                       onClick={() => signIn('google', { callbackUrl: '/' })}
-                      className="btn btn-glow"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', fontSize: '0.875rem', borderRadius: '2rem' }}
+                      className="btn btn-primary"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                     >
-                      <span style={{ color: '#fcd34d', fontSize: '1rem' }}>🔒</span> ลงชื่อเข้าใช้ ADMIN
+                      <LogIn size={16} /> เข้าสู่ระบบ (Admin)
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Mobile menu button */}
-              <div className="mobile-menu-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {pathname !== '/' && (
-                  <Link 
-                    href="/"
-                    style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-text)', display: 'flex', alignItems: 'center' }}
-                    title="กลับหน้าหลัก"
-                  >
-                    <Home size={24} />
-                  </Link>
-                )}
+              <div className="mobile-menu-btn" style={{ display: 'flex', alignItems: 'center' }}>
                 <button 
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-text)', display: 'flex', alignItems: 'center' }}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-text)' }}
                 >
                   {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -266,19 +212,6 @@ export default function Navbar() {
         {isMobileMenuOpen && (
           <div style={{ padding: '1rem 2rem', borderTop: '1px solid var(--color-border)', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {session?.user && (
-                <div style={{ padding: '0.75rem 1rem', marginBottom: '0.25rem', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>
-                    {session.user.name} <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>({roleLabels[session.user.role] || 'Admin'})</span>
-                  </div>
-                  {session.user.email && (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 400, marginTop: '4px' }}>
-                      {session.user.email}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {navLinks.map(link => {
                 const isActive = pathname === link.href;
                 return (
@@ -305,34 +238,30 @@ export default function Navbar() {
                 );
               })}
               
+              <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.5rem 0' }}></div>
+              
               {session?.user ? (
-                <>
-                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{session.user.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>{roleLabels[session.user.role] || 'Admin'}</div>
+                  </div>
                   <button 
                     onClick={() => { setIsMobileMenuOpen(false); setShowConfirmLogout(true); }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                      textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500,
-                      color: 'var(--color-danger)', border: 'none', background: 'transparent', width: '100%', cursor: 'pointer', textAlign: 'left'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', backgroundColor: '#fef2f2', color: 'var(--color-danger)', border: 'none' }}
                   >
-                    <LogOut size={18} /> ออกจากระบบ
+                    <LogOut size={16} /> ออกจากระบบ
                   </button>
-                </>
+                </div>
               ) : (
-                <>
-                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }}></div>
-                  <button 
-                    onClick={() => signIn('google', { callbackUrl: '/' })}
-                    className="btn btn-glow"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%', borderRadius: '2rem' }}
-                  >
-                    <span style={{ color: '#fcd34d', fontSize: '1.1rem' }}>🔒</span> ลงชื่อเข้าใช้ ADMIN
-                  </button>
-                </>
+                <button 
+                  onClick={() => signIn('google', { callbackUrl: '/' })}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%' }}
+                >
+                  <LogIn size={18} /> เข้าสู่ระบบ (Admin)
+                </button>
               )}
             </div>
           </div>

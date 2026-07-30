@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Download, Home as HomeIcon } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from './components/ConfirmModalProvider';
 
@@ -34,8 +34,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
-  const [gridColumns, setGridColumns] = useState(6);
-  const [mobileGridColumns, setMobileGridColumns] = useState(3);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<{ total: number, message: string } | null>(null);
 
@@ -46,7 +44,6 @@ export default function Home() {
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [showAccessDeniedModal, setShowAccessDeniedModal] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -59,52 +56,8 @@ export default function Home() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Prevent body scroll when modals are open
-  useEffect(() => {
-    if (selectedFile || showCreateFolder || (uploading && uploadStatus) || showAccessDeniedModal) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    };
-  }, [selectedFile, showCreateFolder, uploading, uploadStatus, showAccessDeniedModal]);
-
-  // Prevent all native pinch zooming across the entire app
-  useEffect(() => {
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-    const handleGestureStart = (e: Event) => {
-      e.preventDefault();
-    };
-    
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('gesturestart', handleGestureStart, { passive: false });
-    document.body.style.touchAction = 'pan-x pan-y';
-    
-    return () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('gesturestart', handleGestureStart);
-      document.body.style.touchAction = '';
-    };
-  }, []);
-
   // 1. Fetch Session & Check Onboarding
   useEffect(() => {
-    // Check for AccessDenied error
-    if (typeof window !== 'undefined' && window.location.search.includes('error=AccessDenied')) {
-      setShowAccessDeniedModal(true);
-      // Remove the query param to prevent it from showing again on refresh
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
@@ -185,8 +138,8 @@ export default function Home() {
 
   const handleBackClick = () => {
     const newHistory = [...folderHistory];
-    const popped = newHistory.pop();
-    const prevFolder = popped ? popped.id : rootFolderId;
+    newHistory.pop();
+    const prevFolder = newHistory.length > 0 ? newHistory[newHistory.length - 1].id : rootFolderId;
     
     setFolderHistory(newHistory);
     setCurrentFolderId(prevFolder);
@@ -372,6 +325,16 @@ export default function Home() {
     }
   };
 
+  // Prevent scrolling when modal is open
+  useEffect(() => {
+    if (selectedFile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [selectedFile]);
+
   const folders = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
   const mediaFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
 
@@ -383,57 +346,20 @@ export default function Home() {
   const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin';
 
   return (
-    <div style={{ padding: '2rem 1rem', maxWidth: '1600px', margin: '0 auto' }}>
-      {showAccessDeniedModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '16px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
-            <div style={{ width: '64px', height: '64px', backgroundColor: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
-              <span style={{ fontSize: '32px' }}>⚠️</span>
-            </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.5rem' }}>คุณไม่มีสิทธิ์เข้าสู่ระบบ</h2>
-            <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', lineHeight: 1.6 }}>
-              บัญชีนี้ไม่มีสิทธิ์การเข้าถึงในฐานะผู้ดูแลระบบ
-              <br />
-              ต้องการเข้าใช้งาน กรุณาติดต่อผู้ดูแลระบบหลัก
-            </p>
-            <button 
-              onClick={() => setShowAccessDeniedModal(false)}
-              style={{ width: '100%', padding: '0.75rem', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s' }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-dark)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
-            >
-              ตกลง
-            </button>
-          </div>
-        </div>
-      )}
+    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       
       <div style={{ marginBottom: '2rem' }}>
         {/* Folder Navigation & Upload */}
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div>
             {folderHistory.length > 0 ? (
-              <>
-                <button 
-                  onClick={handleBackClick}
-                  className="btn"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
-                >
-                  <ArrowLeft size={16} /> ย้อนกลับ
-                </button>
-                <button 
-                  onClick={() => {
-                    if (rootFolderId) {
-                      setCurrentFolderId(rootFolderId);
-                      setFolderHistory([]);
-                    }
-                  }}
-                  className="btn"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
-                >
-                  <HomeIcon size={16} /> หน้าหลัก
-                </button>
-              </>
+              <button 
+                onClick={handleBackClick}
+                className="btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
+              >
+                <ArrowLeft size={16} /> ย้อนกลับ
+              </button>
             ) : (
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: 'var(--color-text)' }}>หน้าหลัก</h2>
             )}
@@ -503,57 +429,40 @@ export default function Home() {
           {/* ----------------- Folders Section ----------------- */}
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
-              {folderHistory.length > 0 && (
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                  {folderHistory.map(f => f.name).join(' / ')}
-                </h2>
-              )}
-              <div className="responsive-grid-wide">
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>โฟลเดอร์</h2>
+              <div className="responsive-grid">
                 {folders.map(folder => (
                   <div 
                     key={folder.id}
                     onClick={() => handleFolderClick(folder.id, folder.name)}
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: '1.25rem', 
+                      display: 'flex', alignItems: 'center', gap: '1rem', 
                       padding: '1rem', backgroundColor: 'var(--color-surface)', 
-                      border: '1px solid var(--color-border)', borderRadius: '1.5rem',
+                      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
                       cursor: 'pointer', transition: 'all 0.2s ease',
                       boxShadow: 'var(--shadow-sm)', position: 'relative',
                       zIndex: activeDropdown === folder.id ? 100 : 1
                     }}
-                    onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
-                    <div style={{
-                      width: '56px', height: '56px', flexShrink: 0,
-                      background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderRadius: '16px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.8), 0 2px 8px rgba(37, 99, 235, 0.1)'
-                    }}>
-                      <Folder size={28} style={{ color: '#2563eb', fill: '#bfdbfe' }} />
-                    </div>
-
-                    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--color-primary-dark)', wordBreak: 'break-word', lineHeight: 1.3 }}>
-                        {folder.name}
-                      </span>
-                    </div>
+                    <Folder size={24} style={{ color: 'var(--color-primary)' }} />
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '2.5rem' }}>
+                      {folder.name}
+                    </span>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0, paddingRight: '0.5rem' }}>
-                      {(canRename || canDeleteFolder) && (
-                        <div className="dropdown-container" style={{ position: 'relative' }}>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
-                            style={{
-                              backgroundColor: 'transparent', color: 'var(--color-text-muted)',
-                              border: 'none', borderRadius: '50%', padding: '0.4rem',
-                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-main)'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          >
-                            <MoreVertical size={20} />
-                          </button>
+                    {(canRename || canDeleteFolder) && (
+                      <div className="dropdown-container" style={{ position: 'absolute', top: '50%', right: '0.5rem', transform: 'translateY(-50%)' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
+                          style={{
+                            backgroundColor: 'transparent', color: 'var(--color-text-muted)',
+                            border: 'none', borderRadius: '50%', padding: '0.4rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                        >
+                          <MoreVertical size={20} />
+                        </button>
                         
                         {activeDropdown === folder.id && (
                           <div 
@@ -586,11 +495,8 @@ export default function Home() {
                             )}
                           </div>
                         )}
-                        </div>
-                      )}
-                      
-                      <ChevronRight size={20} style={{ color: '#60a5fa' }} />
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -600,57 +506,16 @@ export default function Home() {
           {/* ----------------- Media Section ----------------- */}
           {mediaFiles.length > 0 && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-text-muted)', margin: 0 }}>
-                  {folders.length === 0 && (
-                    folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'ไฟล์รูปภาพ/วิดีโอ'
-                  )}
-                </h2>
-                
-                {/* Desktop Slider */}
-                <div className="desktop-slider" style={{ alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-surface)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    ขนาดรูป: {gridColumns} แถว
-                  </span>
-                  <input 
-                    type="range" 
-                    min="3" max="6" step="1" 
-                    value={gridColumns} 
-                    onChange={(e) => setGridColumns(Number(e.target.value))}
-                    style={{ cursor: 'pointer', accentColor: 'var(--color-primary)', width: '100px' }}
-                  />
-                </div>
-
-                {/* Mobile Slider */}
-                <div className="mobile-slider" style={{ alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-surface)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    ขนาดรูป: {mobileGridColumns} แถว
-                  </span>
-                  <input 
-                    type="range" 
-                    min="1" max="3" step="1" 
-                    value={mobileGridColumns} 
-                    onChange={(e) => setMobileGridColumns(Number(e.target.value))}
-                    style={{ cursor: 'pointer', accentColor: 'var(--color-primary)', width: '100px' }}
-                  />
-                </div>
-              </div>
-
-              <div className="responsive-grid" style={{ '--grid-cols-desktop': gridColumns, '--grid-cols-mobile': mobileGridColumns } as any}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>ไฟล์รูปภาพ/วิดีโอ</h2>
+              <div className="responsive-grid">
                 {mediaFiles.map(file => (
                   <div 
                     key={file.id} 
-                    onClick={() => {
-                      if (file.mimeType.includes('video')) {
-                        window.open(file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`, '_blank');
-                      } else {
-                        setSelectedFile(file);
-                      }
-                    }}
+                    onClick={() => setSelectedFile(file)}
                     style={{ 
                       display: 'block', cursor: 'pointer', color: 'inherit',
                       backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
-                      overflow: 'visible', border: '1px solid var(--color-border)',
+                      overflow: 'hidden', border: '1px solid var(--color-border)',
                       transition: 'all 0.2s ease', position: 'relative',
                       zIndex: activeDropdown === file.id ? 100 : 1
                     }}
@@ -705,7 +570,7 @@ export default function Home() {
                       </div>
                     )}
                     {file.thumbnailLink ? (
-                      <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: '#f0f0f0', overflow: 'hidden', borderTopLeftRadius: 'var(--radius-md)', borderTopRightRadius: 'var(--radius-md)' }}>
+                      <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: '#f0f0f0' }}>
                         <img 
                           src={file.thumbnailLink.replace('=s220', '=s600')} 
                           alt={file.name}
@@ -718,7 +583,7 @@ export default function Home() {
                         )}
                       </div>
                     ) : (
-                      <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderTopLeftRadius: 'var(--radius-md)', borderTopRightRadius: 'var(--radius-md)' }}>
+                      <div style={{ width: '100%', paddingTop: '100%', position: 'relative', backgroundColor: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                            {file.mimeType.includes('video') ? <Video size={32} /> : <ImageIcon size={32} />}
                         </div>
@@ -774,56 +639,32 @@ export default function Home() {
           </button>
           
           <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '100%', maxHeight: '85vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <img 
-              src={selectedFile.thumbnailLink ? selectedFile.thumbnailLink.replace('=s220', '=s2048') : ''}
-              alt={selectedFile.name}
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '80vh', 
-                objectFit: 'contain', 
-                borderRadius: '4px', 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
-              }}
-            />
+            {selectedFile.mimeType.includes('video') ? (
+              <iframe 
+                src={`https://drive.google.com/file/d/${selectedFile.id}/preview`} 
+                style={{ width: '85vw', height: '80vh', border: 'none', borderRadius: '8px', backgroundColor: '#000' }}
+                allow="autoplay"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <img 
+                src={selectedFile.thumbnailLink ? selectedFile.thumbnailLink.replace('=s220', '=s2048') : ''}
+                alt={selectedFile.name}
+                style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '4px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+              />
+            )}
           </div>
           
           <div onClick={(e) => e.stopPropagation()} style={{ color: 'white', marginTop: '1.5rem', textAlign: 'center' }}>
-            <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '1rem' }}>{selectedFile.name}</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center' }}>
-              <a 
-                href={selectedFile.webContentLink || selectedFile.webViewLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                title="ดาวน์โหลด"
-                style={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '50%', transition: 'background 0.2s ease' }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-              >
-                <Download size={20} />
-              </a>
-              {canRename && (
-                <button
-                  onClick={(e) => handleRename(e, selectedFile.id, selectedFile.name)}
-                  title="เปลี่ยนชื่อ"
-                  style={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', padding: '0.75rem', borderRadius: '50%', cursor: 'pointer', transition: 'background 0.2s ease' }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-                >
-                  <Edit2 size={20} />
-                </button>
-              )}
-              {canDeleteFile && (
-                <button
-                  onClick={(e) => handleDelete(e, selectedFile.id)}
-                  title="ลบ"
-                  style={{ color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', padding: '0.75rem', borderRadius: '50%', cursor: 'pointer', transition: 'background 0.2s ease' }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
-                >
-                  <Trash2 size={20} />
-                </button>
-              )}
-            </div>
+            <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>{selectedFile.name}</p>
+            <a 
+              href={selectedFile.webViewLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: '#aaa', textDecoration: 'underline', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            >
+              เปิดใน Google Drive <ExternalLink size={14} />
+            </a>
           </div>
         </div>
       )}
@@ -835,9 +676,7 @@ export default function Home() {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
             backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
             display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
-            backdropFilter: 'blur(3px)',
-            overscrollBehavior: 'none',
-            touchAction: 'none'
+            backdropFilter: 'blur(3px)'
           }}
           onClick={() => setShowCreateFolder(false)}
         >
