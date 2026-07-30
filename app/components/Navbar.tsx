@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogIn, LogOut, Settings, Users, Image as ImageIcon, Menu, X } from 'lucide-react';
+import { LogIn, LogOut, Settings, Users, Image as ImageIcon, Menu, X, Folder } from 'lucide-react';
 import { signIn, signOut } from 'next-auth/react';
 
 export default function Navbar() {
@@ -41,7 +41,8 @@ export default function Navbar() {
     { href: '/', label: 'หน้าแรก', icon: <ImageIcon size={18} /> },
     ...(isSuperadmin ? [
       { href: '/settings/drive', label: 'จัดการลิงก์ Google Drive', icon: <Settings size={18} /> },
-      { href: '/settings/users', label: 'จัดการผู้ดูแลระบบ', icon: <Users size={18} /> }
+      { href: '/settings/users', label: 'จัดการผู้ดูแลระบบ', icon: <Users size={18} /> },
+      { href: '/settings/folders', label: 'จัดการโฟลเดอร์ที่แสดง', icon: <Folder size={18} /> }
     ] : [])
   ];
 
@@ -154,6 +155,19 @@ export default function Navbar() {
                               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             >
                               <Users size={16} /> จัดการผู้ดูแลระบบ
+                            </Link>
+                            <Link 
+                              href="/settings/folders"
+                              onClick={() => setIsSettingsDropdownOpen(false)}
+                              style={{
+                                padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                                color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
                             </Link>
                           </div>
                         )}

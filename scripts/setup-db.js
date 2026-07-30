@@ -41,6 +41,15 @@ async function main() {
     `;
     console.log('✅ Created drive_urls table');
 
+    // Create hidden_folders table
+    await sql`
+      CREATE TABLE IF NOT EXISTS hidden_folders (
+        folder_id VARCHAR(255) PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    console.log('✅ Created hidden_folders table');
+
     // Insert a default admin (admin / admin123) if none exists
     const adminCheck = await sql`SELECT * FROM admins WHERE username = 'admin'`;
     if (adminCheck.rowCount === 0) {
