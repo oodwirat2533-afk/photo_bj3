@@ -13,7 +13,7 @@ export default function Navbar() {
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [showConfirmLogout, setShowConfirmLogout] = useState(false);
 
-  // Fetch session on mount
+  // Fetch session on mount & handle click outside dropdown
   useEffect(() => {
     fetch('/api/auth/session')
       .then((res) => res.json())
@@ -23,6 +23,14 @@ export default function Navbar() {
         }
       })
       .catch((err) => console.error('Session fetch error:', err));
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.settings-dropdown-container')) {
+        setIsSettingsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
   const handleConfirmLogout = () => {
@@ -108,8 +116,8 @@ export default function Navbar() {
                       <ImageIcon size={18} /> หน้าแรก
                     </Link>
                     
-                    {isSuperadmin && (
-                      <div style={{ position: 'relative' }}>
+                    {session?.user && (
+                      <div className="settings-dropdown-container" style={{ position: 'relative' }}>
                         <button 
                           onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
                           style={{
@@ -136,60 +144,75 @@ export default function Navbar() {
                               padding: '0.5rem'
                             }}
                           >
-                            <Link 
-                              href="/settings/drive"
-                              onClick={() => setIsSettingsDropdownOpen(false)}
-                              style={{
-                                padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
-                                color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
-                                display: 'flex', alignItems: 'center', gap: '0.5rem'
+                            {isSuperadmin && (
+                              <>
+                                <Link 
+                                  href="/settings/drive"
+                                  onClick={() => setIsSettingsDropdownOpen(false)}
+                                  style={{
+                                    padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                                    color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                  }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <Settings size={16} /> จัดการลิงก์ Google Drive
+                                </Link>
+                                <Link 
+                                  href="/settings/users"
+                                  onClick={() => setIsSettingsDropdownOpen(false)}
+                                  style={{
+                                    padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                                    color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                  }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <Users size={16} /> จัดการผู้ดูแลระบบ
+                                </Link>
+                                <Link 
+                                  href="/settings/folders"
+                                  onClick={() => setIsSettingsDropdownOpen(false)}
+                                  style={{
+                                    padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
+                                    color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                  }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
+                                </Link>
+                                <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }}></div>
+                              </>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                setIsSettingsDropdownOpen(false);
+                                setShowConfirmLogout(true);
                               }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                              style={{
+                                padding: '0.75rem 1rem', fontSize: '0.875rem',
+                                color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                border: 'none', background: 'none', cursor: 'pointer',
+                                width: '100%', textAlign: 'left'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
                               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                             >
-                              <Settings size={16} /> จัดการลิงก์ Google Drive
-                            </Link>
-                            <Link 
-                              href="/settings/users"
-                              onClick={() => setIsSettingsDropdownOpen(false)}
-                              style={{
-                                padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
-                                color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
-                                display: 'flex', alignItems: 'center', gap: '0.5rem'
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
-                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                              <Users size={16} /> จัดการผู้ดูแลระบบ
-                            </Link>
-                            <Link 
-                              href="/settings/folders"
-                              onClick={() => setIsSettingsDropdownOpen(false)}
-                              style={{
-                                padding: '0.75rem 1rem', textDecoration: 'none', fontSize: '0.875rem',
-                                color: 'var(--color-text)', borderRadius: 'var(--radius-sm)',
-                                display: 'flex', alignItems: 'center', gap: '0.5rem'
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
-                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                              <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
-                            </Link>
+                              <LogOut size={16} /> ออกจากระบบ
+                            </button>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {session?.user ? (
-                    <button 
-                      onClick={() => setShowConfirmLogout(true)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#fef2f2', color: 'var(--color-danger)', cursor: 'pointer', transition: 'background 0.2s' }}
-                      title="ออกจากระบบ"
-                    >
-                      <LogOut size={16} />
-                    </button>
-                  ) : (
+                  {!session?.user && (
                     <button 
                       onClick={() => signIn('google', { callbackUrl: '/' })}
                       className="btn btn-glow"
