@@ -105,12 +105,13 @@ export default function Navbar() {
                           display: 'flex', alignItems: 'center', gap: '0.5rem',
                           padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
                           textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-                          backgroundColor: 'transparent',
+                          backgroundColor: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
                           color: 'var(--color-text-muted)',
                           transition: 'all 0.2s'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
-                        onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
+                        onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.borderColor = 'var(--color-primary-light)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
                       >
                         <ImageIcon size={18} /> หน้าแรก
                       </Link>
@@ -123,13 +124,14 @@ export default function Navbar() {
                           style={{
                             display: 'flex', alignItems: 'center', gap: '0.5rem',
                             padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
-                            border: 'none', background: 'transparent',
+                            border: '1px solid var(--color-border)',
+                            backgroundColor: 'var(--color-surface)',
                             fontSize: '0.875rem', fontWeight: 500,
                             color: 'var(--color-text-muted)',
                             cursor: 'pointer', transition: 'all 0.2s'
                           }}
-                          onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
-                          onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
+                          onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.borderColor = 'var(--color-primary-light)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
                         >
                           <Settings size={18} /> ตั้งค่าระบบ
                         </button>
