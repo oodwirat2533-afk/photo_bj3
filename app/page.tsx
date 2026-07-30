@@ -429,7 +429,9 @@ export default function Home() {
           {/* ----------------- Folders Section ----------------- */}
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>โฟลเดอร์</h2>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+                {folderHistory.length > 0 ? folderHistory[folderHistory.length - 1].name : 'โฟลเดอร์หลัก'}
+              </h2>
               <div className="responsive-grid-wide">
                 {folders.map(folder => (
                   <div 
