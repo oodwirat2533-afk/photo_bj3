@@ -43,10 +43,10 @@ export default function Navbar() {
     'assistant_admin': 'ผู้ช่วย Admin'
   };
 
-  const isSuperadmin = session?.user?.role === 'superadmin';
+  const isSettingsPage = pathname.startsWith('/settings');
 
   const navLinks = [
-    { href: '/', label: 'หน้าแรก', icon: <ImageIcon size={18} /> },
+    ...(isSettingsPage ? [{ href: '/', label: 'หน้าแรก', icon: <ImageIcon size={18} /> }] : []),
     ...(isSuperadmin ? [
       { href: '/settings/drive', label: 'จัดการลิงก์ Google Drive', icon: <Settings size={18} /> },
       { href: '/settings/users', label: 'จัดการผู้ดูแลระบบ', icon: <Users size={18} /> },
@@ -96,25 +96,23 @@ export default function Navbar() {
 
                   {/* Desktop Menu */}
                   <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
-                    <Link 
-                      href="/"
-                      onClick={(e) => {
-                        if (pathname === '/') {
-                          e.preventDefault();
-                          window.dispatchEvent(new Event('go-home'));
-                        }
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
-                        textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
-                        backgroundColor: pathname === '/' ? 'var(--color-primary-light)' : 'transparent',
-                        color: pathname === '/' ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <ImageIcon size={18} /> หน้าแรก
-                    </Link>
+                    {pathname.startsWith('/settings') && (
+                      <Link 
+                        href="/"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.5rem',
+                          padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                          textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
+                          backgroundColor: 'transparent',
+                          color: 'var(--color-text-muted)',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                        onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
+                      >
+                        <ImageIcon size={18} /> หน้าแรก
+                      </Link>
+                    )}
                     
                     {session?.user && (
                       <div className="settings-dropdown-container" style={{ position: 'relative' }}>
