@@ -430,7 +430,7 @@ export default function Home() {
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' > ') : 'โฟลเดอร์หลัก'}
+                {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'โฟลเดอร์หลัก'}
               </h2>
               <div className="responsive-grid-wide">
                 {folders.map(folder => (
@@ -528,7 +528,7 @@ export default function Home() {
           {mediaFiles.length > 0 && (
             <div>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                {folderHistory.length > 0 ? `ไฟล์รูปภาพ/วิดีโอ ใน ${folderHistory.map(f => f.name).join(' > ')}` : 'ไฟล์รูปภาพ/วิดีโอ'}
+                {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'ไฟล์รูปภาพ/วิดีโอ'}
               </h2>
               <div className="responsive-grid">
                 {mediaFiles.map(file => (
