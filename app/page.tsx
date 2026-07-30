@@ -138,11 +138,15 @@ export default function Home() {
 
   const handleBackClick = () => {
     const newHistory = [...folderHistory];
-    newHistory.pop();
-    const prevFolder = newHistory.length > 0 ? newHistory[newHistory.length - 1].id : rootFolderId;
+    const previous = newHistory.pop();
     
-    setFolderHistory(newHistory);
-    setCurrentFolderId(prevFolder);
+    if (previous) {
+      setFolderHistory(newHistory);
+      setCurrentFolderId(previous.id);
+    } else if (rootFolderId) {
+      setFolderHistory([]);
+      setCurrentFolderId(rootFolderId);
+    }
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
