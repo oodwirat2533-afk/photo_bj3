@@ -447,9 +447,11 @@ export default function Home() {
           {/* ----------------- Folders Section ----------------- */}
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'โฟลเดอร์หลัก'}
-              </h2>
+              {folderHistory.length > 0 && (
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+                  {folderHistory.map(f => f.name).join(' / ')}
+                </h2>
+              )}
               <div className="responsive-grid-wide">
                 {folders.map(folder => (
                   <div 
