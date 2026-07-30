@@ -43,7 +43,9 @@ export default function Navbar() {
     'assistant_admin': 'ผู้ช่วย Admin'
   };
 
-  const isSettingsPage = pathname.startsWith('/settings');
+  const isSuperadmin = session?.user?.role === 'superadmin';
+  const isSettingsPage = pathname?.startsWith('/settings') || false;
+
 
   const navLinks = [
     ...(isSettingsPage ? [{ href: '/', label: 'หน้าแรก', icon: <ImageIcon size={18} /> }] : []),
