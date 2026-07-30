@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home as HomeIcon } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home as HomeIcon, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from './components/ConfirmModalProvider';
 
@@ -697,14 +697,47 @@ export default function Home() {
           
           <div onClick={(e) => e.stopPropagation()} style={{ color: 'white', marginTop: '1.5rem', textAlign: 'center' }}>
             <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>{selectedFile.name}</p>
-            <a 
-              href={selectedFile.webViewLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ color: '#aaa', textDecoration: 'underline', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-            >
-              เปิดใน Google Drive <ExternalLink size={14} />
-            </a>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
+              <a 
+                href={selectedFile.webContentLink || selectedFile.webViewLink} 
+                target="_blank"
+                rel="noopener noreferrer"
+                title="ดาวน์โหลด"
+                style={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', transition: 'background-color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+              >
+                <Download size={20} />
+              </a>
+              {canRename && (
+                <button 
+                  onClick={(e) => {
+                    handleRename(e, selectedFile.id, selectedFile.name);
+                    setSelectedFile(null); // Close preview when editing
+                  }}
+                  title="แก้ไขชื่อ"
+                  style={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)', padding: '0.5rem', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+                >
+                  <Edit2 size={20} />
+                </button>
+              )}
+              {canDeleteFile && (
+                <button 
+                  onClick={(e) => {
+                    handleDelete(e, selectedFile.id);
+                    setSelectedFile(null); // Close preview when deleting
+                  }}
+                  title="ลบ"
+                  style={{ color: 'white', backgroundColor: 'rgba(239,68,68,0.8)', padding: '0.5rem', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,1)'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.8)'}
+                >
+                  <Trash2 size={20} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
