@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home as HomeIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from './components/ConfirmModalProvider';
 
@@ -375,7 +375,7 @@ export default function Home() {
                   className="btn"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
                 >
-                  <Home size={16} /> หน้าหลัก
+                  <HomeIcon size={16} /> หน้าหลัก
                 </button>
               </div>
             ) : (
