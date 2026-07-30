@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useConfirm } from '../../components/ConfirmModalProvider';
 
 export default function UsersSettingsPage() {
+  const { confirm } = useConfirm();
   const [users, setUsers] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminRole, setNewAdminRole] = useState('admin');
@@ -56,16 +59,22 @@ export default function UsersSettingsPage() {
       await fetchUsers();
       setNewAdminEmail('');
       setNewAdminRole('admin');
-      alert('เพิ่มผู้ใช้สำเร็จ');
+      toast.success('เพิ่มผู้ใช้สำเร็จ');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     } finally {
       setAdminLoading(false);
     }
   };
 
   const handleDeleteAdmin = async (email: string) => {
-    if (!confirm(`ยืนยันการลบ ${email} ออกจากระบบ?`)) return;
+    const isConfirmed = await confirm({
+      title: 'ยืนยันการลบผู้ใช้งาน',
+      message: `ยืนยันการลบ ${email} ออกจากระบบ?`,
+      danger: true
+    });
+    if (!isConfirmed) return;
+    
     try {
       const res = await fetch('/api/users', {
         method: 'DELETE',
@@ -76,8 +85,9 @@ export default function UsersSettingsPage() {
       if (!res.ok) throw new Error(data.error);
       
       setUsers(prev => prev.filter(u => u.email !== email));
+      toast.success('ลบผู้ใช้เรียบร้อย');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     }
   };
 
@@ -92,8 +102,9 @@ export default function UsersSettingsPage() {
       if (!res.ok) throw new Error(data.error);
       
       setUsers(prev => prev.map(u => u.email === email ? { ...u, role } : u));
+      toast.success('อัปเดตสิทธิ์สำเร็จ');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     }
   };
 

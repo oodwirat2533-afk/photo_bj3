@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Folder } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 function getGoogleDriveFolderId(url: string) {
   try {
@@ -78,8 +79,9 @@ export default function FoldersSettingsPage() {
       } else {
         setHiddenIds(hiddenIds.filter(id => id !== folderId));
       }
+      toast.success(isHidden ? 'เปิดการแสดงผลโฟลเดอร์แล้ว' : 'ซ่อนโฟลเดอร์เรียบร้อย');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาด: ' + err.message);
     }
   };
 

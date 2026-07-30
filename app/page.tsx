@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useConfirm } from './components/ConfirmModalProvider';
 
 // Extract folder ID from Google Drive URL
 function getGoogleDriveFolderId(url: string) {
@@ -23,6 +25,7 @@ interface DriveFile {
 }
 
 export default function Home() {
+  const { confirm } = useConfirm();
   // Gallery State
   const [rootFolderId, setRootFolderId] = useState<string | null>(null);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
@@ -162,7 +165,7 @@ export default function Home() {
     }
 
     if (duplicateFiles.length > 0) {
-      alert(`ไม่อนุญาตให้อัปโหลด เนื่องจากพบไฟล์ชื่อซ้ำอยู่ในโฟลเดอร์นี้แล้ว:\n\n- ${duplicateFiles.join('\n- ')}\n\nกรุณาเปลี่ยนชื่อไฟล์ที่ซ้ำก่อนทำการอัปโหลดใหม่ทั้งหมด`);
+      toast.error(`พบไฟล์ชื่อซ้ำอยู่ในโฟลเดอร์นี้แล้ว:\n\n${duplicateFiles.join(', ')}\n\nกรุณาเปลี่ยนชื่อไฟล์ก่อนอัปโหลด`, { duration: 5000 });
       setUploading(false);
       e.target.value = '';
       return;
@@ -225,13 +228,14 @@ export default function Home() {
         setUploadStatus({ total: filesToUpload.length, message: 'กำลังอัปเดตข้อมูล...' });
         setFiles(prev => [...successfulUploads, ...prev]);
         setRefreshTrigger(prev => prev + 1);
+        toast.success(`อัปโหลดสำเร็จ ${successfulUploads.length} ไฟล์`);
       }
       
       if (failedUploads.length > 0) {
-        alert('อัปโหลดล้มเหลวสำหรับไฟล์:\n' + failedUploads.join('\n'));
+        toast.error('อัปโหลดล้มเหลวสำหรับไฟล์: ' + failedUploads.join(', '));
       }
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
+      toast.error('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
     } finally {
       setUploading(false);
       setUploadStatus(null);
@@ -259,8 +263,9 @@ export default function Home() {
       setFiles(prev => [data.folder, ...prev]);
       setShowCreateFolder(false);
       setNewFolderName('');
+      toast.success('สร้างโฟลเดอร์สำเร็จ');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการสร้างโฟลเดอร์: ' + err.message);
+      toast.error('เกิดข้อผิดพลาดในการสร้างโฟลเดอร์: ' + err.message);
     } finally {
       setCreatingFolder(false);
     }
@@ -268,7 +273,16 @@ export default function Home() {
 
   const handleDelete = async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation();
-    if (!confirm('ยืนยันการลบรายการนี้ออกจาก Google Drive ใช่หรือไม่? (ระวัง: หากลบโฟลเดอร์ ไฟล์ข้างในจะถูกลบด้วย)')) return;
+    
+    const isConfirmed = await confirm({
+      title: 'ยืนยันการลบ',
+      message: 'ยืนยันการลบรายการนี้ออกจาก Google Drive ใช่หรือไม่? (หากลบโฟลเดอร์ ไฟล์ข้างในจะถูกลบด้วย)',
+      danger: true
+    });
+    
+    if (!isConfirmed) return;
+    
+    const loadingToast = toast.loading('กำลังลบข้อมูล...');
     
     try {
       const res = await fetch('/api/drive/delete', {
@@ -284,8 +298,9 @@ export default function Home() {
       setFiles(prev => prev.filter(f => f.id !== fileId));
       if (selectedFile?.id === fileId) setSelectedFile(null);
       setRefreshTrigger(prev => prev + 1);
+      toast.success('ลบข้อมูลสำเร็จ', { id: loadingToast });
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
+      toast.error('เกิดข้อผิดพลาดในการลบ: ' + err.message, { id: loadingToast });
     }
   };
 
@@ -304,8 +319,9 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || 'Unknown error');
       
       setRefreshTrigger(prev => prev + 1);
+      toast.success('เปลี่ยนชื่อสำเร็จ');
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: ' + err.message);
+      toast.error('เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: ' + err.message);
     }
   };
 
@@ -414,7 +430,7 @@ export default function Home() {
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>โฟลเดอร์</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+              <div className="responsive-grid">
                 {folders.map(folder => (
                   <div 
                     key={folder.id}
@@ -491,7 +507,7 @@ export default function Home() {
           {mediaFiles.length > 0 && (
             <div>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>ไฟล์รูปภาพ/วิดีโอ</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div className="responsive-grid">
                 {mediaFiles.map(file => (
                   <div 
                     key={file.id} 
