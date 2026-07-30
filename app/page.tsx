@@ -478,11 +478,8 @@ export default function Home() {
                     </div>
 
                     <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--color-primary-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--color-primary-dark)', wordBreak: 'break-word' }}>
                         {folder.name}
-                      </span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        คลิกเพื่อเปิดดูอัลบั้ม
                       </span>
                     </div>
                     
