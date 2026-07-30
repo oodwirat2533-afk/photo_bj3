@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from './components/ConfirmModalProvider';
 
@@ -430,39 +430,55 @@ export default function Home() {
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>โฟลเดอร์</h2>
-              <div className="responsive-grid">
+              <div className="responsive-grid-wide">
                 {folders.map(folder => (
                   <div 
                     key={folder.id}
                     onClick={() => handleFolderClick(folder.id, folder.name)}
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: '1rem', 
+                      display: 'flex', alignItems: 'center', gap: '1.25rem', 
                       padding: '1rem', backgroundColor: 'var(--color-surface)', 
-                      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--color-border)', borderRadius: '1.5rem',
                       cursor: 'pointer', transition: 'all 0.2s ease',
                       boxShadow: 'var(--shadow-sm)', position: 'relative',
                       zIndex: activeDropdown === folder.id ? 100 : 1
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
                   >
-                    <Folder size={24} style={{ color: 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '2.5rem' }}>
-                      {folder.name}
-                    </span>
+                    <div style={{
+                      width: '56px', height: '56px', flexShrink: 0,
+                      background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderRadius: '16px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.8), 0 2px 8px rgba(37, 99, 235, 0.1)'
+                    }}>
+                      <Folder size={28} style={{ color: '#2563eb', fill: '#bfdbfe' }} />
+                    </div>
+
+                    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--color-primary-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {folder.name}
+                      </span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                        คลิกเพื่อเปิดดูอัลบั้ม
+                      </span>
+                    </div>
                     
-                    {(canRename || canDeleteFolder) && (
-                      <div className="dropdown-container" style={{ position: 'absolute', top: '50%', right: '0.5rem', transform: 'translateY(-50%)' }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
-                          style={{
-                            backgroundColor: 'transparent', color: 'var(--color-text-muted)',
-                            border: 'none', borderRadius: '50%', padding: '0.4rem',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}
-                        >
-                          <MoreVertical size={20} />
-                        </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0, paddingRight: '0.5rem' }}>
+                      {(canRename || canDeleteFolder) && (
+                        <div className="dropdown-container" style={{ position: 'relative' }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === folder.id ? null : folder.id); }}
+                            style={{
+                              backgroundColor: 'transparent', color: 'var(--color-text-muted)',
+                              border: 'none', borderRadius: '50%', padding: '0.4rem',
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-main)'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <MoreVertical size={20} />
+                          </button>
                         
                         {activeDropdown === folder.id && (
                           <div 
@@ -495,8 +511,11 @@ export default function Home() {
                             )}
                           </div>
                         )}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                      
+                      <ChevronRight size={20} style={{ color: '#60a5fa' }} />
+                    </div>
                   </div>
                 ))}
               </div>

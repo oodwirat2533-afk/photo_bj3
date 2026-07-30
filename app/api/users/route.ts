@@ -24,6 +24,23 @@ export async function GET() {
     `;
 
     const dbUsers = result.rows;
+    const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+    
+    for (const adminEmail of masterAdmins) {
+      if (adminEmail && !dbUsers.find(u => u.email === adminEmail)) {
+        dbUsers.unshift({
+          email: adminEmail,
+          role: 'superadmin',
+          title: null,
+          first_name: null,
+          last_name: null,
+          subject_group: null,
+          is_onboarded: true,
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+
     return new Response(JSON.stringify({ users: dbUsers }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

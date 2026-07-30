@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Users, UserPlus, Trash2, ArrowLeft, Home } from 'lucide-react';
+import { Users, UserPlus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../components/ConfirmModalProvider';
 
@@ -118,24 +117,7 @@ export default function UsersSettingsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <button 
-          onClick={() => window.history.back()}
-          className="btn"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
-        >
-          <ArrowLeft size={16} /> ย้อนกลับ
-        </button>
-        <Link 
-          href="/"
-          className="btn"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}
-        >
-          <Home size={16} /> หน้าหลัก
-        </Link>
-      </div>
-
+    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Users size={28} style={{ color: 'var(--color-primary)' }} />
         <h1 className="page-title" style={{ margin: 0 }}>จัดการผู้ดูแลระบบ</h1>
@@ -165,7 +147,7 @@ export default function UsersSettingsPage() {
             className="input-field"
             style={{ flex: '0 0 140px', padding: '0.5rem' }}
           >
-            {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Super Admin</option>}
+            {session?.user?.email === 'ood.wirat2533@gmail.com' && <option value="superadmin">Superadmin</option>}
             <option value="admin">Admin</option>
             <option value="assistant_admin">ผู้ช่วย Admin</option>
           </select>
@@ -190,78 +172,42 @@ export default function UsersSettingsPage() {
                 const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
                 
                 return (
-                  <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                      {u.first_name ? (
-                        <div style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--color-text)' }}>
-                          {u.title}{u.first_name} {u.last_name}
-                          {u.subject_group && (
-                            <span className="user-subject-group">
-                              {u.subject_group}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ fontWeight: 600, fontSize: '1.05rem', color: u.email === 'ood.wirat2533@gmail.com' ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
-                          {u.email === 'ood.wirat2533@gmail.com' ? 'นายวิรัตน์ ธีรพิพัฒนปัญญา (เจ้าของระบบ)' : 'ผู้ใช้ยังไม่ระบุชื่อ'}
+                  <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>{u.email}</span>
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleEditRole(u.email, e.target.value)}
+                          className="input-field"
+                          disabled={isMasterAdmin}
+                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
+                        >
+                          { (session?.user?.email === 'ood.wirat2533@gmail.com' || isSuperadmin) && <option value="superadmin">Superadmin</option> }
+                          <option value="admin">Admin</option>
+                          <option value="assistant_admin">ผู้ช่วย Admin</option>
+                        </select>
+                      </div>
+                      {u.first_name && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                          {u.title}{u.first_name} {u.last_name} {u.subject_group ? `(${u.subject_group})` : ''}
                         </div>
                       )}
-                      
-                      <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {u.email}
-                      </div>
-
                       <div style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
                         {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
                       </div>
                     </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      {(() => {
-                        const styleMap: Record<string, { bg: string; color: string }> = {
-                          superadmin: { bg: '#fee2e2', color: '#dc2626' },
-                          admin: { bg: '#dbeafe', color: '#1d4ed8' },
-                          assistant_admin: { bg: '#d1fae5', color: '#047857' }
-                        };
-                        const currentStyle = styleMap[u.role] || { bg: '#f3f4f6', color: '#4b5563' };
-                        return (
-                          <select
-                            value={u.role}
-                            onChange={(e) => handleEditRole(u.email, e.target.value)}
-                            className="input-field"
-                            disabled={isMasterAdmin}
-                            style={{ 
-                              padding: '0.4rem 0.75rem', 
-                              fontSize: '0.85rem', 
-                              height: 'auto', 
-                              borderRadius: '1rem', 
-                              backgroundColor: currentStyle.bg, 
-                              color: currentStyle.color, 
-                              border: 'none', 
-                              fontWeight: 700, 
-                              cursor: isMasterAdmin ? 'not-allowed' : 'pointer', 
-                              opacity: isMasterAdmin ? 0.7 : 1 
-                            }}
-                          >
-                            { (session?.user?.email === 'ood.wirat2533@gmail.com' || isSuperadmin) && <option value="superadmin" style={{ backgroundColor: '#ffffff', color: '#dc2626' }}>Super Admin</option> }
-                            <option value="admin" style={{ backgroundColor: '#ffffff', color: '#1d4ed8' }}>Admin</option>
-                            <option value="assistant_admin" style={{ backgroundColor: '#ffffff', color: '#047857' }}>ผู้ช่วย Admin</option>
-                          </select>
-                        );
-                      })()}
-
-                      {!isMasterAdmin && (
-                        <button 
-                          onClick={() => handleDeleteAdmin(u.email)}
-                          style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="ลบผู้ใช้"
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                    </div>
+                    {!isSuperadmin && (
+                      <button 
+                        onClick={() => handleDeleteAdmin(u.email)}
+                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="ลบผู้ใช้"
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </li>
                 );
               })}
