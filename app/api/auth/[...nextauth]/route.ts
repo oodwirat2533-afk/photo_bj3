@@ -29,30 +29,46 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/',
+    error: '/',
   },
   callbacks: {
+    async signIn({ user }) {
+      if (!user.email) return false;
+      const cleanEmail = user.email.toLowerCase();
+      
+      if (cleanEmail === 'ood.wirat2533@gmail.com') return true;
+      
+      try {
+        const dbCheck = await sql`SELECT email FROM users WHERE email = ${cleanEmail}`;
+        if (dbCheck.rows.length > 0) {
+          return true; // allow sign in
+        }
+        return false; // block sign in for non-admins
+      } catch (e) {
+        console.error('SignIn check error:', e);
+        return false;
+      }
+    },
     async jwt({ token, user, account, profile, isNewUser }) {
       if (token.email) {
         const cleanEmail = token.email.toLowerCase();
-        const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
         
-        let isMasterAdmin = masterAdmins.includes(cleanEmail);
-        
-        if (isMasterAdmin) {
-          token.isAdmin = true;
-          token.role = 'superadmin';
-          token.isOnboarded = true; 
-        } else {
-          token.isAdmin = false;
-        }
+        token.isAdmin = false;
+        token.role = 'user';
+        token.isOnboarded = false;
         
         try {
-          const dbCheck = await sql`SELECT role, is_onboarded FROM users WHERE email = ${cleanEmail}`;
+          const dbCheck = await sql`SELECT role, is_onboarded, title, first_name, last_name FROM users WHERE email = ${cleanEmail}`;
           if (dbCheck.rows.length > 0) {
             const dbUser = dbCheck.rows[0];
             token.isAdmin = true;
             token.role = dbUser.role; // 'admin' or 'assistant_admin'
             token.isOnboarded = dbUser.is_onboarded;
+            
+            if (dbUser.first_name) {
+              const fullName = `${dbUser.title || ''}${dbUser.first_name} ${dbUser.last_name || ''}`.trim();
+              token.name = fullName;
+            }
           }
         } catch (e) {
           console.error('DB Admin check error:', e);
@@ -65,6 +81,9 @@ export const authOptions: AuthOptions = {
         session.user.isAdmin = token.isAdmin as boolean;
         session.user.role = token.role as string;
         session.user.isOnboarded = token.isOnboarded as boolean;
+        if (token.name) {
+          session.user.name = token.name as string;
+        }
       }
       return session;
     }
