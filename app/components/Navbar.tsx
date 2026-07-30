@@ -59,7 +59,7 @@ export default function Navbar() {
   return (
     <>
       <nav style={{ backgroundColor: 'var(--color-surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 50, boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', height: '64px' }}>
             {/* Left side: Logo & Desktop Links */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>

@@ -350,7 +350,7 @@ export default function Home() {
   const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin';
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '2rem', maxWidth: '100%', margin: '0 auto' }}>
       
       <div style={{ marginBottom: '2rem' }}>
         {/* Folder Navigation & Upload */}
