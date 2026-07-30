@@ -106,6 +106,18 @@ input, textarea {
   box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
 }
 
+.btn-glow {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 4px 14px rgba(37, 99, 235, 0.39);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.7), 0 6px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
 .btn-primary:hover {
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.23);
   transform: translateY(-1px);
@@ -151,8 +163,14 @@ input, textarea {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
+.responsive-grid-wide {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+}
+
 @media (max-width: 640px) {
-  .responsive-grid {
+  .responsive-grid, .responsive-grid-wide {
     grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
   }
 }

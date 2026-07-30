@@ -61,9 +61,15 @@ export default function Navbar() {
                     window.dispatchEvent(new Event('go-home'));
                   }
                 }}
-                style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
               >
-                <ImageIcon size={24} /> คลังภาพ ร.ร.
+                <div style={{ width: '42px', height: '42px', background: 'linear-gradient(135deg, #60a5fa, #2563eb)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}>
+                  <ImageIcon size={20} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary-dark)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>School Photo Hub</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#d97706', marginTop: '2px' }}>พัฒนาโดย ครูวิรัตน์ ธีรพิพัฒนปัญญา</span>
+                </div>
               </Link>
               
               {/* Desktop menu moved to right side */}
@@ -186,10 +192,10 @@ export default function Navbar() {
                   ) : (
                     <button 
                       onClick={() => signIn('google', { callbackUrl: '/' })}
-                      className="btn btn-primary"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      className="btn btn-glow"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', fontSize: '0.875rem', borderRadius: '2rem' }}
                     >
-                      <LogIn size={16} /> เข้าสู่ระบบ (Admin)
+                      <span style={{ color: '#fcd34d', fontSize: '1rem' }}>🔒</span> ลงชื่อเข้าใช้ ADMIN
                     </button>
                   )}
                 </div>
@@ -257,10 +263,10 @@ export default function Navbar() {
               ) : (
                 <button 
                   onClick={() => signIn('google', { callbackUrl: '/' })}
-                  className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%' }}
+                  className="btn btn-glow"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%', borderRadius: '2rem' }}
                 >
-                  <LogIn size={18} /> เข้าสู่ระบบ (Admin)
+                  <span style={{ color: '#fcd34d', fontSize: '1.1rem' }}>🔒</span> ลงชื่อเข้าใช้ ADMIN
                 </button>
               )}
             </div>
