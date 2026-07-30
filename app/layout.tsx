@@ -5,8 +5,15 @@ import { Toaster } from 'react-hot-toast';
 import { ConfirmModalProvider } from './components/ConfirmModalProvider';
 
 export const metadata: Metadata = {
-  title: "School Media ERP",
-  description: "ระบบติดตามบุตรหลาน ภาพและวิดีโอจาก Google Drive",
+  title: "คลังรูปโรงเรียนบรรหารแจ่มใสวิทยา 3",
+  description: "ระบบคลังรูปภาพและวิดีโอ โรงเรียนบรรหารแจ่มใสวิทยา 3",
+};
+
+export const viewport: import("next").Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
