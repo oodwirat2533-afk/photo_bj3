@@ -209,17 +209,15 @@ export default function UsersSettingsPage() {
                         <option value="assistant_admin">ผู้ช่วย Admin</option>
                       </select>
 
-                      {!isSuperadmin && (
-                        <button 
-                          onClick={() => handleDeleteAdmin(u.email)}
-                          style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="ลบผู้ใช้"
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => handleDeleteAdmin(u.email)}
+                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="ลบผู้ใช้"
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </li>
                 );
