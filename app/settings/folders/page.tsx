@@ -132,7 +132,7 @@ export default function FoldersSettingsPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Folder size={20} style={{ color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)' }} />
+                    <Folder size={20} style={{ flexShrink: 0, color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)' }} />
                     <span style={{ fontWeight: 500, color: isHidden ? 'var(--color-text-muted)' : 'var(--color-text)' }}>
                       {folder.name}
                     </span>
