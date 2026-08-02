@@ -45,6 +45,18 @@ export default function Home() {
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
+  // Grid slider state
+  const [mobileCols, setMobileCols] = useState(2);
+  const [desktopCols, setDesktopCols] = useState(4);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -549,10 +561,28 @@ export default function Home() {
           {/* ----------------- Media Section ----------------- */}
           {mediaFiles.length > 0 && (
             <div>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'ไฟล์รูปภาพ/วิดีโอ'}
-              </h2>
-              <div className="responsive-grid">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                  {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'ไฟล์รูปภาพ/วิดีโอ'}
+                </h2>
+                
+                {/* Column Slider */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-surface)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+                  <ImageIcon size={16} style={{ color: 'var(--color-text-muted)' }} />
+                  <input 
+                    type="range" 
+                    min={isMobile ? 1 : 3} 
+                    max={isMobile ? 3 : 6} 
+                    value={isMobile ? mobileCols : desktopCols} 
+                    onChange={(e) => isMobile ? setMobileCols(parseInt(e.target.value)) : setDesktopCols(parseInt(e.target.value))}
+                    style={{ width: '80px', accentColor: 'var(--color-primary)' }}
+                  />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                    {isMobile ? mobileCols : desktopCols} แถว
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: `repeat(${isMobile ? mobileCols : desktopCols}, minmax(0, 1fr))` }}>
                 {mediaFiles.map(file => (
                   <div 
                     key={file.id} 
