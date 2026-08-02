@@ -1,7 +1,52 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Key } from 'lucide-react';
+import { Key, ChevronRight, ChevronDown } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth }: any) => {
+  const [expanded, setExpanded] = useState(depth === 0);
+  
+  const perm = userPermissions.find((p: any) => p.folder_id === folder.id) || { can_manage: false, include_subfolders: false };
+  const children = folders.filter((f: any) => f.parents?.[0] === folder.id);
+  const hasChildren = children.length > 0;
+
+  return (
+    <div style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: depth > 0 ? '8px' : '0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+        
+        {hasChildren ? (
+          <button 
+            onClick={() => setExpanded(!expanded)} 
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}
+          >
+            {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+          </button>
+        ) : (
+          <div style={{ width: '26px' }} />
+        )}
+
+        <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400 }}>{folder.name}</span>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id, 'can_manage')} style={{ cursor: 'pointer' }} />
+          ให้สิทธิ์
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={perm.include_subfolders} onChange={() => togglePermission(folder.id, 'include_subfolders')} style={{ cursor: 'pointer' }} />
+          รวมโฟลเดอร์ย่อย
+        </label>
+      </div>
+      
+      {expanded && hasChildren && (
+        <div>
+          {children.map((child: any) => (
+            <FolderNode key={child.id} folder={child} folders={folders} userPermissions={userPermissions} togglePermission={togglePermission} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 import toast from 'react-hot-toast';
 
 export default function PermissionsSettingsPage() {
@@ -87,41 +132,19 @@ export default function PermissionsSettingsPage() {
     }
   };
 
-  const renderFolderTree = (parentId: string | null, depth = 0) => {
+  const renderFolderTree = (parentId: string | null) => {
     if (!parentId) return null;
+    const rootFolder = folders.find(f => f.id === parentId);
+    if (!rootFolder) return null;
     
-    let itemsToRender = [];
-    if (depth === 0) {
-      const rootFolder = folders.find(f => f.id === parentId);
-      if (rootFolder) itemsToRender.push(rootFolder);
-    } else {
-      itemsToRender = folders.filter(f => f.parents?.[0] === parentId);
-    }
-    
-    if (itemsToRender.length === 0) return null;
-
     return (
-      <div style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: depth > 0 ? '8px' : '0' }}>
-        {itemsToRender.map(folder => {
-          const perm = userPermissions.find(p => p.folder_id === folder.id) || { can_manage: false, include_subfolders: false };
-          return (
-            <div key={folder.id} style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
-                <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400 }}>{folder.name}</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id, 'can_manage')} style={{ cursor: 'pointer' }} />
-                  ให้สิทธิ์
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={perm.include_subfolders} onChange={() => togglePermission(folder.id, 'include_subfolders')} style={{ cursor: 'pointer' }} />
-                  รวมโฟลเดอร์ย่อย
-                </label>
-              </div>
-              {renderFolderTree(folder.id, depth + 1)}
-            </div>
-          );
-        })}
-      </div>
+      <FolderNode 
+        folder={rootFolder} 
+        folders={folders} 
+        userPermissions={userPermissions} 
+        togglePermission={togglePermission} 
+        depth={0} 
+      />
     );
   };
 
@@ -147,7 +170,7 @@ export default function PermissionsSettingsPage() {
           ) : !rootFolderId ? (
             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>ยังไม่มีการตั้งค่าโฟลเดอร์หลักในระบบ</div>
           ) : (
-            renderFolderTree(rootFolderId, 0)
+            renderFolderTree(rootFolderId)
           )}
         </div>
 
