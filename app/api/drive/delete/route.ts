@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       const fileData = await fileRes.json();
       const parentId = fileData.parents && fileData.parents.length > 0 ? fileData.parents[0] : null;
       if (parentId) {
-        const hasAccess = await verifyFolderAccess(parentId, session.user.email as string, session.user.role as string);
+        const hasAccess = await verifyFolderAccess(parentId, session.user.role as string);
         if (!hasAccess) {
           return NextResponse.json({ error: 'Permission denied to delete in this folder' }, { status: 403 });
         }

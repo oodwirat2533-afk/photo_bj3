@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ hasAccess: false });
     }
 
-    const hasAccess = await verifyFolderAccess(folderId, session.user.email as string, session.user.role as string);
+    const hasAccess = await verifyFolderAccess(folderId, session.user.role as string);
     return NextResponse.json({ hasAccess });
   } catch (error) {
     console.error('Check Permissions Error:', error);

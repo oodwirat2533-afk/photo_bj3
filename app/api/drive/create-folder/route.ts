@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       }
     } else {
       // Check permissions for subfolders
-      const hasAccess = await verifyFolderAccess(parentFolderId, session.user.email as string, session.user.role as string);
+      const hasAccess = await verifyFolderAccess(parentFolderId, session.user.role as string);
       if (!hasAccess) {
         return NextResponse.json({ error: 'Permission denied for this folder' }, { status: 403 });
       }

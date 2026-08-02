@@ -1,14 +1,14 @@
 import { sql } from '@/lib/db';
 import { getDriveAccessToken } from '@/lib/google-auth';
 
-export async function verifyFolderAccess(targetFolderId: string, userEmail: string, userRole: string): Promise<boolean> {
+export async function verifyFolderAccess(targetFolderId: string, userRole: string): Promise<boolean> {
   // Superadmin always has access
   if (userRole === 'superadmin') {
     return true;
   }
 
-  // Get user's permissions from DB
-  const res = await sql`SELECT folder_id, include_subfolders FROM folder_permissions WHERE user_email = ${userEmail} AND can_manage = TRUE`;
+  // Get global permissions from DB
+  const res = await sql`SELECT folder_id, include_subfolders FROM folder_permissions WHERE can_manage = TRUE`;
   const perms = res.rows;
 
   if (perms.length === 0) {
