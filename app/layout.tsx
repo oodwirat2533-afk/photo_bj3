@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import { Toaster } from 'react-hot-toast';
@@ -7,6 +7,13 @@ import { ConfirmModalProvider } from './components/ConfirmModalProvider';
 export const metadata: Metadata = {
   title: "School Media ERP",
   description: "ระบบติดตามบุตรหลาน ภาพและวิดีโอจาก Google Drive",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

@@ -51,6 +51,7 @@ html, body {
   font-family: 'Inter', 'Sarabun', sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  touch-action: pan-x pan-y; /* Disables pinch-to-zoom completely on mobile */
 }
 
 a {
