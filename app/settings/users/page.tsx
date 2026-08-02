@@ -172,38 +172,43 @@ export default function UsersSettingsPage() {
                 const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
                 
                 return (
-                  <li key={u.email} className="user-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '100%' }}>
-                      {u.first_name && (
-                        <>
-                          <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>
-                            {u.title}{u.first_name} {u.last_name}
-                          </div>
-                          <div className="user-subject-line" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                            <span className="subject-bracket-left">(</span>{u.subject_group}<span className="subject-bracket-right">)</span>
-                          </div>
-                        </>
-                      )}
-                      <div className="user-email-role-line" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: u.first_name ? '0.25rem' : '0' }}>
-                        <span className="user-email" style={{ fontSize: '0.85rem', color: 'var(--color-text-main)', wordBreak: 'break-all' }}>{u.email}</span>
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleEditRole(u.email, e.target.value)}
-                          className="input-field user-role-select"
-                          disabled={isMasterAdmin}
-                          style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
-                        >
-                          { (session?.user?.email === 'ood.wirat2533@gmail.com' || isSuperadmin) && <option value="superadmin">Superadmin</option> }
-                          <option value="admin">Admin</option>
-                          <option value="assistant_admin">ผู้ช่วย Admin</option>
-                        </select>
+                  <li key={u.email} className="user-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                    
+                    {/* Left: Info Stack */}
+                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flexGrow: 1, minWidth: 0, paddingRight: '1rem' }}>
+                      
+                      {/* Line 1: Name or Email */}
+                      <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {u.first_name ? `${u.title || ''}${u.first_name} ${u.last_name || ''}` : u.email}
                       </div>
-                      <div className="user-status-line" style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange', marginTop: '0.25rem' }}>
+
+                      {/* Line 2: Subject */}
+                      {u.subject_group && (
+                        <div className="user-subject-line" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          กลุ่มสาระฯ: {u.subject_group}
+                        </div>
+                      )}
+
+                      {/* Line 3: Status */}
+                      <div className="user-status-line" style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
                         {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0, marginLeft: '0.5rem' }}>
+                    {/* Right: Actions (Role Dropdown + Delete) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleEditRole(u.email, e.target.value)}
+                        className="input-field user-role-select"
+                        disabled={isMasterAdmin}
+                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
+                      >
+                        { (session?.user?.email === 'ood.wirat2533@gmail.com' || isSuperadmin) && <option value="superadmin">Superadmin</option> }
+                        <option value="admin">Admin</option>
+                        <option value="assistant_admin">ผู้ช่วย Admin</option>
+                      </select>
+
                       {!isSuperadmin && (
                         <button 
                           onClick={() => handleDeleteAdmin(u.email)}
