@@ -68,6 +68,9 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
+        if (token.name) {
+          session.user.name = token.name;
+        }
         session.user.isAdmin = token.isAdmin as boolean;
         session.user.role = token.role as string;
         session.user.isOnboarded = token.isOnboarded as boolean;
