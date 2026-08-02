@@ -182,7 +182,14 @@ export default function UsersSettingsPage() {
                         {u.first_name ? `${u.title || ''}${u.first_name} ${u.last_name || ''}` : u.email}
                       </div>
 
-                      {/* Line 2: Subject */}
+                      {/* Line 2: Email (if name exists) */}
+                      {u.first_name && (
+                        <div className="user-email-line" style={{ fontSize: '0.85rem', color: 'var(--color-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          อีเมล: {u.email}
+                        </div>
+                      )}
+
+                      {/* Line 3: Subject */}
                       {u.subject_group && (
                         <div className="user-subject-line" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           กลุ่มสาระฯ: {u.subject_group}
