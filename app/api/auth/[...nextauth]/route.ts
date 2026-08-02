@@ -47,12 +47,18 @@ export const authOptions: AuthOptions = {
         }
         
         try {
-          const dbCheck = await sql`SELECT role, is_onboarded FROM users WHERE email = ${cleanEmail}`;
+          const dbCheck = await sql`SELECT role, is_onboarded, title, first_name, last_name FROM users WHERE email = ${cleanEmail}`;
           if (dbCheck.rows.length > 0) {
             const dbUser = dbCheck.rows[0];
             token.isAdmin = true;
-            token.role = dbUser.role; // 'admin' or 'assistant_admin'
+            if (!isMasterAdmin) {
+              token.role = dbUser.role;
+            }
             token.isOnboarded = dbUser.is_onboarded;
+            
+            if (dbUser.first_name) {
+              token.name = `${dbUser.title || ''}${dbUser.first_name} ${dbUser.last_name || ''}`.trim();
+            }
           }
         } catch (e) {
           console.error('DB Admin check error:', e);
