@@ -556,7 +556,13 @@ export default function Home() {
                 {mediaFiles.map(file => (
                   <div 
                     key={file.id} 
-                    onClick={() => setSelectedFile(file)}
+                    onClick={() => {
+                      if (file.mimeType.includes('video')) {
+                        window.open(file.webViewLink || file.webContentLink, '_blank');
+                      } else {
+                        setSelectedFile(file);
+                      }
+                    }}
                     style={{ 
                       display: 'block', cursor: 'pointer', color: 'inherit',
                       backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
