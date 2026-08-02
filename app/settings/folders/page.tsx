@@ -133,32 +133,43 @@ export default function FoldersSettingsPage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <Folder size={20} style={{ color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)' }} />
-                    <span style={{ fontWeight: 500, textDecoration: isHidden ? 'line-through' : 'none', color: isHidden ? 'var(--color-text-muted)' : 'var(--color-text)' }}>
+                    <span style={{ fontWeight: 500, color: isHidden ? 'var(--color-text-muted)' : 'var(--color-text)' }}>
                       {folder.name}
                     </span>
                   </div>
                   
-                  <button
-                    onClick={() => toggleVisibility(folder.id, isHidden)}
-                    className="btn"
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.5rem',
-                      backgroundColor: isHidden ? '#f0fdf4' : '#fef2f2', 
-                      color: isHidden ? '#166534' : 'var(--color-danger)',
-                      borderColor: isHidden ? '#bbf7d0' : '#fecaca',
-                      padding: '0.5rem 1rem'
-                    }}
-                  >
-                    {isHidden ? (
-                      <>
-                        <Eye size={16} /> แสดงโฟลเดอร์
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff size={16} /> ซ่อนโฟลเดอร์
-                      </>
-                    )}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: isHidden ? 'var(--color-text-muted)' : 'var(--color-primary)', fontWeight: 500 }}>
+                      {isHidden ? 'ซ่อน' : 'แสดง'}
+                    </span>
+                    <button
+                      onClick={() => toggleVisibility(folder.id, isHidden)}
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        backgroundColor: isHidden ? '#d1d5db' : 'var(--color-primary)',
+                        position: 'relative',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.3s ease',
+                        flexShrink: 0
+                      }}
+                      title={isHidden ? "ซ่อนอยู่ (คลิกเพื่อแสดง)" : "แสดงอยู่ (คลิกเพื่อซ่อน)"}
+                    >
+                      <div style={{
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        backgroundColor: 'white',
+                        position: 'absolute',
+                        top: '3px',
+                        left: isHidden ? '3px' : '23px',
+                        transition: 'left 0.3s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
