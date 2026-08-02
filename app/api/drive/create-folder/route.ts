@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getDriveAccessToken } from '@/lib/google-auth';
 import { sql } from '@/lib/db';
+import { verifyFolderAccess } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +42,12 @@ export async function POST(request: Request) {
       // Only superadmin can create folders in the root
       if (userRole !== 'superadmin') {
         return NextResponse.json({ error: 'Permission denied. Only Superadmin can create folders in the root directory.' }, { status: 403 });
+      }
+    } else {
+      // Check permissions for subfolders
+      const hasAccess = await verifyFolderAccess(parentFolderId, session.user.email, session.user.role);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Permission denied for this folder' }, { status: 403 });
       }
     }
 

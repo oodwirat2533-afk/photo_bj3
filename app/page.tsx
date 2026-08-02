@@ -36,6 +36,7 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<{ total: number, message: string } | null>(null);
+  const [hasAccessToCurrentFolder, setHasAccessToCurrentFolder] = useState(false);
 
   // Session & Global Auth State
   const [session, setSession] = useState<any>(null);
@@ -139,6 +140,16 @@ export default function Home() {
       })
       .finally(() => setLoading(false));
   }, [currentFolderId, refreshTrigger]);
+
+  // 4. Check Permission for Current Folder
+  useEffect(() => {
+    if (currentFolderId && session?.user?.isAdmin) {
+      fetch(`/api/permissions/check?folderId=${currentFolderId}`)
+        .then(res => res.json())
+        .then(data => setHasAccessToCurrentFolder(data.hasAccess))
+        .catch(console.error);
+    }
+  }, [currentFolderId, session]);
 
   // Gallery Handlers
   const handleFolderClick = (folderId: string, folderName: string) => {
@@ -360,11 +371,11 @@ export default function Home() {
   const mediaFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
 
   const isRootFolder = currentFolderId === rootFolderId;
-  const canUpload = session?.user?.isAdmin && !isRootFolder;
-  const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : true);
+  const canUpload = session?.user?.isAdmin && !isRootFolder && (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder);
+  const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder));
   const canRename = session?.user?.role === 'superadmin' || session?.user?.role === 'admin';
   const canDeleteFolder = session?.user?.role === 'superadmin';
-  const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin';
+  const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder);
 
   return (
     <div style={{ padding: '2rem', maxWidth: '100%', margin: '0 auto' }}>

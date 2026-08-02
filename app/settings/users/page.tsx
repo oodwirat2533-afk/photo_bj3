@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Trash2 } from 'lucide-react';
+import { Users, UserPlus, Trash2, Key, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../components/ConfirmModalProvider';
 
@@ -13,6 +13,15 @@ export default function UsersSettingsPage() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+
+  // Permissions Modal State
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [folders, setFolders] = useState<any[]>([]);
+  const [rootFolderId, setRootFolderId] = useState<string | null>(null);
+  const [userPermissions, setUserPermissions] = useState<any[]>([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [savingPermissions, setSavingPermissions] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -108,12 +117,105 @@ export default function UsersSettingsPage() {
     }
   };
 
+  const handleManagePermissions = async (email: string) => {
+    setSelectedUserEmail(email);
+    setPermissionsModalOpen(true);
+    setLoadingFolders(true);
+    try {
+      const foldersRes = await fetch('/api/drive/folders');
+      const foldersData = await foldersRes.json();
+      
+      const permsRes = await fetch(`/api/permissions?email=${email}`);
+      const permsData = await permsRes.json();
+      
+      setFolders(foldersData.folders || []);
+      setRootFolderId(foldersData.rootFolderId || null);
+      setUserPermissions(permsData.permissions || []);
+    } catch (err) {
+      toast.error('Failed to load permissions data');
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
+
+  const togglePermission = (folderId: string, field: 'can_manage' | 'include_subfolders') => {
+    setUserPermissions(prev => {
+      const existing = prev.find(p => p.folder_id === folderId);
+      if (existing) {
+        if (field === 'can_manage' && existing.can_manage && !existing.include_subfolders) {
+           return prev.filter(p => p.folder_id !== folderId);
+        }
+        return prev.map(p => p.folder_id === folderId ? { ...p, [field]: !p[field] } : p);
+      } else {
+        return [...prev, { folder_id: folderId, can_manage: field === 'can_manage', include_subfolders: field === 'include_subfolders', user_email: selectedUserEmail }];
+      }
+    });
+  };
+
+  const handleSavePermissions = async () => {
+    setSavingPermissions(true);
+    try {
+      const res = await fetch('/api/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: selectedUserEmail, permissions: userPermissions }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast.success('บันทึกสิทธิ์สำเร็จ');
+      setPermissionsModalOpen(false);
+    } catch (err) {
+      toast.error('เกิดข้อผิดพลาดในการบันทึกสิทธิ์');
+    } finally {
+      setSavingPermissions(false);
+    }
+  };
+
+  const renderFolderTree = (parentId: string | null, depth = 0) => {
+    if (!parentId) return null;
+    
+    // Find the folder itself if depth === 0 to render the root
+    let itemsToRender = [];
+    if (depth === 0) {
+      const rootFolder = folders.find(f => f.id === parentId);
+      if (rootFolder) itemsToRender.push(rootFolder);
+    } else {
+      itemsToRender = folders.filter(f => f.parents?.[0] === parentId);
+    }
+    
+    if (itemsToRender.length === 0) return null;
+
+    return (
+      <div style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: depth > 0 ? '8px' : '0' }}>
+        {itemsToRender.map(folder => {
+          const perm = userPermissions.find(p => p.folder_id === folder.id) || { can_manage: false, include_subfolders: false };
+          return (
+            <div key={folder.id} style={{ marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+                <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400 }}>{folder.name}</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id, 'can_manage')} style={{ cursor: 'pointer' }} />
+                  ให้สิทธิ์
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={perm.include_subfolders} onChange={() => togglePermission(folder.id, 'include_subfolders')} style={{ cursor: 'pointer' }} />
+                  รวมโฟลเดอร์ย่อย
+                </label>
+              </div>
+              {/* Recursively render children if it's root (depth 0) or any children */}
+              {renderFolderTree(folder.id, depth + 1)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (checkingSession) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>Loading...</div>;
   }
 
   if (!session || session.user?.role !== 'superadmin') {
-    return null; // Will redirect
+    return null;
   }
 
   return (
@@ -180,7 +282,6 @@ export default function UsersSettingsPage() {
                             {u.title}{u.first_name} {u.last_name}
                           </div>
                           <div className="user-subject-line" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                            {/* Desktop shows parentheses via CSS, mobile hides them */}
                             <span className="subject-bracket-left">(</span>{u.subject_group}<span className="subject-bracket-right">)</span>
                           </div>
                         </>
@@ -203,17 +304,31 @@ export default function UsersSettingsPage() {
                         {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
                       </div>
                     </div>
-                    {!isSuperadmin && (
-                      <button 
-                        onClick={() => handleDeleteAdmin(u.email)}
-                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '0.5rem', flexShrink: 0 }}
-                        title="ลบผู้ใช้"
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0, marginLeft: '0.5rem' }}>
+                      {!isSuperadmin && (
+                        <button
+                          onClick={() => handleManagePermissions(u.email)}
+                          style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="จัดการสิทธิ์โฟลเดอร์"
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-light)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Key size={18} />
+                        </button>
+                      )}
+                      {!isSuperadmin && (
+                        <button 
+                          onClick={() => handleDeleteAdmin(u.email)}
+                          style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="ลบผู้ใช้"
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
                   </li>
                 );
               })}
@@ -221,6 +336,53 @@ export default function UsersSettingsPage() {
           )}
         </div>
       </div>
+
+      {permissionsModalOpen && (
+        <div 
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+            display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem',
+            backdropFilter: 'blur(3px)'
+          }}
+          onClick={() => setPermissionsModalOpen(false)}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="card"
+            style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
+          >
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Key size={20} style={{ color: 'var(--color-primary)' }} />
+                จัดการสิทธิ์โฟลเดอร์: {selectedUserEmail}
+              </h2>
+              <button onClick={() => setPermissionsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div style={{ padding: '1.5rem', overflowY: 'auto', flexGrow: 1 }}>
+              {loadingFolders ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>กำลังโหลดโครงสร้างโฟลเดอร์...</div>
+              ) : !rootFolderId ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>ยังไม่มีการตั้งค่าโฟลเดอร์หลักในระบบ</div>
+              ) : (
+                renderFolderTree(rootFolderId, 0)
+              )}
+            </div>
+            
+            <div style={{ padding: '1.5rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button className="btn" onClick={() => setPermissionsModalOpen(false)}>
+                ยกเลิก
+              </button>
+              <button className="btn btn-primary" onClick={handleSavePermissions} disabled={savingPermissions || loadingFolders}>
+                {savingPermissions ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getDriveAccessToken } from '@/lib/google-auth';
+import { verifyFolderAccess } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,21 @@ export async function POST(request: Request) {
     }
 
     const token = await getDriveAccessToken();
+
+    // Verify permission on parent folder
+    const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (fileRes.ok) {
+      const fileData = await fileRes.json();
+      const parentId = fileData.parents && fileData.parents.length > 0 ? fileData.parents[0] : null;
+      if (parentId) {
+        const hasAccess = await verifyFolderAccess(parentId, session.user.email, session.user.role);
+        if (!hasAccess) {
+          return NextResponse.json({ error: 'Permission denied to delete in this folder' }, { status: 403 });
+        }
+      }
+    }
 
     const deleteRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
       method: 'DELETE',

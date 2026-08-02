@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getDriveAccessToken } from '@/lib/google-auth';
+import { verifyFolderAccess } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +15,11 @@ export async function POST(request: Request) {
 
     if (!name || !folderId) {
       return NextResponse.json({ error: 'Missing name or folderId' }, { status: 400 });
+    }
+
+    const hasAccess = await verifyFolderAccess(folderId, session.user.email, session.user.role);
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Permission denied for this folder' }, { status: 403 });
     }
 
     const metadata = {
