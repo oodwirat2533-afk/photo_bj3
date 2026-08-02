@@ -28,12 +28,8 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
 
         <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400 }}>{folder.name}</span>
         <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id, 'can_manage')} style={{ cursor: 'pointer' }} />
-          ให้สิทธิ์
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={perm.include_subfolders} onChange={() => togglePermission(folder.id, 'include_subfolders')} style={{ cursor: 'pointer' }} />
-          รวมโฟลเดอร์ย่อย
+          <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id)} style={{ cursor: 'pointer' }} />
+          ให้สิทธิ์ (รวมโฟลเดอร์ย่อยอัตโนมัติ)
         </label>
       </div>
       
@@ -100,16 +96,13 @@ export default function PermissionsSettingsPage() {
     }
   };
 
-  const togglePermission = (folderId: string, field: 'can_manage' | 'include_subfolders') => {
+  const togglePermission = (folderId: string) => {
     setUserPermissions(prev => {
       const existing = prev.find(p => p.folder_id === folderId);
       if (existing) {
-        if (field === 'can_manage' && existing.can_manage && !existing.include_subfolders) {
-           return prev.filter(p => p.folder_id !== folderId);
-        }
-        return prev.map(p => p.folder_id === folderId ? { ...p, [field]: !p[field] } : p);
+        return prev.filter(p => p.folder_id !== folderId);
       } else {
-        return [...prev, { folder_id: folderId, can_manage: field === 'can_manage', include_subfolders: field === 'include_subfolders' }];
+        return [...prev, { folder_id: folderId, can_manage: true, include_subfolders: true }];
       }
     });
   };
