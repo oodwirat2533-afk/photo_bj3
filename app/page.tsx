@@ -333,10 +333,15 @@ export default function Home() {
   useEffect(() => {
     if (selectedFile) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
-    return () => { document.body.style.overflow = 'auto'; };
+    return () => { 
+      document.body.style.overflow = ''; 
+      document.documentElement.style.overflow = '';
+    };
   }, [selectedFile]);
 
   const folders = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
