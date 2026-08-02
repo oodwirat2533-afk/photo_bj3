@@ -47,7 +47,6 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
     </div>
   );
 };
-import toast from 'react-hot-toast';
 
 export default function PermissionsSettingsPage() {
   const [folders, setFolders] = useState<any[]>([]);
@@ -134,17 +133,23 @@ export default function PermissionsSettingsPage() {
 
   const renderFolderTree = (parentId: string | null) => {
     if (!parentId) return null;
-    const rootFolder = folders.find(f => f.id === parentId);
-    if (!rootFolder) return null;
+    const rootChildren = folders.filter((f: any) => f.parents?.[0] === parentId);
     
+    if (rootChildren.length === 0) return null;
+
     return (
-      <FolderNode 
-        folder={rootFolder} 
-        folders={folders} 
-        userPermissions={userPermissions} 
-        togglePermission={togglePermission} 
-        depth={0} 
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {rootChildren.map((child: any) => (
+          <FolderNode 
+            key={child.id}
+            folder={child} 
+            folders={folders} 
+            userPermissions={userPermissions} 
+            togglePermission={togglePermission} 
+            depth={0} 
+          />
+        ))}
+      </div>
     );
   };
 

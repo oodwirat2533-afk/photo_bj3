@@ -24,16 +24,28 @@ export async function GET(request: Request) {
     
     const token = await getDriveAccessToken();
     const q = `mimeType='application/vnd.google-apps.folder' and trashed=false`;
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,parents)&pageSize=1000`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
     
-    if (!res.ok) {
-        throw new Error('Failed to fetch from Drive API');
-    }
+    let allFolders: any[] = [];
+    let pageToken = '';
     
-    const data = await res.json();
-    return NextResponse.json({ folders: data.files, rootFolderId });
+    do {
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,parents),nextPageToken&pageSize=1000${pageToken ? `&pageToken=${pageToken}` : ''}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!res.ok) {
+          throw new Error('Failed to fetch from Drive API');
+      }
+      
+      const data = await res.json();
+      if (data.files) {
+        allFolders = allFolders.concat(data.files);
+      }
+      pageToken = data.nextPageToken || '';
+    } while (pageToken);
+    
+    return NextResponse.json({ folders: allFolders, rootFolderId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
