@@ -26,7 +26,7 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
           <div style={{ width: '26px' }} />
         )}
 
-        <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{folder.name}</span>
+        <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400, wordBreak: 'break-word' }}>{folder.name}</span>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <span style={{ fontSize: '14px', color: perm.can_manage ? 'var(--color-primary)' : 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
