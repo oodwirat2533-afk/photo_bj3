@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing name or folderId' }, { status: 400 });
     }
 
-    const hasAccess = await verifyFolderAccess(folderId, session.user.email, session.user.role);
+    const hasAccess = await verifyFolderAccess(folderId, session.user.email as string, session.user.role as string);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Permission denied for this folder' }, { status: 403 });
     }
