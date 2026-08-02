@@ -36,10 +36,17 @@ export default function PermissionsSettingsPage() {
       const foldersRes = await fetch('/api/drive/folders');
       const foldersData = await foldersRes.json();
       
+      const hiddenRes = await fetch('/api/hidden-folders');
+      const hiddenData = await hiddenRes.json();
+      const hiddenIds = hiddenData.hiddenIds || [];
+
       const permsRes = await fetch('/api/permissions');
       const permsData = await permsRes.json();
       
-      setFolders(foldersData.folders || []);
+      const allFolders = foldersData.folders || [];
+      const visibleFolders = allFolders.filter((f: any) => !hiddenIds.includes(f.id));
+
+      setFolders(visibleFolders);
       setRootFolderId(foldersData.rootFolderId || null);
       setUserPermissions(permsData.permissions || []);
     } catch (err) {
