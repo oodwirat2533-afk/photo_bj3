@@ -64,12 +64,12 @@ export default function Navbar() {
             {/* Left side: Logo & Desktop Links */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '42px', height: '42px', background: 'linear-gradient(135deg, #60a5fa, #2563eb)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}>
-                  <ImageIcon size={20} />
+                <div className="logo-icon-container" style={{ background: 'linear-gradient(135deg, #60a5fa, #2563eb)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}>
+                  <ImageIcon className="logo-icon" size={20} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary-dark)', lineHeight: 1.1, letterSpacing: '-0.02em' }}>School Photo Hub</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#d97706', marginTop: '2px' }}>พัฒนาโดย ครูวิรัตน์ ธีรพิพัฒนปัญญา</span>
+                  <span className="logo-title" style={{ fontWeight: 800, color: 'var(--color-primary-dark)', lineHeight: 1.1, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>คลังรูปโรงเรียนบรรหารแจ่มใสวิทยา 3</span>
+                  <span className="logo-subtitle" style={{ fontWeight: 600, color: '#d97706', marginTop: '2px', whiteSpace: 'nowrap' }}>พัฒนาโดย ครูวิรัตน์ ธีรพิพัฒนปัญญา</span>
                 </div>
               </div>
               

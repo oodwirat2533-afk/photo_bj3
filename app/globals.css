@@ -170,8 +170,49 @@ input, textarea {
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
 }
 
+/* Navbar Logo Responsive Styles */
+.logo-icon-container {
+  width: 42px;
+  height: 42px;
+}
+.logo-icon {
+  width: 20px;
+  height: 20px;
+}
+.logo-title {
+  font-size: 1.15rem;
+}
+.logo-subtitle {
+  font-size: 0.75rem;
+}
+
 @media (max-width: 640px) {
   .responsive-grid, .responsive-grid-wide {
     grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  }
+  
+  .logo-icon-container {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px !important;
+  }
+  .logo-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .logo-title {
+    font-size: 0.95rem;
+  }
+  .logo-subtitle {
+    font-size: 0.65rem;
+  }
+  
+  /* User list styling for mobile */
+  .subject-bracket-left, .subject-bracket-right {
+    display: none;
+  }
+  
+  .user-email-role-line {
+    flex-wrap: wrap;
   }
 }

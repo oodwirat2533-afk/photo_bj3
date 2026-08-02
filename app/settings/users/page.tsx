@@ -172,14 +172,25 @@ export default function UsersSettingsPage() {
                 const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
                 
                 return (
-                  <li key={u.email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>{u.email}</span>
+                  <li key={u.email} className="user-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '100%' }}>
+                      {u.first_name && (
+                        <>
+                          <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>
+                            {u.title}{u.first_name} {u.last_name}
+                          </div>
+                          <div className="user-subject-line" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                            {/* Desktop shows parentheses via CSS, mobile hides them */}
+                            <span className="subject-bracket-left">(</span>{u.subject_group}<span className="subject-bracket-right">)</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="user-email-role-line" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: u.first_name ? '0.25rem' : '0' }}>
+                        <span className="user-email" style={{ fontSize: '0.85rem', color: 'var(--color-text-main)', wordBreak: 'break-all' }}>{u.email}</span>
                         <select
                           value={u.role}
                           onChange={(e) => handleEditRole(u.email, e.target.value)}
-                          className="input-field"
+                          className="input-field user-role-select"
                           disabled={isMasterAdmin}
                           style={{ padding: '0.1rem 0.5rem', fontSize: '0.75rem', height: 'auto', borderRadius: '1rem', backgroundColor: isSuperadmin ? 'var(--color-primary-light)' : '#f3f4f6', color: isSuperadmin ? 'var(--color-primary)' : '#4b5563', border: 'none', fontWeight: 600, cursor: isMasterAdmin ? 'not-allowed' : 'pointer', opacity: isMasterAdmin ? 0.7 : 1 }}
                         >
@@ -188,19 +199,14 @@ export default function UsersSettingsPage() {
                           <option value="assistant_admin">ผู้ช่วย Admin</option>
                         </select>
                       </div>
-                      {u.first_name && (
-                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                          {u.title}{u.first_name} {u.last_name} {u.subject_group ? `(${u.subject_group})` : ''}
-                        </div>
-                      )}
-                      <div style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
+                      <div className="user-status-line" style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange', marginTop: '0.25rem' }}>
                         {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
                       </div>
                     </div>
                     {!isSuperadmin && (
                       <button 
                         onClick={() => handleDeleteAdmin(u.email)}
-                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '0.5rem', flexShrink: 0 }}
                         title="ลบผู้ใช้"
                         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
                         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}

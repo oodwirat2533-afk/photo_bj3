@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { ConfirmModalProvider } from './components/ConfirmModalProvider';
 
 export const metadata: Metadata = {
-  title: "School Media ERP",
+  title: "คลังรูปโรงเรียนบรรหารแจ่มใสวิทยา 3",
   description: "ระบบติดตามบุตรหลาน ภาพและวิดีโอจาก Google Drive",
 };
 
