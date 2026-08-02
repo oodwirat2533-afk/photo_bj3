@@ -373,7 +373,7 @@ export default function Home() {
   const isRootFolder = currentFolderId === rootFolderId;
   const canUpload = session?.user?.isAdmin && !isRootFolder && (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder);
   const canCreateFolder = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (isRootFolder ? session?.user?.role === 'superadmin' : (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder));
-  const canRename = session?.user?.role === 'superadmin' || session?.user?.role === 'admin';
+  const canRename = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder);
   const canDeleteFolder = session?.user?.role === 'superadmin';
   const canDeleteFile = session?.user?.isAdmin && session?.user?.role !== 'assistant_admin' && (session?.user?.role === 'superadmin' || hasAccessToCurrentFolder);
 
