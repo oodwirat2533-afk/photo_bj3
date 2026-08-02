@@ -5,7 +5,7 @@ import { Key, ChevronRight, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth }: any) => {
-  const [expanded, setExpanded] = useState(depth === 0);
+  const [expanded, setExpanded] = useState(false);
   
   const perm = userPermissions.find((p: any) => p.folder_id === folder.id) || { can_manage: false, include_subfolders: false };
   const children = folders.filter((f: any) => f.parents?.[0] === folder.id);
