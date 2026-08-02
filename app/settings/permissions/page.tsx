@@ -27,10 +27,38 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
         )}
 
         <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400 }}>{folder.name}</span>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={perm.can_manage} onChange={() => togglePermission(folder.id)} style={{ cursor: 'pointer' }} />
-          ให้สิทธิ์ (รวมโฟลเดอร์ย่อยอัตโนมัติ)
-        </label>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '14px', color: perm.can_manage ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+            {perm.can_manage ? 'อนุญาตแล้ว' : 'ไม่อนุญาต'}
+          </span>
+          <button
+            onClick={() => togglePermission(folder.id)}
+            style={{
+              width: '44px',
+              height: '24px',
+              borderRadius: '12px',
+              backgroundColor: perm.can_manage ? 'var(--color-primary)' : '#d1d5db',
+              position: 'relative',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease',
+              flexShrink: 0
+            }}
+          >
+            <div style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              position: 'absolute',
+              top: '3px',
+              left: perm.can_manage ? '23px' : '3px',
+              transition: 'left 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }} />
+          </button>
+        </div>
       </div>
       
       {expanded && hasChildren && (
@@ -96,33 +124,34 @@ export default function PermissionsSettingsPage() {
     }
   };
 
-  const togglePermission = (folderId: string) => {
-    setUserPermissions(prev => {
-      const existing = prev.find(p => p.folder_id === folderId);
-      if (existing) {
-        return prev.filter(p => p.folder_id !== folderId);
-      } else {
-        return [...prev, { folder_id: folderId, can_manage: true, include_subfolders: true }];
-      }
-    });
-  };
+  const togglePermission = async (folderId: string) => {
+    // 1. Calculate new state immediately
+    const existing = userPermissions.find(p => p.folder_id === folderId);
+    let newPermissions;
+    if (existing) {
+      newPermissions = userPermissions.filter(p => p.folder_id !== folderId);
+    } else {
+      newPermissions = [...userPermissions, { folder_id: folderId, can_manage: true, include_subfolders: true }];
+    }
 
-  const handleSavePermissions = async () => {
-    setSavingPermissions(true);
+    // 2. Update state optimistically
+    setUserPermissions(newPermissions);
+
+    // 3. Save to backend
     try {
       const res = await fetch('/api/permissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ permissions: userPermissions }),
+        body: JSON.stringify({ permissions: newPermissions }),
       });
       if (!res.ok) throw new Error('Failed to save');
-      toast.success('บันทึกสิทธิ์สำเร็จ');
+      toast.success('อัปเดตสิทธิ์สำเร็จ');
     } catch (err) {
-      toast.error('เกิดข้อผิดพลาดในการบันทึกสิทธิ์');
-    } finally {
-      setSavingPermissions(false);
+      toast.error('เกิดข้อผิดพลาดในการอัปเดตสิทธิ์');
     }
   };
+
+
 
   const renderFolderTree = (parentId: string | null) => {
     if (!parentId) return null;
@@ -158,8 +187,9 @@ export default function PermissionsSettingsPage() {
       </div>
 
       <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-        <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-          ตั้งค่านี้จะมีผลกับ Admin และ ผู้ช่วย Admin ทุกคนในระบบ โดยเลือกโฟลเดอร์ที่ต้องการให้พวกเขามีสิทธิ์อัปโหลดหรือลบไฟล์
+        <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+          กำหนดสิทธิ์การจัดการโฟลเดอร์สำหรับ <b>Admin และผู้ช่วย</b> ทุกคนในระบบ<br/>
+          (เมื่อเลื่อนเปิดสิทธิ์ ระบบจะบันทึกให้อัตโนมัติ และสิทธิ์นั้นจะ<b>ครอบคลุมโฟลเดอร์ย่อยทั้งหมดที่อยู่ภายในด้วยเสมอ</b>)
         </p>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -170,12 +200,6 @@ export default function PermissionsSettingsPage() {
           ) : (
             renderFolderTree(rootFolderId)
           )}
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-          <button className="btn btn-primary" onClick={handleSavePermissions} disabled={savingPermissions || loadingFolders}>
-            {savingPermissions ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์'}
-          </button>
         </div>
       </div>
     </div>
