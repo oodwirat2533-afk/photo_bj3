@@ -235,7 +235,17 @@ export default function Navbar() {
         {isMobileMenuOpen && (
           <div style={{ padding: '1rem 2rem', borderTop: '1px solid var(--color-border)', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {navLinks.map(link => {
+              {session?.user && (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 1rem', marginBottom: '0.5rem', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{session.user.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>{roleLabels[session.user.role] || 'Admin'}</div>
+                  </div>
+                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.5rem 0' }}></div>
+                </>
+              )}
+
+              {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link 
@@ -261,27 +271,27 @@ export default function Navbar() {
                 );
               })}
               
-              <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.5rem 0' }}></div>
-              
               {session?.user ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{session.user.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>{roleLabels[session.user.role] || 'Admin'}</div>
-                  </div>
+                <>
+                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.5rem 0' }}></div>
                   <button 
                     onClick={() => { setIsMobileMenuOpen(false); setShowConfirmLogout(true); }}
-                    className="btn"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', backgroundColor: '#fef2f2', color: 'var(--color-danger)', border: 'none' }}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.75rem', 
+                      padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', 
+                      backgroundColor: 'transparent', color: 'var(--color-danger)', 
+                      border: 'none', width: '100%', textAlign: 'left',
+                      fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer'
+                    }}
                   >
-                    <LogOut size={16} /> ออกจากระบบ
+                    <LogOut size={18} /> ออกจากระบบ
                   </button>
-                </div>
+                </>
               ) : (
                 <button 
                   onClick={() => signIn('google', { callbackUrl: '/' })}
                   className="btn btn-glow"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%', borderRadius: '2rem' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', width: '100%', borderRadius: '2rem', marginTop: '1rem' }}
                 >
                   <span style={{ color: '#fcd34d', fontSize: '1.1rem' }}>🔒</span> ลงชื่อเข้าใช้ ADMIN
                 </button>
