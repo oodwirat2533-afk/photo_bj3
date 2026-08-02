@@ -118,36 +118,36 @@ export default function Navbar() {
                     )}
                     
                     {session?.user && (
-                      <div className="settings-dropdown-container" style={{ position: 'relative' }}>
-                        <button 
-                          onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '0.5rem',
-                            padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--color-border)',
-                            backgroundColor: 'var(--color-surface)',
-                            fontSize: '0.875rem', fontWeight: 500,
-                            color: 'var(--color-text-muted)',
-                            cursor: 'pointer', transition: 'all 0.2s'
-                          }}
-                          onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.borderColor = 'var(--color-primary-light)'; }}
-                          onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
-                        >
-                          <Settings size={18} /> ตั้งค่าระบบ
-                        </button>
+                      <>
+                        {isSuperadmin ? (
+                          <div className="settings-dropdown-container" style={{ position: 'relative' }}>
+                            <button 
+                              onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: 'var(--color-surface)',
+                                fontSize: '0.875rem', fontWeight: 500,
+                                color: 'var(--color-text-muted)',
+                                cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                              onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.borderColor = 'var(--color-primary-light)'; }}
+                              onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                            >
+                              <Settings size={18} /> ตั้งค่าระบบ
+                            </button>
 
-                        {isSettingsDropdownOpen && (
-                          <div 
-                            style={{
-                              position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
-                              backgroundColor: 'white', borderRadius: 'var(--radius-md)',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)',
-                              minWidth: '220px', zIndex: 100, display: 'flex', flexDirection: 'column',
-                              padding: '0.5rem'
-                            }}
-                          >
-                            {isSuperadmin && (
-                              <>
+                            {isSettingsDropdownOpen && (
+                              <div 
+                                style={{
+                                  position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
+                                  backgroundColor: 'white', borderRadius: 'var(--radius-md)',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid var(--color-border)',
+                                  minWidth: '220px', zIndex: 100, display: 'flex', flexDirection: 'column',
+                                  padding: '0.5rem'
+                                }}
+                              >
                                 <Link 
                                   href="/settings/drive"
                                   onClick={() => setIsSettingsDropdownOpen(false)}
@@ -188,29 +188,46 @@ export default function Navbar() {
                                   <Folder size={16} /> จัดการโฟลเดอร์ที่แสดง
                                 </Link>
                                 <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '0.25rem 0' }}></div>
-                              </>
-                            )}
 
-                            <button
-                              onClick={() => {
-                                setIsSettingsDropdownOpen(false);
-                                setShowConfirmLogout(true);
-                              }}
-                              style={{
-                                padding: '0.75rem 1rem', fontSize: '0.875rem',
-                                color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)',
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                border: 'none', background: 'none', cursor: 'pointer',
-                                width: '100%', textAlign: 'left'
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                              <LogOut size={16} /> ออกจากระบบ
-                            </button>
+                                <button
+                                  onClick={() => {
+                                    setIsSettingsDropdownOpen(false);
+                                    setShowConfirmLogout(true);
+                                  }}
+                                  style={{
+                                    padding: '0.75rem 1rem', fontSize: '0.875rem',
+                                    color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)',
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    border: 'none', background: 'none', cursor: 'pointer',
+                                    width: '100%', textAlign: 'left'
+                                  }}
+                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <LogOut size={16} /> ออกจากระบบ
+                                </button>
+                              </div>
+                            )}
                           </div>
+                        ) : (
+                          <button 
+                            onClick={() => setShowConfirmLogout(true)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.5rem',
+                              padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)',
+                              border: '1px solid var(--color-danger-bg)',
+                              backgroundColor: '#fef2f2',
+                              fontSize: '0.875rem', fontWeight: 500,
+                              color: 'var(--color-danger)',
+                              cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-danger)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--color-danger)'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = 'var(--color-danger)'; e.currentTarget.style.borderColor = 'var(--color-danger-bg)'; }}
+                          >
+                            <LogOut size={18} /> ออกจากระบบ
+                          </button>
                         )}
-                      </div>
+                      </>
                     )}
                   </div>
 
