@@ -104,20 +104,6 @@ export default function OnboardingPage() {
           )}
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <label htmlFor="email" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
-              อีเมล <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(ไม่สามารถแก้ไขได้)</span>
-            </label>
-            <input
-              id="email"
-              type="email"
-              readOnly
-              value={email}
-              className="input-field"
-              style={{ backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' }}
-            />
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <label htmlFor="title" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
               คำนำหน้าชื่อ
             </label>
@@ -164,6 +150,20 @@ export default function OnboardingPage() {
                 placeholder="นามสกุลของคุณ"
               />
             </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <label htmlFor="email" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+              อีเมล <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(ไม่สามารถแก้ไขได้)</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              readOnly
+              value={email}
+              className="input-field"
+              style={{ backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' }}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
