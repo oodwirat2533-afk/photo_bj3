@@ -144,7 +144,7 @@ export default function Home() {
   // 4. Check Permission for Current Folder
   useEffect(() => {
     if (currentFolderId && session?.user?.isAdmin) {
-      fetch(`/api/permissions/check?folderId=${currentFolderId}`)
+      fetch(`/api/permissions/check?folderId=${currentFolderId}&t=${Date.now()}`)
         .then(res => res.json())
         .then(data => setHasAccessToCurrentFolder(data.hasAccess))
         .catch(console.error);
