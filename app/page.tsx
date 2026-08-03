@@ -42,6 +42,7 @@ export default function Home() {
   const [session, setSession] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -74,9 +75,7 @@ export default function Home() {
     // Check for login errors
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('error') === 'unauthorized') {
-      toast.error('คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้');
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      setShowUnauthorizedModal(true);
     }
 
     fetch('/api/auth/session')
@@ -882,6 +881,42 @@ export default function Home() {
             <p style={{ color: 'var(--color-danger)', fontSize: '0.85rem', marginTop: '1rem', fontWeight: 500 }}>
               * กรุณาอย่าปิดหรือรีเฟรชหน้านี้ จนกว่าการอัปโหลดจะเสร็จสิ้น
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Unauthorized Modal */}
+      {showUnauthorizedModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          padding: '1rem', backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: 'var(--color-surface)', padding: '2.5rem 2rem',
+            borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-xl)',
+            maxWidth: '400px', width: '100%', textAlign: 'center'
+          }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--color-danger-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <span style={{ fontSize: '2rem' }}>🚫</span>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.75rem' }}>
+              เข้าสู่ระบบไม่สำเร็จ
+            </h3>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', lineHeight: 1.5 }}>
+              คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้<br />กรุณาติดต่อผู้ดูแลระบบหากคุณต้องการเข้าถึง
+            </p>
+            <button
+              onClick={() => {
+                setShowUnauthorizedModal(false);
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+            >
+              ตกลง
+            </button>
           </div>
         </div>
       )}
