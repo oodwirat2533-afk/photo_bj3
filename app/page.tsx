@@ -150,12 +150,22 @@ export default function Home() {
 
   // 4. Check Permission for Current Folder
   useEffect(() => {
+    let ignore = false;
+    
     if (currentFolderId && session?.user?.isAdmin) {
       fetch(`/api/permissions/check?folderId=${currentFolderId}&t=${Date.now()}`)
         .then(res => res.json())
-        .then(data => setHasAccessToCurrentFolder(data.hasAccess))
+        .then(data => {
+          if (!ignore) {
+            setHasAccessToCurrentFolder(data.hasAccess);
+          }
+        })
         .catch(console.error);
     }
+    
+    return () => {
+      ignore = true;
+    };
   }, [currentFolderId, session]);
 
   // Gallery Handlers
