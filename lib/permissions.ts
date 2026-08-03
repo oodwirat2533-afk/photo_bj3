@@ -55,6 +55,9 @@ export async function verifyFolderAccess(targetFolderId: string, userRole: strin
         parentMap.set(folder.id, folder.parents[0]);
       }
     }
+    
+    console.log('[DEBUG] verifyFolderAccess - parentMap size:', parentMap.size);
+    console.log('[DEBUG] verifyFolderAccess - targetFolder parent:', parentMap.get(targetFolderId));
 
     // Walk up from target folder, checking each ancestor against permissions
     let currentId: string | undefined = targetFolderId;
