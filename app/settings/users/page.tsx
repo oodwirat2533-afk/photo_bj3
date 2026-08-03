@@ -172,38 +172,38 @@ export default function UsersSettingsPage() {
                 const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
                 
                 return (
-                  <li key={u.email} className="user-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <li key={u.email} className="user-list-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                     
-                    {/* Left: Info Stack */}
-                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flexGrow: 1, minWidth: 0, paddingRight: '1rem' }}>
+                    {/* Top: Info Stack */}
+                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', width: '100%' }}>
                       
                       {/* Line 1: Name or Email */}
-                      <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)', wordBreak: 'break-word' }}>
                         {u.first_name ? `${u.title || ''}${u.first_name} ${u.last_name || ''}` : u.email}
                       </div>
 
                       {/* Line 2: Subject */}
                       {u.subject_group && (
-                        <div className="user-subject-line" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div className="user-subject-line" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', wordBreak: 'break-word' }}>
                           กลุ่มสาระฯ: {u.subject_group}
                         </div>
                       )}
 
                       {/* Line 3: Email (if name exists) */}
                       {u.first_name && (
-                        <div className="user-email-line" style={{ fontSize: '0.85rem', color: 'var(--color-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div className="user-email-line" style={{ fontSize: '0.85rem', color: 'var(--color-primary)', wordBreak: 'break-all' }}>
                           อีเมล: {u.email}
                         </div>
                       )}
 
-                      {/* Line 3: Status */}
+                      {/* Line 4: Status */}
                       <div className="user-status-line" style={{ fontSize: '0.75rem', fontWeight: 500, color: u.is_onboarded ? 'var(--color-success)' : 'orange' }}>
                         {u.is_onboarded ? 'กรอกข้อมูลแล้ว' : 'รอเข้าสู่ระบบครั้งแรก'}
                       </div>
                     </div>
                     
-                    {/* Right: Actions (Role Dropdown + Delete) */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                    {/* Bottom: Actions (Role Dropdown + Delete) */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed var(--color-border)', paddingTop: '0.75rem' }}>
                       <select
                         value={u.role}
                         onChange={(e) => handleEditRole(u.email, e.target.value)}
