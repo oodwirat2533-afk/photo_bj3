@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home as HomeIcon, Download } from 'lucide-react';
+import { Folder, Image as ImageIcon, ArrowLeft, ExternalLink, Video, Trash2, UploadCloud, FolderPlus, Edit2, MoreVertical, ChevronRight, Home as HomeIcon, Download, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from './components/ConfirmModalProvider';
 
@@ -889,22 +889,23 @@ export default function Home() {
       {showUnauthorizedModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
+          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          padding: '1rem', backdropFilter: 'blur(4px)'
+          padding: '1rem', backdropFilter: 'blur(5px)'
         }}>
           <div style={{
-            backgroundColor: 'var(--color-surface)', padding: '2.5rem 2rem',
-            borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-xl)',
+            backgroundColor: '#fef2f2', padding: '2.5rem 2rem',
+            borderRadius: 'var(--radius-lg)', boxShadow: '0 20px 25px -5px rgba(220, 38, 38, 0.1), 0 10px 10px -5px rgba(220, 38, 38, 0.04)',
+            border: '1px solid #fca5a5',
             maxWidth: '400px', width: '100%', textAlign: 'center'
           }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--color-danger-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-              <span style={{ fontSize: '2rem' }}>🚫</span>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', backgroundColor: '#fee2e2', border: '4px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <AlertTriangle size={36} color="#dc2626" strokeWidth={2.5} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.75rem' }}>
               เข้าสู่ระบบไม่สำเร็จ
             </h3>
-            <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', lineHeight: 1.5 }}>
+            <p style={{ color: '#b91c1c', marginBottom: '2.5rem', lineHeight: 1.6, fontSize: '0.95rem' }}>
               คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้<br />กรุณาติดต่อผู้ดูแลระบบหากคุณต้องการเข้าถึง
             </p>
             <button
@@ -912,8 +913,16 @@ export default function Home() {
                 setShowUnauthorizedModal(false);
                 window.history.replaceState({}, document.title, window.location.pathname);
               }}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+              style={{
+                width: '100%', padding: '0.85rem', fontSize: '1rem', fontWeight: 600,
+                backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: 'var(--radius-md)',
+                cursor: 'pointer', transition: 'background-color 0.2s, transform 0.1s',
+                boxShadow: '0 4px 6px -1px rgba(220, 38, 38, 0.2), 0 2px 4px -1px rgba(220, 38, 38, 0.1)'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               ตกลง
             </button>
