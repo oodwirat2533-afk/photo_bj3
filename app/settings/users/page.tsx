@@ -203,7 +203,7 @@ export default function UsersSettingsPage() {
                     </div>
                     
                     {/* Bottom: Actions (Role Dropdown + Delete) */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed var(--color-border)', paddingTop: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingTop: '0.25rem' }}>
                       <select
                         value={u.role}
                         onChange={(e) => handleEditRole(u.email, e.target.value)}
