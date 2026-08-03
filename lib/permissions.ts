@@ -31,7 +31,7 @@ export async function verifyFolderAccess(targetFolderId: string, userRole: strin
     let pageToken = '';
     
     do {
-      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,parents),nextPageToken&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true${pageToken ? `&pageToken=${pageToken}` : ''}`;
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&corpora=allDrives&includeItemsFromAllDrives=true&supportsAllDrives=true&fields=files(id,parents),nextPageToken&pageSize=1000${pageToken ? `&pageToken=${pageToken}` : ''}`;
       const driveRes = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
