@@ -12,11 +12,17 @@ export async function GET(request: Request) {
       headers: { Authorization: `Bearer ${token}` }
     });
     
+    let info: any = {};
     if (res.ok) {
-      return NextResponse.json(await res.json());
+      info = await res.json();
     } else {
-      return NextResponse.json({ error: await res.text() });
+      info = { error: await res.text() };
     }
+
+    const { verifyFolderAccess } = await import('@/lib/permissions');
+    const hasAccessAdmin = await verifyFolderAccess(id, 'admin');
+
+    return NextResponse.json({ info, hasAccessAdmin });
   } catch (error: any) {
     return NextResponse.json({ error: error.message });
   }
