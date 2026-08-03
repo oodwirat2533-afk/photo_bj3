@@ -32,7 +32,7 @@ export async function verifyFolderAccess(targetFolderId: string, userRole: strin
       }
 
       // Fetch parent of currentId from Google Drive
-      const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${currentId}?fields=parents`, {
+      const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${currentId}?fields=parents&supportsAllDrives=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
