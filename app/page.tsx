@@ -163,12 +163,15 @@ export default function Home() {
     if (currentFolderId) {
       setFolderHistory([...folderHistory, { id: currentFolderId, name: folderName }]);
     }
+    setHasAccessToCurrentFolder(false);
     setCurrentFolderId(folderId);
   };
 
   const handleBackClick = () => {
     const newHistory = [...folderHistory];
     const previous = newHistory.pop();
+    
+    setHasAccessToCurrentFolder(false);
     
     if (previous) {
       setFolderHistory(newHistory);
