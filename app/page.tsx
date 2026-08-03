@@ -71,6 +71,14 @@ export default function Home() {
 
   // 1. Fetch Session & Check Onboarding
   useEffect(() => {
+    // Check for login errors
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'unauthorized') {
+      toast.error('คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้');
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {

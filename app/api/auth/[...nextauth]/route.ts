@@ -31,6 +31,26 @@ export const authOptions: AuthOptions = {
     signIn: '/',
   },
   callbacks: {
+    async signIn({ user }) {
+      if (user.email) {
+        const cleanEmail = user.email.toLowerCase();
+        const masterAdmins = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+        
+        if (masterAdmins.includes(cleanEmail)) {
+          return true;
+        }
+
+        try {
+          const dbCheck = await sql`SELECT email FROM users WHERE email = ${cleanEmail}`;
+          if (dbCheck.rows.length > 0) {
+            return true;
+          }
+        } catch (e) {
+          console.error('Sign In DB Check Error:', e);
+        }
+      }
+      return '/?error=unauthorized';
+    },
     async jwt({ token, user, account, profile, isNewUser }) {
       if (token.email) {
         const cleanEmail = token.email.toLowerCase();
