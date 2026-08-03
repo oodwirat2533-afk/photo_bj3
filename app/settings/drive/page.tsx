@@ -10,6 +10,8 @@ export default function DriveSettingsPage() {
   const [urlSuccess, setUrlSuccess] = useState('');
   const [session, setSession] = useState<any>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [folderInfo, setFolderInfo] = useState<any>(null);
+  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -36,6 +38,32 @@ export default function DriveSettingsPage() {
       })
       .catch((err) => console.error('Failed to load drive url:', err));
   }, []);
+
+  useEffect(() => {
+    const getFolderId = (url: string) => {
+      if (!url) return null;
+      const match = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+      return match ? match[1] : null;
+    };
+
+    const folderId = getFolderId(adminUrl);
+    if (folderId) {
+      setIsLoadingInfo(true);
+      fetch(`/api/debug-folder?id=${folderId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.info && !data.info.error) {
+            setFolderInfo(data.info);
+          } else {
+            setFolderInfo(null);
+          }
+        })
+        .catch(() => setFolderInfo(null))
+        .finally(() => setIsLoadingInfo(false));
+    } else {
+      setFolderInfo(null);
+    }
+  }, [adminUrl]);
 
   const handleUpdateUrl = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +130,21 @@ export default function DriveSettingsPage() {
               style={!isMasterEmail ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed', color: '#9ca3af' } : {}}
             />
           </div>
+
+          {folderInfo && (
+            <div style={{ backgroundColor: 'var(--color-surface-hover)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontSize: '0.875rem' }}>
+              <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-primary-dark)' }}>ข้อมูลโฟลเดอร์:</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--color-text-muted)' }}>ชื่อโฟลเดอร์:</span>
+                <span style={{ fontWeight: 500 }}>{folderInfo.name}</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>Folder ID:</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{folderInfo.id}</span>
+              </div>
+            </div>
+          )}
+          {isLoadingInfo && (
+            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>กำลังโหลดข้อมูลโฟลเดอร์...</div>
+          )}
 
           {isMasterEmail && (
             <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={urlLoading}>
