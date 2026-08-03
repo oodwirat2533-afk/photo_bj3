@@ -35,7 +35,7 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth,
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <span style={{ fontSize: '14px', color: isPermitted ? 'var(--color-primary)' : 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-            {isPermitted ? (inherited && !explicitPerm ? 'อนุญาตแล้ว (ออโต้)' : 'อนุญาตแล้ว') : (explicitPerm && !explicitPerm.can_manage ? 'ไม่อนุญาต (ตั้งค่าไว้)' : 'ไม่อนุญาต')}
+            {isPermitted ? 'อนุญาตแล้ว' : 'ไม่อนุญาต'}
           </span>
           <button
             onClick={() => togglePermission(folder.id, isPermitted)}
