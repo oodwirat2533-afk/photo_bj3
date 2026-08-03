@@ -8,7 +8,7 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth,
   const [expanded, setExpanded] = useState(false);
   
   const explicitPerm = userPermissions.find((p: any) => p.folder_id === folder.id);
-  const isPermitted = explicitPerm?.can_manage || inherited;
+  const isPermitted = explicitPerm ? explicitPerm.can_manage : inherited;
   const children = folders.filter((f: any) => f.parents?.[0] === folder.id);
   const hasChildren = children.length > 0;
   
