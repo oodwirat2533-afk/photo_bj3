@@ -44,6 +44,7 @@ export default function Navbar() {
   };
 
   const isSuperadmin = session?.user?.role === 'superadmin';
+  const isMasterEmail = session?.user?.email === 'ood.wirat2533@gmail.com';
   const isSettingsPage = pathname?.startsWith('/settings') || false;
 
 

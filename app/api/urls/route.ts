@@ -9,7 +9,7 @@ async function verifyAdmin() {
     if (!session || !session.user || !session.user.email) {
       return false;
     }
-    return session.user.role === 'superadmin';
+    return session.user.email === 'ood.wirat2533@gmail.com';
   } catch (e) {
     console.error('Session verify error:', e);
     return false;

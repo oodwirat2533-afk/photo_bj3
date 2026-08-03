@@ -67,6 +67,8 @@ export default function DriveSettingsPage() {
   if (!session || session.user?.role !== 'superadmin') {
     return null; // Will redirect
   }
+  
+  const isMasterEmail = session.user.email === 'ood.wirat2533@gmail.com';
 
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -96,12 +98,16 @@ export default function DriveSettingsPage() {
               onChange={(e) => setAdminUrl(e.target.value)}
               placeholder="https://drive.google.com/drive/folders/..."
               required
+              disabled={!isMasterEmail}
+              style={!isMasterEmail ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed', color: '#9ca3af' } : {}}
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={urlLoading}>
-            {urlLoading ? 'กำลังบันทึก...' : 'บันทึกลิงก์โฟลเดอร์'}
-          </button>
+          {isMasterEmail && (
+            <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={urlLoading}>
+              {urlLoading ? 'กำลังบันทึก...' : 'บันทึกลิงก์โฟลเดอร์'}
+            </button>
+          )}
         </form>
       </div>
     </div>
