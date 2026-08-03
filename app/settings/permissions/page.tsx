@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import { Key, ChevronRight, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth }: any) => {
+const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth, inherited = false }: any) => {
   const [expanded, setExpanded] = useState(false);
   
-  const perm = userPermissions.find((p: any) => p.folder_id === folder.id) || { can_manage: false, include_subfolders: false };
+  const explicitPerm = userPermissions.find((p: any) => p.folder_id === folder.id);
+  const isPermitted = explicitPerm?.can_manage || inherited;
   const children = folders.filter((f: any) => f.parents?.[0] === folder.id);
   const hasChildren = children.length > 0;
+  
+  const willPassInheritance = (explicitPerm?.can_manage && explicitPerm?.include_subfolders) || inherited;
 
   return (
     <div style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: depth > 0 ? '8px' : '0' }}>
@@ -29,19 +32,26 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
         <span style={{ flexGrow: 1, fontWeight: depth === 0 ? 600 : 400, wordBreak: 'break-word' }}>{folder.name}</span>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-          <span style={{ fontSize: '14px', color: perm.can_manage ? 'var(--color-primary)' : 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-            {perm.can_manage ? 'อนุญาตแล้ว' : 'ไม่อนุญาต'}
+          <span style={{ fontSize: '14px', color: isPermitted ? 'var(--color-primary)' : 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+            {isPermitted ? (inherited && !explicitPerm ? 'อนุญาตแล้ว (ออโต้)' : 'อนุญาตแล้ว') : 'ไม่อนุญาต'}
           </span>
           <button
-            onClick={() => togglePermission(folder.id)}
+            onClick={() => {
+              if (inherited && !explicitPerm) {
+                toast('โฟลเดอร์นี้ได้รับสิทธิ์ครอบคลุมมาจากโฟลเดอร์แม่ หากต้องการปิด ต้องไปปิดที่โฟลเดอร์แม่ครับ', { icon: 'ℹ️' });
+              } else {
+                togglePermission(folder.id);
+              }
+            }}
             style={{
               width: '44px',
               height: '24px',
               borderRadius: '12px',
-              backgroundColor: perm.can_manage ? 'var(--color-primary)' : '#d1d5db',
+              backgroundColor: isPermitted ? 'var(--color-primary)' : '#d1d5db',
+              opacity: inherited && !explicitPerm ? 0.6 : 1,
               position: 'relative',
               border: 'none',
-              cursor: 'pointer',
+              cursor: inherited && !explicitPerm ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.3s ease',
               flexShrink: 0
             }}
@@ -53,7 +63,7 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
               backgroundColor: 'white',
               position: 'absolute',
               top: '3px',
-              left: perm.can_manage ? '23px' : '3px',
+              left: isPermitted ? '23px' : '3px',
               transition: 'left 0.3s ease',
               boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }} />
@@ -64,7 +74,7 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth 
       {expanded && hasChildren && (
         <div>
           {children.map((child: any) => (
-            <FolderNode key={child.id} folder={child} folders={folders} userPermissions={userPermissions} togglePermission={togglePermission} depth={depth + 1} />
+            <FolderNode key={child.id} folder={child} folders={folders} userPermissions={userPermissions} togglePermission={togglePermission} depth={depth + 1} inherited={willPassInheritance} />
           ))}
         </div>
       )}
