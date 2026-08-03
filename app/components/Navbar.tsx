@@ -250,12 +250,22 @@ export default function Navbar() {
 
               {/* Mobile menu button */}
               <div className="mobile-menu-btn" style={{ display: 'flex', alignItems: 'center' }}>
-                <button 
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-text)' }}
-                >
-                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                {session?.user && !isSuperadmin ? (
+                  <button
+                    onClick={() => setShowConfirmLogout(true)}
+                    style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-danger)' }}
+                    title="ออกจากระบบ"
+                  >
+                    <LogOut size={24} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: 'var(--color-text)' }}
+                  >
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                  </button>
+                )}
               </div>
             </div>
           </div>
