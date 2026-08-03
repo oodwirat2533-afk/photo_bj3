@@ -12,7 +12,9 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth,
   const children = folders.filter((f: any) => f.parents?.[0] === folder.id);
   const hasChildren = children.length > 0;
   
-  const willPassInheritance = (explicitPerm?.can_manage && explicitPerm?.include_subfolders) || inherited;
+  const willPassInheritance = explicitPerm 
+    ? (explicitPerm.can_manage && explicitPerm.include_subfolders) 
+    : inherited;
 
   return (
     <div style={{ marginLeft: depth > 0 ? '20px' : '0', marginTop: depth > 0 ? '8px' : '0' }}>
@@ -33,25 +35,18 @@ const FolderNode = ({ folder, folders, userPermissions, togglePermission, depth,
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <span style={{ fontSize: '14px', color: isPermitted ? 'var(--color-primary)' : 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-            {isPermitted ? (inherited && !explicitPerm ? 'อนุญาตแล้ว (ออโต้)' : 'อนุญาตแล้ว') : 'ไม่อนุญาต'}
+            {isPermitted ? (inherited && !explicitPerm ? 'อนุญาตแล้ว (ออโต้)' : 'อนุญาตแล้ว') : (explicitPerm && !explicitPerm.can_manage ? 'ไม่อนุญาต (ตั้งค่าไว้)' : 'ไม่อนุญาต')}
           </span>
           <button
-            onClick={() => {
-              if (inherited && !explicitPerm) {
-                toast('โฟลเดอร์นี้ได้รับสิทธิ์ครอบคลุมมาจากโฟลเดอร์แม่ หากต้องการปิด ต้องไปปิดที่โฟลเดอร์แม่ครับ', { icon: 'ℹ️' });
-              } else {
-                togglePermission(folder.id);
-              }
-            }}
+            onClick={() => togglePermission(folder.id, isPermitted)}
             style={{
               width: '44px',
               height: '24px',
               borderRadius: '12px',
               backgroundColor: isPermitted ? 'var(--color-primary)' : '#d1d5db',
-              opacity: inherited && !explicitPerm ? 0.6 : 1,
               position: 'relative',
               border: 'none',
-              cursor: inherited && !explicitPerm ? 'not-allowed' : 'pointer',
+              cursor: 'pointer',
               transition: 'background-color 0.3s ease',
               flexShrink: 0
             }}
@@ -134,15 +129,14 @@ export default function PermissionsSettingsPage() {
     }
   };
 
-  const togglePermission = async (folderId: string) => {
+  const togglePermission = async (folderId: string, currentPermittedState: boolean) => {
     // 1. Calculate new state immediately
-    const existing = userPermissions.find(p => p.folder_id === folderId);
-    let newPermissions;
-    if (existing) {
-      newPermissions = userPermissions.filter(p => p.folder_id !== folderId);
-    } else {
-      newPermissions = [...userPermissions, { folder_id: folderId, can_manage: true, include_subfolders: true }];
-    }
+    const newState = !currentPermittedState;
+    const filtered = userPermissions.filter(p => p.folder_id !== folderId);
+    
+    // We add an explicit record for this folder whether it's true or false,
+    // so it properly overrides any inheritance from parents.
+    const newPermissions = [...filtered, { folder_id: folderId, can_manage: newState, include_subfolders: true }];
 
     // 2. Update state optimistically
     setUserPermissions(newPermissions);

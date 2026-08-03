@@ -8,17 +8,17 @@ export async function verifyFolderAccess(targetFolderId: string, userRole: strin
   }
 
   // Get global permissions from DB
-  const res = await sql`SELECT folder_id, include_subfolders FROM folder_permissions WHERE can_manage = TRUE`;
+  const res = await sql`SELECT folder_id, can_manage, include_subfolders FROM folder_permissions`;
   const perms = res.rows;
 
   if (perms.length === 0) {
     return false;
   }
 
-  // Quick check: is the exact target folder permitted?
+  // Quick check: is the exact target folder explicitly defined?
   const directPerm = perms.find((p) => p.folder_id === targetFolderId);
   if (directPerm) {
-    return true;
+    return directPerm.can_manage;
   }
 
   // Need to walk up the tree. Fetch ALL folders from Drive to build the tree in memory.
@@ -71,7 +71,8 @@ export async function verifyFolderAccess(targetFolderId: string, userRole: strin
 
       const perm = perms.find((p) => p.folder_id === currentId);
       if (perm && perm.include_subfolders) {
-        return true;
+        // Return the first explicitly defined permission we encounter up the tree
+        return perm.can_manage;
       }
       
       depth++;
