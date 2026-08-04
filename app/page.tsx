@@ -492,14 +492,16 @@ export default function Home() {
         </div>
       ) : (
         <>
+          {/* ----------------- Global Breadcrumb ----------------- */}
+          {folderHistory.length > 0 && (
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--color-text-muted)' }}>
+              {folderHistory.map(f => f.name).join(' / ')}
+            </h2>
+          )}
+
           {/* ----------------- Folders Section ----------------- */}
           {folders.length > 0 && (
             <div style={{ marginBottom: '3rem' }}>
-              {folderHistory.length > 0 && (
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
-                  {folderHistory.map(f => f.name).join(' / ')}
-                </h2>
-              )}
               <div className="responsive-grid-wide">
                 {folders.map(folder => (
                   <div 
@@ -592,10 +594,12 @@ export default function Home() {
           {/* ----------------- Media Section ----------------- */}
           {mediaFiles.length > 0 && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                  {folderHistory.length > 0 ? folderHistory.map(f => f.name).join(' / ') : 'ไฟล์รูปภาพ/วิดีโอ'}
-                </h2>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                {folderHistory.length === 0 && (
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-text-muted)', marginRight: 'auto' }}>
+                    ไฟล์รูปภาพ/วิดีโอ
+                  </h2>
+                )}
                 
                 {/* Column Slider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--color-surface)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
