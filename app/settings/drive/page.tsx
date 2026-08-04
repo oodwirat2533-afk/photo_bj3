@@ -138,7 +138,7 @@ export default function DriveSettingsPage() {
                 <span style={{ color: 'var(--color-text-muted)' }}>ชื่อโฟลเดอร์:</span>
                 <span style={{ fontWeight: 500 }}>{folderInfo.name}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>Folder ID:</span>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{folderInfo.id}</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>{folderInfo.id}</span>
               </div>
             </div>
           )}
