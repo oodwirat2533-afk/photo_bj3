@@ -172,10 +172,10 @@ export default function UsersSettingsPage() {
                 const isMasterAdmin = u.email === 'ood.wirat2533@gmail.com';
                 
                 return (
-                  <li key={u.email} className="user-list-item" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+                  <li key={u.email} className="user-list-item" style={{ padding: '1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                     
-                    {/* Top: Info Stack */}
-                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', width: '100%' }}>
+                    {/* Top/Left: Info Stack */}
+                    <div className="user-info-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                       
                       {/* Line 1: Name or Email */}
                       <div className="user-name-line" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)', wordBreak: 'break-word' }}>
@@ -202,8 +202,8 @@ export default function UsersSettingsPage() {
                       </div>
                     </div>
                     
-                    {/* Bottom: Actions (Role Dropdown + Delete) */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingTop: '0.25rem' }}>
+                    {/* Bottom/Right: Actions (Role Dropdown + Delete) */}
+                    <div className="user-actions-container">
                       <select
                         value={u.role}
                         onChange={(e) => handleEditRole(u.email, e.target.value)}
